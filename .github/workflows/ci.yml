@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: finanzas_test
+          POSTGRES_USER: finanzas
+          POSTGRES_PASSWORD: finanzas_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U finanzas -d finanzas_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      FINANZAS_DB_URL: jdbc:postgresql://localhost:5432/finanzas_test
+      POSTGRES_USER: finanzas
+      POSTGRES_PASSWORD: finanzas_test_password
+      FINANZAS_JWT_SECRET: ci-only-secret-with-more-than-48-characters-please-change
+      SPRING_PROFILES_ACTIVE: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Prepare wrapper
+        run: chmod +x mvnw
+      - name: Test desktop client
+        run: ./mvnw -f pom.xml -B test
+      - name: Test backend
+        run: ./mvnw -f finanzas-backend/pom.xml -B test
+      - name: Check OpenAPI copies
+        run: cmp finanzas-backend/src/main/resources/openapi/finanzas-api.yaml src/main/resources/openapi/finanzas-api.yaml
+      - name: Package desktop client
+        run: ./mvnw -f pom.xml -B -DskipTests package
+      - name: Package backend
+        run: ./mvnw -f finanzas-backend/pom.xml -B -DskipTests package
+      - name: Check Flyway migration order
+        run: test "$(find finanzas-backend/src/main/resources/db/migration -name 'V*.sql' | wc -l)" -ge 4
+      - name: Build backend image
+        run: docker build -f finanzas-backend/Dockerfile -t finanzas-backend:ci .

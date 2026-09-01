@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: finanzas-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finanzas}
+      POSTGRES_USER: ${POSTGRES_USER:-finanzas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finanzas_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - finanzas-postgres-data:/var/lib/postgresql/data
+    networks:
+      - finanzas-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finanzas} -d ${POSTGRES_DB:-finanzas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: finanzas-backend/Dockerfile
+    container_name: finanzas-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      PORT: 8080
+      FINANZAS_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-finanzas}
+      POSTGRES_USER: ${POSTGRES_USER:-finanzas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finanzas_dev_password}
+      FINANZAS_JWT_SECRET: ${FINANZAS_JWT_SECRET:-dev-only-change-this-secret-before-real-use-123456}
+      FINANZAS_STORAGE_DIR: /app/storage
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - finanzas-backend-storage:/app/storage
+    networks:
+      - finanzas-internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/readiness || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  tls-proxy:
+    image: caddy:2-alpine
+    profiles: ["tls-proxy"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      FINANZAS_DOMAIN: ${FINANZAS_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - finanzas-caddy-data:/data
+      - finanzas-caddy-config:/config
+    networks:
+      - finanzas-internal
+
+volumes:
+  finanzas-postgres-data:
+  finanzas-backend-storage:
+  finanzas-caddy-data:
+  finanzas-caddy-config:
+
+networks:
+  finanzas-internal:
+    driver: bridge

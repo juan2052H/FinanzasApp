@@ -1,0 +1,640 @@
+package com.finanzas.ui;
+
+import com.finanzas.data.DataManager;
+import com.finanzas.model.FinancialCategory;
+import com.finanzas.model.GastoHogar;
+import com.finanzas.model.Money;
+import com.finanzas.model.Settlement;
+import com.finanzas.ui.components.AppColors;
+import com.finanzas.ui.components.AppIcons;
+import com.finanzas.ui.components.RoundedButton;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+public class FinanzasHogarPanel extends JPanel {
+    private final DataManager data = DataManager.getInstance();
+    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private JPanel debtCards;
+    private DefaultTableModel tableModel;
+    private List<GastoHogar> currentList;
+
+    public FinanzasHogarPanel() {
+        setBackground(AppColors.MAIN_BG);
+        setLayout(new BorderLayout());
+        buildUI();
+        data.addListener(() -> SwingUtilities.invokeLater(this::refresh));
+    }
+
+    private void buildUI() {
+        add(buildHeader(), BorderLayout.NORTH);
+
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, buildTopSection(), buildTableSection());
+        split.setResizeWeight(0.42);
+        split.setBorder(null);
+        split.setDividerSize(6);
+        split.setBackground(AppColors.MAIN_BG);
+        add(split, BorderLayout.CENTER);
+    }
+
+    private JPanel buildHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(AppColors.MAIN_BG);
+        header.setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
+
+        JLabel title = new JLabel("Finanzas del Hogar");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(AppColors.TEXT_PRIMARY);
+
+        JLabel subtitle = new JLabel("Gestiona los gastos compartidos con tu hogar");
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setForeground(AppColors.TEXT_SECONDARY);
+
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+        left.setBackground(AppColors.MAIN_BG);
+        left.add(title);
+        left.add(subtitle);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actions.setOpaque(false);
+        RoundedButton settlementButton = new RoundedButton("Registrar liquidacion", AppColors.TEXT_MUTED);
+        settlementButton.addActionListener(e -> showSettlementDialog());
+        RoundedButton addButton = new RoundedButton(AppIcons.PLUS + " Nuevo Gasto Hogar", AppColors.CARD_AHORROS);
+        addButton.addActionListener(e -> showGastoDialog(null));
+        actions.add(settlementButton);
+        actions.add(addButton);
+        header.add(left, BorderLayout.WEST);
+        header.add(actions, BorderLayout.EAST);
+        return header;
+    }
+
+    private JPanel buildTopSection() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 16, 0));
+        panel.setBackground(AppColors.MAIN_BG);
+        panel.setBorder(BorderFactory.createEmptyBorder(4, 20, 8, 20));
+        panel.add(buildMembersCard());
+        panel.add(buildDebtsCard());
+        return panel;
+    }
+
+    private JPanel buildMembersCard() {
+        JPanel card = card();
+        card.setLayout(new BorderLayout(0, 8));
+        JLabel title = new JLabel("👥 Miembros del hogar");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setForeground(AppColors.TEXT_PRIMARY);
+
+        JPanel membersList = new JPanel();
+        membersList.setLayout(new BoxLayout(membersList, BoxLayout.Y_AXIS));
+        membersList.setOpaque(false);
+        refreshMembersList(membersList);
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        buttonRow.setOpaque(false);
+        RoundedButton addMember = new RoundedButton(AppIcons.PLUS + " Agregar", AppColors.ACCENT_BLUE);
+        addMember.setPreferredSize(new Dimension(120, 28));
+        addMember.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        addMember.addActionListener(e -> {
+            if (data.isBackendSessionActive()) {
+                showInviteMemberDialog();
+                return;
+            }
+            String name = JOptionPane.showInputDialog(this, "Nombre del nuevo miembro:", "Agregar miembro", JOptionPane.QUESTION_MESSAGE);
+            if (name != null && !name.trim().isEmpty()) {
+                data.addMiembro(name.trim());
+                refreshMembersList(membersList);
+                membersList.revalidate();
+                membersList.repaint();
+            }
+        });
+        buttonRow.add(addMember);
+
+        card.add(title, BorderLayout.NORTH);
+        card.add(membersList, BorderLayout.CENTER);
+        card.add(buttonRow, BorderLayout.SOUTH);
+        return card;
+    }
+
+    private void showInviteMemberDialog() {
+        JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
+        JTextField emailField = new JTextField();
+        JComboBox<String> roleBox = new JComboBox<String>(new String[]{"MEMBER", "VIEWER", "ADMIN"});
+        form.add(new JLabel("Email:"));
+        form.add(emailField);
+        form.add(new JLabel("Rol:"));
+        form.add(roleBox);
+
+        int result = JOptionPane.showConfirmDialog(this, form, "Invitar miembro al workspace", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        if (data.inviteBackendMember(emailField.getText().trim(), (String) roleBox.getSelectedItem())) {
+            JOptionPane.showMessageDialog(this, "Invitacion enviada.", "Miembros backend", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, data.getLastErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void refreshMembersList(JPanel panel) {
+        panel.removeAll();
+        List<Map.Entry<String, Double>> balances = new ArrayList<>(data.calcularDeudas().entrySet());
+        for (Map.Entry<String, Double> entry : balances) {
+            JPanel row = new JPanel(new BorderLayout(8, 0));
+            row.setOpaque(false);
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+
+            JLabel name = new JLabel("👤 " + entry.getKey());
+            name.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            name.setForeground(AppColors.TEXT_PRIMARY);
+
+            double balance = entry.getValue();
+            JLabel balanceLabel = new JLabel(balance >= 0
+                    ? "+$" + nf.format((long) balance) + " le deben"
+                    : "-$" + nf.format((long) Math.abs(balance)) + " debe");
+            balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            balanceLabel.setForeground(balance >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
+
+            JButton delete = new JButton("X");
+            delete.setFont(new Font("Segoe UI", Font.BOLD, 9));
+            delete.setBorderPainted(false);
+            delete.setContentAreaFilled(false);
+            delete.setForeground(AppColors.TEXT_MUTED);
+            delete.addActionListener(e -> {
+                if (data.isBackendSessionActive()) {
+                    int confirm = JOptionPane.showConfirmDialog(this, "Eliminar a " + entry.getKey() + " del workspace?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        try {
+                            data.removeMiembro(entry.getKey());
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    return;
+                }
+                data.removeMiembro(entry.getKey());
+                refreshMembersList(panel);
+                panel.revalidate();
+                panel.repaint();
+            });
+
+            row.add(name, BorderLayout.WEST);
+            row.add(balanceLabel, BorderLayout.CENTER);
+            row.add(delete, BorderLayout.EAST);
+            panel.add(row);
+            panel.add(Box.createVerticalStrut(4));
+        }
+    }
+
+    private JPanel buildDebtsCard() {
+        JPanel card = card();
+        card.setLayout(new BorderLayout(0, 8));
+        JLabel title = new JLabel("💳 Resumen de deudas compartidas");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setForeground(AppColors.TEXT_PRIMARY);
+
+        debtCards = new JPanel();
+        debtCards.setLayout(new BoxLayout(debtCards, BoxLayout.Y_AXIS));
+        debtCards.setOpaque(false);
+        refreshDebtCards();
+
+        card.add(title, BorderLayout.NORTH);
+        card.add(debtCards, BorderLayout.CENTER);
+        return card;
+    }
+
+    private void refreshDebtCards() {
+        if (debtCards == null) {
+            return;
+        }
+        debtCards.removeAll();
+        Map<String, Double> balances = data.calcularDeudas();
+        double totalExpenses = data.getGastosHogar().stream()
+                .filter(GastoHogar::isDividido)
+                .mapToDouble(GastoHogar::getMonto)
+                .sum();
+
+        JLabel total = new JLabel("Total gastos compartidos: $" + nf.format((long) totalExpenses));
+        total.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        total.setForeground(AppColors.TEXT_PRIMARY);
+        total.setAlignmentX(Component.LEFT_ALIGNMENT);
+        debtCards.add(total);
+        debtCards.add(Box.createVerticalStrut(8));
+
+        for (Map.Entry<String, Double> entry : balances.entrySet()) {
+            JPanel row = new JPanel(new BorderLayout(6, 0));
+            row.setOpaque(false);
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+
+            JLabel name = new JLabel(entry.getKey() + ":");
+            name.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            name.setForeground(AppColors.TEXT_SECONDARY);
+
+            double value = entry.getValue();
+            String message = value >= 0 ? "le deben $" + nf.format((long) value) : "debe $" + nf.format((long) Math.abs(value));
+            JLabel status = new JLabel(message);
+            status.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            status.setForeground(value >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
+
+            row.add(name, BorderLayout.WEST);
+            row.add(status, BorderLayout.EAST);
+            debtCards.add(row);
+            debtCards.add(Box.createVerticalStrut(4));
+        }
+        if (!data.getSettlements().isEmpty()) {
+            debtCards.add(Box.createVerticalStrut(8));
+            JLabel historyTitle = new JLabel("Ultimas liquidaciones");
+            historyTitle.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            historyTitle.setForeground(AppColors.TEXT_PRIMARY);
+            historyTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+            debtCards.add(historyTitle);
+            debtCards.add(Box.createVerticalStrut(4));
+            for (int i = 0; i < Math.min(3, data.getSettlements().size()); i++) {
+                Settlement settlement = data.getSettlements().get(i);
+                JLabel row = new JLabel(settlement.getFromMember() + " -> " + settlement.getToMember()
+                        + " $" + nf.format((long) settlement.getAmount())
+                        + " (" + settlement.getDate().format(dtf) + ")");
+                row.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+                row.setForeground(AppColors.TEXT_MUTED);
+                row.setAlignmentX(Component.LEFT_ALIGNMENT);
+                debtCards.add(row);
+            }
+        }
+        debtCards.revalidate();
+        debtCards.repaint();
+    }
+
+    private JPanel buildTableSection() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(AppColors.MAIN_BG);
+        panel.setBorder(BorderFactory.createEmptyBorder(4, 20, 16, 20));
+
+        JPanel titleRow = new JPanel(new BorderLayout());
+        titleRow.setOpaque(false);
+        JLabel title = new JLabel("Historial de gastos del hogar");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setForeground(AppColors.TEXT_PRIMARY);
+        titleRow.add(title, BorderLayout.WEST);
+
+        String[] columns = {"Descripcion", "Categoria", "Monto", "Pagado por", "Fecha", "Dividido", "Acciones"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable table = new JTable(tableModel);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setRowHeight(36);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(0xEBF3FE));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        table.getTableHeader().setBackground(new Color(0xf8fafc));
+        table.getTableHeader().setForeground(AppColors.TEXT_SECONDARY);
+        table.getColumnModel().getColumn(2).setPreferredWidth(120);
+        table.getColumnModel().getColumn(6).setMaxWidth(80);
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, selected, focus, row, column);
+                setBackground(selected ? new Color(0xEBF3FE) : (row % 2 == 0 ? Color.WHITE : new Color(0xf9fafb)));
+                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+                if (column == 2) {
+                    setForeground(AppColors.ACCENT_RED);
+                    setFont(new Font("Segoe UI", Font.BOLD, 12));
+                } else if (column == 5) {
+                    setForeground("Si".equals(value) ? AppColors.ACCENT_GREEN : AppColors.TEXT_MUTED);
+                    setFont(new Font("Segoe UI", Font.BOLD, 11));
+                } else {
+                    setForeground(AppColors.TEXT_SECONDARY);
+                    setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                }
+                return this;
+            }
+        });
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                int col = table.columnAtPoint(e.getPoint());
+                if (row >= 0 && col == 6 && currentList != null && row < currentList.size()) {
+                    JPopupMenu menu = new JPopupMenu();
+                    JMenuItem edit = new JMenuItem("Editar");
+                    JMenuItem delete = new JMenuItem("Eliminar");
+                    edit.addActionListener(ev -> showGastoDialog(currentList.get(row)));
+                    delete.addActionListener(ev -> {
+                        int result = JOptionPane.showConfirmDialog(FinanzasHogarPanel.this, "Eliminar este gasto?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                        if (result == JOptionPane.YES_OPTION) {
+                            data.removeGastoHogar(currentList.get(row));
+                        }
+                    });
+                    menu.add(edit);
+                    menu.add(delete);
+                    menu.show(table, e.getX(), e.getY());
+                }
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        panel.add(titleRow, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        refreshTable();
+        return panel;
+    }
+
+    private void refreshTable() {
+        if (tableModel == null) {
+            return;
+        }
+        currentList = data.getGastosHogar();
+        tableModel.setRowCount(0);
+        for (GastoHogar gasto : currentList) {
+            tableModel.addRow(new Object[]{
+                    gasto.getDescripcion(),
+                    gasto.getCategoria(),
+                    "$" + nf.format((long) gasto.getMonto()),
+                    gasto.getPagadoPor(),
+                    gasto.getFecha().format(dtf),
+                    gasto.isDividido() ? "Si" : "No",
+                    "⋮"
+            });
+        }
+    }
+
+    private void refresh() {
+        refreshDebtCards();
+        refreshTable();
+    }
+
+    public void openNewHouseholdExpenseDialog() {
+        showGastoDialog(null);
+    }
+
+    private void showGastoDialog(GastoHogar existing) {
+        boolean isEdit = existing != null;
+        JDialog dialog = new JDialog(
+                SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
+                isEdit ? "Editar gasto" : "Nuevo gasto del hogar",
+                true);
+        dialog.setSize(520, 460);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(7, 4, 7, 4);
+
+        JTextField descField = new JTextField(isEdit ? existing.getDescripcion() : "");
+        JComboBox<String> categoryBox = new JComboBox<String>(data.getCategoryNames(FinancialCategory.Kind.HOUSEHOLD));
+        if (isEdit) {
+            categoryBox.setSelectedItem(existing.getCategoria());
+        }
+        JTextField amountField = new JTextField(isEdit ? String.valueOf((long) existing.getMonto()) : "");
+        List<String> members = data.getMiembrosHogar();
+        if (members.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Agrega al menos un miembro del hogar antes de registrar gastos compartidos.", "Hogar sin miembros", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        JComboBox<String> paidByBox = new JComboBox<>(members.toArray(new String[0]));
+        if (isEdit) {
+            paidByBox.setSelectedItem(existing.getPagadoPor());
+        }
+        JTextField dateField = new JTextField(isEdit ? existing.getFecha().format(dtf) : LocalDate.now().format(dtf));
+        JCheckBox split = new JCheckBox("Dividir entre todos");
+        split.setBackground(Color.WHITE);
+        if (isEdit) {
+            split.setSelected(existing.isDividido());
+        }
+        JComboBox<GastoHogar.SplitMethod> splitMethodBox = new JComboBox<GastoHogar.SplitMethod>(GastoHogar.SplitMethod.values());
+        if (isEdit) {
+            splitMethodBox.setSelectedItem(existing.getSplitMethod());
+        }
+        JTextArea splitValues = new JTextArea(defaultSplitValues(existing, members), 4, 22);
+        splitValues.setLineWrap(true);
+        splitValues.setWrapStyleWord(true);
+        JScrollPane splitScroll = new JScrollPane(splitValues);
+
+        Runnable refreshSplitControls = () -> {
+            boolean customSplit = split.isSelected() && splitMethodBox.getSelectedItem() != GastoHogar.SplitMethod.EQUAL;
+            splitMethodBox.setEnabled(split.isSelected());
+            splitValues.setEnabled(customSplit);
+            splitValues.setBackground(customSplit ? Color.WHITE : new Color(0xf3f4f6));
+        };
+        split.addActionListener(e -> refreshSplitControls.run());
+        splitMethodBox.addActionListener(e -> refreshSplitControls.run());
+        refreshSplitControls.run();
+
+        addFormRow(panel, gbc, 0, "Descripcion:", descField);
+        addFormRow(panel, gbc, 1, "Categoria:", categoryBox);
+        addFormRow(panel, gbc, 2, "Monto ($):", amountField);
+        addFormRow(panel, gbc, 3, "Pagado por:", paidByBox);
+        addFormRow(panel, gbc, 4, "Fecha:", dateField);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.weightx = 0.4;
+        panel.add(new JLabel(""), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.6;
+        panel.add(split, gbc);
+        addFormRow(panel, gbc, 6, "Metodo:", splitMethodBox);
+        addFormRow(panel, gbc, 7, "Valores por miembro:", splitScroll);
+
+        RoundedButton save = new RoundedButton(isEdit ? "Guardar cambios" : "Agregar gasto", AppColors.CARD_AHORROS);
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        panel.add(save, gbc);
+        save.addActionListener(e -> {
+            try {
+                String desc = descField.getText().trim();
+                if (desc.isEmpty()) {
+                    throw new IllegalArgumentException();
+                }
+                BigDecimal amount = Money.parseFlexible(amountField.getText());
+                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new IllegalArgumentException();
+                }
+                GastoHogar nuevo = new GastoHogar(
+                        desc,
+                        (String) categoryBox.getSelectedItem(),
+                        amount,
+                        (String) paidByBox.getSelectedItem(),
+                        LocalDate.parse(dateField.getText().trim(), dtf),
+                        split.isSelected());
+                applySplit(nuevo, members, splitValues.getText(), (GastoHogar.SplitMethod) splitMethodBox.getSelectedItem());
+                if (isEdit) {
+                    data.removeGastoHogar(existing);
+                }
+                data.addGastoHogar(nuevo);
+                dialog.dispose();
+            } catch (Exception ex) {
+                String message = ex.getMessage() == null || ex.getMessage().trim().isEmpty() ? "Datos invalidos." : ex.getMessage();
+                JOptionPane.showMessageDialog(dialog, message, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
+    }
+
+    private void showSettlementDialog() {
+        List<String> members = data.getMiembrosHogar();
+        if (members.size() < 2) {
+            JOptionPane.showMessageDialog(this, "Agrega al menos dos miembros para registrar liquidaciones.", "Hogar incompleto", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(
+                SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
+                "Registrar liquidacion",
+                true);
+        dialog.setSize(420, 300);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(7, 4, 7, 4);
+
+        JComboBox<String> fromBox = new JComboBox<String>(members.toArray(new String[0]));
+        JComboBox<String> toBox = new JComboBox<String>(members.toArray(new String[0]));
+        JTextField amountField = new JTextField();
+        JTextField dateField = new JTextField(LocalDate.now().format(dtf));
+        JTextField noteField = new JTextField();
+
+        addFormRow(panel, gbc, 0, "Paga:", fromBox);
+        addFormRow(panel, gbc, 1, "Recibe:", toBox);
+        addFormRow(panel, gbc, 2, "Monto:", amountField);
+        addFormRow(panel, gbc, 3, "Fecha:", dateField);
+        addFormRow(panel, gbc, 4, "Nota:", noteField);
+
+        RoundedButton save = new RoundedButton("Guardar liquidacion", AppColors.ACCENT_BLUE);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        panel.add(save, gbc);
+
+        save.addActionListener(e -> {
+            try {
+                Settlement settlement = new Settlement(
+                        (String) fromBox.getSelectedItem(),
+                        (String) toBox.getSelectedItem(),
+                        Money.parseFlexible(amountField.getText()),
+                        LocalDate.parse(dateField.getText().trim(), dtf),
+                        noteField.getText());
+                data.addSettlement(settlement);
+                dialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
+    }
+
+    private void applySplit(GastoHogar gasto, List<String> members, String rawValues, GastoHogar.SplitMethod method) {
+        if (!gasto.isDividido()) {
+            return;
+        }
+        if (method == GastoHogar.SplitMethod.PERCENTAGE) {
+            gasto.definePercentageSplit(parseMemberValues(rawValues, members));
+        } else if (method == GastoHogar.SplitMethod.CUSTOM_AMOUNT) {
+            gasto.defineCustomAmountSplit(parseMemberValues(rawValues, members));
+        } else {
+            gasto.defineEqualSplit(members);
+        }
+    }
+
+    private Map<String, BigDecimal> parseMemberValues(String rawValues, List<String> members) {
+        Map<String, BigDecimal> values = new LinkedHashMap<String, BigDecimal>();
+        String[] lines = rawValues == null ? new String[0] : rawValues.split("\\r?\\n");
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+            String[] parts = line.split("[:=]", 2);
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Usa formato Nombre=valor, una linea por miembro.");
+            }
+            String member = parts[0].trim();
+            if (!members.contains(member)) {
+                throw new IllegalArgumentException("El miembro no existe: " + member);
+            }
+            values.put(member, Money.parseFlexible(parts[1].trim()));
+        }
+        return values;
+    }
+
+    private String defaultSplitValues(GastoHogar existing, List<String> members) {
+        if (existing != null && !existing.getSplitAmounts().isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for (Map.Entry<String, BigDecimal> entry : existing.getSplitAmounts().entrySet()) {
+                builder.append(entry.getKey()).append("=").append(entry.getValue().toPlainString()).append("\n");
+            }
+            return builder.toString();
+        }
+        StringBuilder builder = new StringBuilder();
+        for (String member : members) {
+            builder.append(member).append("=0").append("\n");
+        }
+        return builder.toString();
+    }
+
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, Component component) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.4;
+        JLabel view = new JLabel(label);
+        view.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        panel.add(view, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.6;
+        panel.add(component, gbc);
+    }
+
+    private JPanel card() {
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.setColor(AppColors.BORDER);
+                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setOpaque(false);
+        card.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+        return card;
+    }
+}

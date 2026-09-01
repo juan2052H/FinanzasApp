@@ -1,0 +1,62 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+
+# Build outputs
+target/
+out/
+dist/
+build/
+
+# Logs and diagnostics
+logs/
+*.log
+crash_log.txt
+hs_err_pid*
+
+# Local runtime state and real backups
+data/app-state.bin
+data/*.backup
+data/*.bak
+data/*.audit-backup-*
+data/backups/
+backups/
+
+# Uploaded/private storage
+storage/
+uploads/
+avatars/
+facturas/
+invoices/
+finanzas-backend/storage/
+finanzas-backend/uploads/
+
+# IDE and OS temporary files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+~$*
+
+# Test and coverage artifacts
+coverage/
+.coverage
+jacoco.exec
+*.exec
+
+# Maven wrapper runtime cache
+.mvn/wrapper/dists/

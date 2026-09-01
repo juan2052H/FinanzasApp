@@ -1,0 +1,336 @@
+﻿# Inventario inicial
+
+Generado: 2026-08-31 20:38:45 -05:00
+
+Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
+
+## Modulos Maven
+
+- finanzas-backend\pom.xml: artifactId=finanzas-backend; packaging=jar; java.version=21
+- pom.xml: artifactId=FinanzasApp; packaging=jar; maven.compiler.source=11
+
+## Clases de aplicacion
+
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AnalyticsController.java: com.finanzas.backend.api - class AnalyticsController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\ApiExceptionHandler.java: com.finanzas.backend.api - class ApiExceptionHandler
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AuditLogController.java: com.finanzas.backend.api - class AuditLogController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AuthController.java: com.finanzas.backend.api - class AuthController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\BudgetController.java: com.finanzas.backend.api - class BudgetController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\CategoryController.java: com.finanzas.backend.api - class CategoryController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\CorrelationIdFilter.java: com.finanzas.backend.api - class CorrelationIdFilter
+- finanzas-backend\src\main\java\com\finanzas\backend\api\CurrentUser.java: com.finanzas.backend.api - class CurrentUser
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AnalyticsDtos.java: com.finanzas.backend.api.dto - class AnalyticsDtos, record SummaryResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuditDtos.java: com.finanzas.backend.api.dto - class AuditDtos, record AuditLogResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuthDtos.java: com.finanzas.backend.api.dto - class AuthDtos, record RegisterRequest, record LoginRequest, record RefreshRequest, record LogoutRequest, record GoogleRequest, record AuthResponse, record UserResponse, record UserPatchRequest
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\BudgetDtos.java: com.finanzas.backend.api.dto - class BudgetDtos, record BudgetRequest, record BudgetResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\CategoryDtos.java: com.finanzas.backend.api.dto - class CategoryDtos, record CategoryRequest, record CategoryResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\HouseholdDtos.java: com.finanzas.backend.api.dto - class HouseholdDtos, record InvitationRequest, record InvitationResponse, record MemberResponse, record MemberRoleRequest, record SplitParticipantRequest, record SharedExpenseRequest, record ExpenseSplitResponse, record SharedExpenseResponse, record SettlementRequest, record SettlementResponse, record MemberBalanceResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\NotificationDtos.java: com.finanzas.backend.api.dto - class NotificationDtos, record NotificationResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\RecurringDtos.java: com.finanzas.backend.api.dto - class RecurringDtos, record RecurringTransactionRequest, record RecurringTransactionResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\ReportDtos.java: com.finanzas.backend.api.dto - class ReportDtos, record ReportResponse, record ReportTransaction, record BudgetUsage, record GoalProgress, record RecurringUpcoming
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\SavingsDtos.java: com.finanzas.backend.api.dto - class SavingsDtos, record SavingsConfigRequest, record SavingsConfigResponse, record SavingsSummaryResponse, record SavingsMovementRequest, record GoalSavingsMovementRequest, record SavingsMovementResponse, record SavingsMovementPageResponse, record IncomeImpactResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\SavingsGoalDtos.java: com.finanzas.backend.api.dto - class SavingsGoalDtos, record SavingsGoalRequest, record ContributionRequest, record SavingsGoalResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\TransactionDtos.java: com.finanzas.backend.api.dto - class TransactionDtos, record TransactionRequest, record TransactionResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\WorkspaceDtos.java: com.finanzas.backend.api.dto - class WorkspaceDtos, record WorkspaceRequest, record WorkspaceResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\HealthController.java: com.finanzas.backend.api - class HealthController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\InvitationController.java: com.finanzas.backend.api - class InvitationController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\NotificationController.java: com.finanzas.backend.api - class NotificationController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\RecurringTransactionController.java: com.finanzas.backend.api - class RecurringTransactionController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\ReportController.java: com.finanzas.backend.api - class ReportController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SavingsController.java: com.finanzas.backend.api - class SavingsController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SavingsGoalController.java: com.finanzas.backend.api - class SavingsGoalController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SharedExpenseController.java: com.finanzas.backend.api - class SharedExpenseController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\TransactionController.java: com.finanzas.backend.api - class TransactionController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\UserController.java: com.finanzas.backend.api - class UserController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceController.java: com.finanzas.backend.api - class WorkspaceController
+- finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceMemberController.java: com.finanzas.backend.api - class WorkspaceMemberController
+- finanzas-backend\src\main\java\com\finanzas\backend\config\ProductionSafetyValidator.java: com.finanzas.backend.config - class ProductionSafetyValidator
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\AuditLogEntity.java: com.finanzas.backend.domain - class AuditLogEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\AuthProvider.java: com.finanzas.backend.domain - enum AuthProvider
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\BudgetEntity.java: com.finanzas.backend.domain - class BudgetEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\CategoryEntity.java: com.finanzas.backend.domain - class CategoryEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\CategoryType.java: com.finanzas.backend.domain - enum CategoryType
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\ExpenseSplitEntity.java: com.finanzas.backend.domain - class ExpenseSplitEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\InvitationStatus.java: com.finanzas.backend.domain - enum InvitationStatus
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\NotificationEntity.java: com.finanzas.backend.domain - class NotificationEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\RecurringFrequency.java: com.finanzas.backend.domain - enum RecurringFrequency
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\RecurringTransactionEntity.java: com.finanzas.backend.domain - class RecurringTransactionEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\RefreshTokenEntity.java: com.finanzas.backend.domain - class RefreshTokenEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsAllocationMode.java: com.finanzas.backend.domain - enum SavingsAllocationMode
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsConfigEntity.java: com.finanzas.backend.domain - class SavingsConfigEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsGoalEntity.java: com.finanzas.backend.domain - class SavingsGoalEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsMovementDirection.java: com.finanzas.backend.domain - enum SavingsMovementDirection
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsMovementEntity.java: com.finanzas.backend.domain - class SavingsMovementEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SavingsMovementType.java: com.finanzas.backend.domain - enum SavingsMovementType
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SettlementEntity.java: com.finanzas.backend.domain - class SettlementEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SharedExpenseEntity.java: com.finanzas.backend.domain - class SharedExpenseEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SharedExpenseStatus.java: com.finanzas.backend.domain - enum SharedExpenseStatus
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\SplitMethod.java: com.finanzas.backend.domain - enum SplitMethod
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\TransactionEntity.java: com.finanzas.backend.domain - class TransactionEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\TransactionType.java: com.finanzas.backend.domain - enum TransactionType
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\UserEntity.java: com.finanzas.backend.domain - class UserEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceEntity.java: com.finanzas.backend.domain - class WorkspaceEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceInvitationEntity.java: com.finanzas.backend.domain - class WorkspaceInvitationEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceMemberEntity.java: com.finanzas.backend.domain - class WorkspaceMemberEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceMemberId.java: com.finanzas.backend.domain - class WorkspaceMemberId
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceRole.java: com.finanzas.backend.domain - enum WorkspaceRole
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceType.java: com.finanzas.backend.domain - enum WorkspaceType
+- finanzas-backend\src\main\java\com\finanzas\backend\FinanzasBackendApplication.java: com.finanzas.backend - class FinanzasBackendApplication
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\AuditLogRepository.java: com.finanzas.backend.repo - interface AuditLogRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\BudgetRepository.java: com.finanzas.backend.repo - interface BudgetRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\CategoryRepository.java: com.finanzas.backend.repo - interface CategoryRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\ExpenseSplitRepository.java: com.finanzas.backend.repo - interface ExpenseSplitRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\NotificationRepository.java: com.finanzas.backend.repo - interface NotificationRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\RecurringTransactionRepository.java: com.finanzas.backend.repo - interface RecurringTransactionRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\RefreshTokenRepository.java: com.finanzas.backend.repo - interface RefreshTokenRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\SavingsConfigRepository.java: com.finanzas.backend.repo - interface SavingsConfigRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\SavingsGoalRepository.java: com.finanzas.backend.repo - interface SavingsGoalRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\SavingsMovementRepository.java: com.finanzas.backend.repo - interface SavingsMovementRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\SettlementRepository.java: com.finanzas.backend.repo - interface SettlementRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\SharedExpenseRepository.java: com.finanzas.backend.repo - interface SharedExpenseRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\TransactionRepository.java: com.finanzas.backend.repo - interface TransactionRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\UserRepository.java: com.finanzas.backend.repo - interface UserRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\WorkspaceInvitationRepository.java: com.finanzas.backend.repo - interface WorkspaceInvitationRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\WorkspaceMemberRepository.java: com.finanzas.backend.repo - interface WorkspaceMemberRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\WorkspaceRepository.java: com.finanzas.backend.repo - interface WorkspaceRepository
+- finanzas-backend\src\main\java\com\finanzas\backend\security\AuthenticatedUser.java: com.finanzas.backend.security - record AuthenticatedUser
+- finanzas-backend\src\main\java\com\finanzas\backend\security\JwtAuthenticationFilter.java: com.finanzas.backend.security - class JwtAuthenticationFilter
+- finanzas-backend\src\main\java\com\finanzas\backend\security\JwtService.java: com.finanzas.backend.security - class JwtService
+- finanzas-backend\src\main\java\com\finanzas\backend\security\SecurityConfig.java: com.finanzas.backend.security - class SecurityConfig
+- finanzas-backend\src\main\java\com\finanzas\backend\service\AnalyticsService.java: com.finanzas.backend.service - class AnalyticsService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\AuditLogService.java: com.finanzas.backend.service - class AuditLogService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\AuthApplicationService.java: com.finanzas.backend.service - class AuthApplicationService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\AvatarStorageService.java: com.finanzas.backend.service - class AvatarStorageService, record AvatarResource
+- finanzas-backend\src\main\java\com\finanzas\backend\service\BudgetService.java: com.finanzas.backend.service - class BudgetService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\CategoryService.java: com.finanzas.backend.service - class CategoryService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\DefaultCategoryService.java: com.finanzas.backend.service - class DefaultCategoryService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\LoginRateLimiter.java: com.finanzas.backend.service - class LoginRateLimiter
+- finanzas-backend\src\main\java\com\finanzas\backend\service\NotificationService.java: com.finanzas.backend.service - class NotificationService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\RecurringTransactionService.java: com.finanzas.backend.service - class RecurringTransactionService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\RefreshTokenService.java: com.finanzas.backend.service - class RefreshTokenService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\ReportService.java: com.finanzas.backend.service - class ReportService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\SavingsGoalService.java: com.finanzas.backend.service - class SavingsGoalService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\SavingsService.java: com.finanzas.backend.service - class SavingsService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\SharedExpenseService.java: com.finanzas.backend.service - class SharedExpenseService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\SharedExpenseSplitCalculator.java: com.finanzas.backend.service - class SharedExpenseSplitCalculator, record SplitInput, record SplitAllocation
+- finanzas-backend\src\main\java\com\finanzas\backend\service\TransactionService.java: com.finanzas.backend.service - class TransactionService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\WorkspaceAccessService.java: com.finanzas.backend.service - class WorkspaceAccessService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\WorkspaceCollaborationService.java: com.finanzas.backend.service - class WorkspaceCollaborationService
+- src\main\java\com\finanzas\api\BackendApiException.java: com.finanzas.api - class BackendApiException
+- src\main\java\com\finanzas\api\BackendAvatar.java: com.finanzas.api - class BackendAvatar
+- src\main\java\com\finanzas\api\BackendBudget.java: com.finanzas.api - class BackendBudget
+- src\main\java\com\finanzas\api\BackendCategory.java: com.finanzas.api - class BackendCategory
+- src\main\java\com\finanzas\api\BackendConfig.java: com.finanzas.api - class BackendConfig
+- src\main\java\com\finanzas\api\BackendExpenseSplit.java: com.finanzas.api - class BackendExpenseSplit
+- src\main\java\com\finanzas\api\BackendMember.java: com.finanzas.api - class BackendMember
+- src\main\java\com\finanzas\api\BackendNotification.java: com.finanzas.api - class BackendNotification
+- src\main\java\com\finanzas\api\BackendRecurringTransaction.java: com.finanzas.api - class BackendRecurringTransaction
+- src\main\java\com\finanzas\api\BackendSavingsConfig.java: com.finanzas.api - class BackendSavingsConfig
+- src\main\java\com\finanzas\api\BackendSavingsGoal.java: com.finanzas.api - class BackendSavingsGoal
+- src\main\java\com\finanzas\api\BackendSavingsMovement.java: com.finanzas.api - class BackendSavingsMovement
+- src\main\java\com\finanzas\api\BackendSavingsSummary.java: com.finanzas.api - class BackendSavingsSummary
+- src\main\java\com\finanzas\api\BackendSession.java: com.finanzas.api - class BackendSession
+- src\main\java\com\finanzas\api\BackendSettlement.java: com.finanzas.api - class BackendSettlement
+- src\main\java\com\finanzas\api\BackendSharedExpense.java: com.finanzas.api - class BackendSharedExpense
+- src\main\java\com\finanzas\api\BackendTransaction.java: com.finanzas.api - class BackendTransaction
+- src\main\java\com\finanzas\api\BackendUser.java: com.finanzas.api - class BackendUser
+- src\main\java\com\finanzas\api\BackendWorkspace.java: com.finanzas.api - class BackendWorkspace
+- src\main\java\com\finanzas\api\FinanzasApiClient.java: com.finanzas.api - class FinanzasApiClient
+- src\main\java\com\finanzas\api\GoogleAuthorizationResult.java: com.finanzas.api - class GoogleAuthorizationResult
+- src\main\java\com\finanzas\api\GoogleOAuthDesktopFlow.java: com.finanzas.api - class GoogleOAuthDesktopFlow
+- src\main\java\com\finanzas\api\SimpleJson.java: com.finanzas.api - class SimpleJson
+- src\main\java\com\finanzas\data\AuthService.java: com.finanzas.data - class AuthService
+- src\main\java\com\finanzas\data\DataManager.java: com.finanzas.data - class DataManager
+- src\main\java\com\finanzas\data\ExportService.java: com.finanzas.data - class ExportService
+- src\main\java\com\finanzas\data\FinancialHealthSnapshot.java: com.finanzas.data - class FinancialHealthSnapshot
+- src\main\java\com\finanzas\data\FinancialInsights.java: com.finanzas.data - class FinancialInsights
+- src\main\java\com\finanzas\data\HouseholdInsights.java: com.finanzas.data - class HouseholdInsights
+- src\main\java\com\finanzas\data\InsightProvider.java: com.finanzas.data - interface InsightProvider
+- src\main\java\com\finanzas\data\LegacyStateMigrationService.java: com.finanzas.data - class LegacyStateMigrationService
+- src\main\java\com\finanzas\data\NotificationItem.java: com.finanzas.data - class NotificationItem, enum Severity
+- src\main\java\com\finanzas\data\PersistenceService.java: com.finanzas.data - class PersistenceService
+- src\main\java\com\finanzas\data\RecurringExpenseInsight.java: com.finanzas.data - class RecurringExpenseInsight
+- src\main\java\com\finanzas\data\ReportPeriod.java: com.finanzas.data - class ReportPeriod
+- src\main\java\com\finanzas\data\ReportSnapshot.java: com.finanzas.data - class ReportSnapshot
+- src\main\java\com\finanzas\data\RuleBasedInsightProvider.java: com.finanzas.data - class RuleBasedInsightProvider
+- src\main\java\com\finanzas\data\SearchResult.java: com.finanzas.data - class SearchResult
+- src\main\java\com\finanzas\domain\analytics\FinancialHealthScore.java: com.finanzas.domain.analytics - class FinancialHealthScore
+- src\main\java\com\finanzas\domain\analytics\FinancialHealthService.java: com.finanzas.domain.analytics - class FinancialHealthService
+- src\main\java\com\finanzas\domain\model\AuthProvider.java: com.finanzas.domain.model - enum AuthProvider
+- src\main\java\com\finanzas\domain\model\Budget.java: com.finanzas.domain.model - class Budget
+- src\main\java\com\finanzas\domain\model\Category.java: com.finanzas.domain.model - class Category
+- src\main\java\com\finanzas\domain\model\FinancialTransaction.java: com.finanzas.domain.model - class FinancialTransaction
+- src\main\java\com\finanzas\domain\model\SavingsGoal.java: com.finanzas.domain.model - class SavingsGoal
+- src\main\java\com\finanzas\domain\model\TransactionType.java: com.finanzas.domain.model - enum TransactionType
+- src\main\java\com\finanzas\domain\model\User.java: com.finanzas.domain.model - class User
+- src\main\java\com\finanzas\domain\model\Workspace.java: com.finanzas.domain.model - class Workspace
+- src\main\java\com\finanzas\domain\model\WorkspaceMember.java: com.finanzas.domain.model - class WorkspaceMember
+- src\main\java\com\finanzas\domain\model\WorkspaceRole.java: com.finanzas.domain.model - enum WorkspaceRole
+- src\main\java\com\finanzas\domain\model\WorkspaceType.java: com.finanzas.domain.model - enum WorkspaceType
+- src\main\java\com\finanzas\domain\security\WorkspaceAccessException.java: com.finanzas.domain.security - class WorkspaceAccessException
+- src\main\java\com\finanzas\domain\security\WorkspaceAccessService.java: com.finanzas.domain.security - class WorkspaceAccessService
+- src\main\java\com\finanzas\domain\simulation\SimulationResult.java: com.finanzas.domain.simulation - class SimulationResult
+- src\main\java\com\finanzas\domain\simulation\WhatIfSimulatorService.java: com.finanzas.domain.simulation - class WhatIfSimulatorService
+- src\main\java\com\finanzas\Main.java: com.finanzas - class Main
+- src\main\java\com\finanzas\model\FinancialCategory.java: com.finanzas.model - class FinancialCategory, enum Kind
+- src\main\java\com\finanzas\model\GastoHogar.java: com.finanzas.model - class GastoHogar, enum SplitMethod
+- src\main\java\com\finanzas\model\MetaAhorro.java: com.finanzas.model - class MetaAhorro
+- src\main\java\com\finanzas\model\Money.java: com.finanzas.model - class Money
+- src\main\java\com\finanzas\model\Presupuesto.java: com.finanzas.model - class Presupuesto
+- src\main\java\com\finanzas\model\RecurringTransaction.java: com.finanzas.model - class RecurringTransaction, enum Frequency
+- src\main\java\com\finanzas\model\Settlement.java: com.finanzas.model - class Settlement
+- src\main\java\com\finanzas\model\Transaccion.java: com.finanzas.model - class Transaccion, enum Tipo
+- src\main\java\com\finanzas\model\Usuario.java: com.finanzas.model - class Usuario
+- src\main\java\com\finanzas\ui\components\AppColors.java: com.finanzas.ui.components - class AppColors
+- src\main\java\com\finanzas\ui\components\AppIcons.java: com.finanzas.ui.components - class AppIcons
+- src\main\java\com\finanzas\ui\components\AvatarView.java: com.finanzas.ui.components - class AvatarView
+- src\main\java\com\finanzas\ui\components\BarChartPanel.java: com.finanzas.ui.components - class BarChartPanel
+- src\main\java\com\finanzas\ui\components\CardPanel.java: com.finanzas.ui.components - class CardPanel
+- src\main\java\com\finanzas\ui\components\DonutChartPanel.java: com.finanzas.ui.components - class DonutChartPanel
+- src\main\java\com\finanzas\ui\components\FormSupport.java: com.finanzas.ui.components - class FormSupport
+- src\main\java\com\finanzas\ui\components\PageHeader.java: com.finanzas.ui.components - class PageHeader
+- src\main\java\com\finanzas\ui\components\RoundedButton.java: com.finanzas.ui.components - class RoundedButton
+- src\main\java\com\finanzas\ui\components\Sidebar.java: com.finanzas.ui.components - class Sidebar
+- src\main\java\com\finanzas\ui\components\SummaryCard.java: com.finanzas.ui.components - class SummaryCard
+- src\main\java\com\finanzas\ui\ConfiguracionPanel.java: com.finanzas.ui - class ConfiguracionPanel
+- src\main\java\com\finanzas\ui\DashboardPanel.java: com.finanzas.ui - class DashboardPanel
+- src\main\java\com\finanzas\ui\dialogs\OnboardingDialog.java: com.finanzas.ui.dialogs - class OnboardingDialog
+- src\main\java\com\finanzas\ui\dialogs\RecurringTransactionDialog.java: com.finanzas.ui.dialogs - class RecurringTransactionDialog
+- src\main\java\com\finanzas\ui\dialogs\SimulationDialog.java: com.finanzas.ui.dialogs - class SimulationDialog
+- src\main\java\com\finanzas\ui\dialogs\TransactionDialog.java: com.finanzas.ui.dialogs - class TransactionDialog
+- src\main\java\com\finanzas\ui\FinanzasHogarPanel.java: com.finanzas.ui - class FinanzasHogarPanel
+- src\main\java\com\finanzas\ui\HeaderPanel.java: com.finanzas.ui - class HeaderPanel
+- src\main\java\com\finanzas\ui\LoginFrame.java: com.finanzas.ui - class LoginFrame
+- src\main\java\com\finanzas\ui\MainFrame.java: com.finanzas.ui - class MainFrame
+- src\main\java\com\finanzas\ui\MetasPanel.java: com.finanzas.ui - class MetasPanel
+- src\main\java\com\finanzas\ui\PresupuestoPanel.java: com.finanzas.ui - class PresupuestoPanel
+- src\main\java\com\finanzas\ui\ReportesPanel.java: com.finanzas.ui - class ReportesPanel
+- src\main\java\com\finanzas\ui\TransaccionesPanel.java: com.finanzas.ui - class TransaccionesPanel
+
+## Endpoints REST detectados
+
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AnalyticsController.java (AnalyticsController), base /api/workspaces/{workspaceId}/analytics
+  - ANY /api/workspaces/{workspaceId}/analytics/api/workspaces/{workspaceId}/analytics
+  - GET /api/workspaces/{workspaceId}/analytics/summary
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AuditLogController.java (AuditLogController), base /api/workspaces/{workspaceId}/audit-logs
+  - ANY /api/workspaces/{workspaceId}/audit-logs/api/workspaces/{workspaceId}/audit-logs
+- finanzas-backend\src\main\java\com\finanzas\backend\api\AuthController.java (AuthController), base /api/auth
+  - ANY /api/auth/api/auth
+  - POST /api/auth/register
+  - POST /api/auth/login
+  - POST /api/auth/refresh
+  - POST /api/auth/logout
+  - POST /api/auth/google
+- finanzas-backend\src\main\java\com\finanzas\backend\api\BudgetController.java (BudgetController), base /api/workspaces/{workspaceId}/budgets
+  - ANY /api/workspaces/{workspaceId}/budgets/api/workspaces/{workspaceId}/budgets
+  - PUT /api/workspaces/{workspaceId}/budgets/{budgetId}
+  - DELETE /api/workspaces/{workspaceId}/budgets/{budgetId}
+- finanzas-backend\src\main\java\com\finanzas\backend\api\CategoryController.java (CategoryController), base /api/workspaces/{workspaceId}/categories
+  - ANY /api/workspaces/{workspaceId}/categories/api/workspaces/{workspaceId}/categories
+  - PUT /api/workspaces/{workspaceId}/categories/{categoryId}
+  - DELETE /api/workspaces/{workspaceId}/categories/{categoryId}
+  - POST /api/workspaces/{workspaceId}/categories/{categoryId}/restore
+- finanzas-backend\src\main\java\com\finanzas\backend\api\HealthController.java (HealthController), base 
+  - GET /health
+  - GET /health/readiness
+- finanzas-backend\src\main\java\com\finanzas\backend\api\InvitationController.java (InvitationController), base /api/invitations
+  - ANY /api/invitations/api/invitations
+  - GET /api/invitations/mine
+  - POST /api/invitations/{invitationId}/accept
+  - POST /api/invitations/{invitationId}/reject
+- finanzas-backend\src\main\java\com\finanzas\backend\api\NotificationController.java (NotificationController), base /api/workspaces/{workspaceId}/notifications
+  - ANY /api/workspaces/{workspaceId}/notifications/api/workspaces/{workspaceId}/notifications
+  - POST /api/workspaces/{workspaceId}/notifications/refresh
+  - PATCH /api/workspaces/{workspaceId}/notifications/{notificationId}/read
+- finanzas-backend\src\main\java\com\finanzas\backend\api\RecurringTransactionController.java (RecurringTransactionController), base /api/workspaces/{workspaceId}/recurring-transactions
+  - ANY /api/workspaces/{workspaceId}/recurring-transactions/api/workspaces/{workspaceId}/recurring-transactions
+  - DELETE /api/workspaces/{workspaceId}/recurring-transactions/{recurringTransactionId}
+  - POST /api/workspaces/{workspaceId}/recurring-transactions/{recurringTransactionId}/run
+- finanzas-backend\src\main\java\com\finanzas\backend\api\ReportController.java (ReportController), base /api/workspaces/{workspaceId}/reports
+  - ANY /api/workspaces/{workspaceId}/reports/api/workspaces/{workspaceId}/reports
+  - GET /api/workspaces/{workspaceId}/reports/summary
+  - GET /api/workspaces/{workspaceId}/reports/export.csv
+  - GET /api/workspaces/{workspaceId}/reports/export.pdf
+  - GET /api/workspaces/{workspaceId}/reports/export.xlsx
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SavingsController.java (SavingsController), base /api/workspaces/{workspaceId}/savings
+  - ANY /api/workspaces/{workspaceId}/savings/api/workspaces/{workspaceId}/savings
+  - GET /api/workspaces/{workspaceId}/savings/config
+  - PUT /api/workspaces/{workspaceId}/savings/config
+  - GET /api/workspaces/{workspaceId}/savings/summary
+  - GET /api/workspaces/{workspaceId}/savings/movements
+  - POST /api/workspaces/{workspaceId}/savings/deposits
+  - POST /api/workspaces/{workspaceId}/savings/withdrawals
+  - POST /api/workspaces/{workspaceId}/savings/goals/{goalId}/allocations
+  - POST /api/workspaces/{workspaceId}/savings/goals/{goalId}/releases
+  - GET /api/workspaces/{workspaceId}/savings/income-impact
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SavingsGoalController.java (SavingsGoalController), base /api/workspaces/{workspaceId}/goals
+  - ANY /api/workspaces/{workspaceId}/goals/api/workspaces/{workspaceId}/goals
+  - PUT /api/workspaces/{workspaceId}/goals/{goalId}
+  - POST /api/workspaces/{workspaceId}/goals/{goalId}/contributions
+  - DELETE /api/workspaces/{workspaceId}/goals/{goalId}
+- finanzas-backend\src\main\java\com\finanzas\backend\api\SharedExpenseController.java (SharedExpenseController), base /api/workspaces/{workspaceId}/shared-expenses
+  - ANY /api/workspaces/{workspaceId}/shared-expenses/api/workspaces/{workspaceId}/shared-expenses
+  - DELETE /api/workspaces/{workspaceId}/shared-expenses/{sharedExpenseId}
+  - GET /api/workspaces/{workspaceId}/shared-expenses/balances
+  - GET /api/workspaces/{workspaceId}/shared-expenses/settlements
+  - POST /api/workspaces/{workspaceId}/shared-expenses/settlements
+- finanzas-backend\src\main\java\com\finanzas\backend\api\TransactionController.java (TransactionController), base /api/workspaces/{workspaceId}/transactions
+  - ANY /api/workspaces/{workspaceId}/transactions/api/workspaces/{workspaceId}/transactions
+  - PUT /api/workspaces/{workspaceId}/transactions/{transactionId}
+  - DELETE /api/workspaces/{workspaceId}/transactions/{transactionId}
+- finanzas-backend\src\main\java\com\finanzas\backend\api\UserController.java (UserController), base /api/users/me
+  - ANY /api/users/me/api/users/me
+  - GET /api/users/me/avatar
+  - POST /api/users/me/avatar
+  - DELETE /api/users/me/avatar
+- finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceController.java (WorkspaceController), base /api/workspaces
+  - ANY /api/workspaces/api/workspaces
+  - GET /api/workspaces/{workspaceId}
+- finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceMemberController.java (WorkspaceMemberController), base /api/workspaces/{workspaceId}
+  - ANY /api/workspaces/{workspaceId}/api/workspaces/{workspaceId}
+  - GET /api/workspaces/{workspaceId}/members
+  - PATCH /api/workspaces/{workspaceId}/members/{memberId}
+  - DELETE /api/workspaces/{workspaceId}/members/{memberId}
+  - GET /api/workspaces/{workspaceId}/invitations
+  - POST /api/workspaces/{workspaceId}/invitations
+  - DELETE /api/workspaces/{workspaceId}/invitations/{invitationId}
+
+## Tablas, indices y migraciones
+
+- finanzas-backend\src\main\resources\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
+- finanzas-backend\src\main\resources\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
+- finanzas-backend\src\main\resources\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
+- finanzas-backend\src\main\resources\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- finanzas-backend\target\classes\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
+- finanzas-backend\target\classes\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
+- finanzas-backend\target\classes\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
+- finanzas-backend\target\classes\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- src\main\resources\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
+- src\main\resources\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
+- src\main\resources\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
+- src\main\resources\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- target\classes\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
+- target\classes\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
+- target\classes\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
+- target\classes\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+
+## Pruebas
+
+- finanzas-backend\src\test\java\com\finanzas\backend\db\FlywayPostgresMigrationTest.java: FlywayPostgresMigrationTest (2 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\domain\RecurringTransactionEntityTest.java: RecurringTransactionEntityTest (3 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\AvatarStorageServiceTest.java: AvatarStorageServiceTest (8 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\RefreshTokenServiceTest.java: RefreshTokenServiceTest (1 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\SavingsServiceTest.java: SavingsServiceTest (6 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\SharedExpenseSplitCalculatorTest.java: SharedExpenseSplitCalculatorTest (4 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceAccessServiceTest.java: WorkspaceAccessServiceTest (2 tests anotados)
+- src\test\java\com\finanzas\api\SimpleJsonTest.java: SimpleJsonTest (2 tests anotados)
+- src\test\java\com\finanzas\data\DataManagerRegressionTest.java: DataManagerRegressionTest (12 tests anotados)
+- src\test\java\com\finanzas\domain\FinancialHealthAndSimulationTest.java: FinancialHealthAndSimulationTest (2 tests anotados)
+- src\test\java\com\finanzas\domain\WorkspaceAccessServiceTest.java: WorkspaceAccessServiceTest (2 tests anotados)
+
+## Contratos OpenAPI
+
+- finanzas-backend\src\main\resources\openapi\finanzas-api.yaml
+- finanzas-backend\target\classes\openapi\finanzas-api.yaml
+- src\main\resources\openapi\finanzas-api.yaml
+- target\classes\openapi\finanzas-api.yaml

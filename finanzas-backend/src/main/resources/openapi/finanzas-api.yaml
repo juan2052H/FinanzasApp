@@ -1,0 +1,1445 @@
+openapi: 3.0.3
+info:
+  title: FinanzasApp API
+  version: 2.0.0
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/register:
+    post:
+      summary: Registrar usuario
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario creado
+  /api/auth/login:
+    post:
+      summary: Iniciar sesion
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesion iniciada
+  /api/auth/google:
+    post:
+      summary: Completar Google OpenID Connect con Authorization Code + PKCE
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequest'
+      responses:
+        '200':
+          description: Sesion iniciada o cuenta vinculada
+  /api/auth/refresh:
+    post:
+      summary: Renovar sesion
+      responses:
+        '200':
+          description: Token renovado
+  /api/auth/logout:
+    post:
+      summary: Cerrar sesion actual
+      responses:
+        '204':
+          description: Sesion cerrada
+  /api/users/me:
+    get:
+      summary: Obtener perfil autenticado
+      responses:
+        '200':
+          description: Perfil
+    patch:
+      summary: Actualizar perfil autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatchRequest'
+      responses:
+        '200':
+          description: Perfil actualizado
+  /api/users/me/avatar:
+    get:
+      summary: Descargar avatar autenticado normalizado
+      parameters:
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Avatar PNG cuadrado
+          headers:
+            ETag:
+              schema:
+                type: string
+            Last-Modified:
+              schema:
+                type: string
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '304':
+          description: La cache del cliente sigue vigente
+        '404':
+          description: El usuario no tiene avatar
+    post:
+      summary: Subir avatar del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar actualizado
+        '422':
+          description: Archivo invalido, MIME falso, corrupto o demasiado grande
+    delete:
+      summary: Eliminar avatar del usuario autenticado
+      responses:
+        '204':
+          description: Avatar eliminado
+  /api/workspaces:
+    get:
+      summary: Listar workspaces del usuario
+      responses:
+        '200':
+          description: Workspaces autorizados
+    post:
+      summary: Crear workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+      responses:
+        '201':
+          description: Workspace creado
+  /api/workspaces/{workspaceId}:
+    get:
+      summary: Obtener workspace autorizado
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Workspace
+  /api/workspaces/{workspaceId}/invitations:
+    get:
+      summary: Listar invitaciones del workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Invitaciones
+    post:
+      summary: Invitar miembro
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationRequest'
+      responses:
+        '201':
+          description: Invitacion creada
+  /api/workspaces/{workspaceId}/invitations/{invitationId}:
+    delete:
+      summary: Cancelar invitacion pendiente
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Invitacion cancelada
+  /api/invitations/mine:
+    get:
+      summary: Listar invitaciones pendientes del usuario autenticado
+      responses:
+        '200':
+          description: Invitaciones pendientes
+  /api/invitations/{invitationId}/accept:
+    post:
+      summary: Aceptar invitacion recibida
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitacion aceptada
+  /api/invitations/{invitationId}/reject:
+    post:
+      summary: Rechazar invitacion recibida
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitacion rechazada
+  /api/workspaces/{workspaceId}/members:
+    get:
+      summary: Listar miembros
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Miembros
+  /api/workspaces/{workspaceId}/members/{memberId}:
+    patch:
+      summary: Cambiar rol de miembro
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRoleRequest'
+      responses:
+        '200':
+          description: Miembro actualizado
+    delete:
+      summary: Eliminar miembro segun permisos
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Miembro eliminado
+  /api/workspaces/{workspaceId}/shared-expenses:
+    get:
+      summary: Listar gastos compartidos
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, SETTLED, CANCELLED]
+      responses:
+        '200':
+          description: Gastos compartidos
+    post:
+      summary: Crear gasto compartido con division real
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SharedExpenseRequest'
+      responses:
+        '201':
+          description: Gasto compartido creado
+  /api/workspaces/{workspaceId}/shared-expenses/{sharedExpenseId}:
+    delete:
+      summary: Cancelar gasto compartido
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: sharedExpenseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Gasto compartido cancelado
+  /api/workspaces/{workspaceId}/shared-expenses/balances:
+    get:
+      summary: Balance por miembro del hogar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Balances
+  /api/workspaces/{workspaceId}/shared-expenses/settlements:
+    get:
+      summary: Historial de liquidaciones
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Liquidaciones
+    post:
+      summary: Registrar liquidacion de deuda
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettlementRequest'
+      responses:
+        '201':
+          description: Liquidacion registrada
+  /api/workspaces/{workspaceId}/audit-logs:
+    get:
+      summary: Consultar ultimos eventos de auditoria del workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Eventos de auditoria
+  /api/workspaces/{workspaceId}/notifications:
+    get:
+      summary: Listar notificaciones del usuario en el workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: includeRead
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Notificaciones
+  /api/workspaces/{workspaceId}/notifications/refresh:
+    post:
+      summary: Recalcular notificaciones desde datos reales
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Notificaciones no leidas
+  /api/workspaces/{workspaceId}/notifications/{notificationId}/read:
+    patch:
+      summary: Marcar notificacion como leida
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notificacion actualizada
+  /api/workspaces/{workspaceId}/reports/summary:
+    get:
+      summary: Reporte financiero por rango
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reporte con transacciones, presupuestos, metas y proximos movimientos
+  /api/workspaces/{workspaceId}/reports/export.csv:
+    get:
+      summary: Exportar reporte CSV por rango
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Archivo CSV
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+  /api/workspaces/{workspaceId}/reports/export.pdf:
+    get:
+      summary: Exportar reporte PDF por rango
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Archivo PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /api/workspaces/{workspaceId}/reports/export.xlsx:
+    get:
+      summary: Exportar reporte XLSX por rango
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Archivo XLSX
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+  /api/workspaces/{workspaceId}/categories:
+    get:
+      summary: Listar categorias con filtros
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [INCOME, EXPENSE]
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Categorias
+    post:
+      summary: Crear categoria
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: Categoria creada
+  /api/workspaces/{workspaceId}/categories/{categoryId}:
+    put:
+      summary: Editar categoria
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: Categoria actualizada
+    delete:
+      summary: Archivar categoria
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Categoria archivada
+  /api/workspaces/{workspaceId}/categories/{categoryId}/restore:
+    post:
+      summary: Restaurar categoria archivada conservando UUID
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Categoria restaurada
+  /api/workspaces/{workspaceId}/transactions:
+    get:
+      summary: Buscar transacciones
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [INCOME, EXPENSE]
+      responses:
+        '200':
+          description: Lista paginada
+    post:
+      summary: Crear transaccion
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Transaccion creada
+  /api/workspaces/{workspaceId}/transactions/{transactionId}:
+    put:
+      summary: Editar transaccion autorizada
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '200':
+          description: Transaccion actualizada
+    delete:
+      summary: Eliminar transaccion autorizada
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Transaccion eliminada
+  /api/workspaces/{workspaceId}/recurring-transactions:
+    get:
+      summary: Listar transacciones recurrentes
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Recurrencias
+    post:
+      summary: Crear transaccion recurrente
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTransactionRequest'
+      responses:
+        '201':
+          description: Recurrencia creada
+  /api/workspaces/{workspaceId}/recurring-transactions/{recurringTransactionId}:
+    delete:
+      summary: Desactivar transaccion recurrente
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: recurringTransactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Recurrencia desactivada
+  /api/workspaces/{workspaceId}/recurring-transactions/{recurringTransactionId}/run:
+    post:
+      summary: Crear movimiento real desde una recurrencia y avanzar proxima fecha
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: recurringTransactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaccion creada
+  /api/workspaces/{workspaceId}/budgets:
+    get:
+      summary: Listar presupuestos
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Presupuestos
+    post:
+      summary: Crear presupuesto
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetRequest'
+      responses:
+        '201':
+          description: Presupuesto creado
+  /api/workspaces/{workspaceId}/budgets/{budgetId}:
+    put:
+      summary: Editar presupuesto
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetRequest'
+      responses:
+        '200':
+          description: Presupuesto actualizado
+    delete:
+      summary: Eliminar presupuesto
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Presupuesto eliminado
+  /api/workspaces/{workspaceId}/goals:
+    get:
+      summary: Listar metas
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Metas
+    post:
+      summary: Crear meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsGoalRequest'
+      responses:
+        '201':
+          description: Meta creada
+  /api/workspaces/{workspaceId}/goals/{goalId}/contributions:
+    post:
+      summary: Registrar aporte a una meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: goalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionRequest'
+      responses:
+        '200':
+          description: Meta actualizada
+  /api/workspaces/{workspaceId}/goals/{goalId}:
+    put:
+      summary: Editar meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: goalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsGoalRequest'
+      responses:
+        '200':
+          description: Meta actualizada
+    delete:
+      summary: Archivar meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: goalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Meta archivada
+  /api/workspaces/{workspaceId}/savings/config:
+    get:
+      summary: Consultar configuracion de ahorro automatico
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Configuracion de ahorro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsConfigResponse'
+    put:
+      summary: Actualizar porcentaje vigente de ahorro
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsConfigRequest'
+      responses:
+        '200':
+          description: Configuracion actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsConfigResponse'
+  /api/workspaces/{workspaceId}/savings/summary:
+    get:
+      summary: Consultar resumen del libro mayor de ahorro
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Resumen de ahorro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsSummaryResponse'
+  /api/workspaces/{workspaceId}/savings/movements:
+    get:
+      summary: Listar movimientos de ahorro paginados
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: Pagina de movimientos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsMovementPageResponse'
+  /api/workspaces/{workspaceId}/savings/deposits:
+    post:
+      summary: Registrar deposito manual de ahorro
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsMovementRequest'
+      responses:
+        '201':
+          description: Movimiento creado
+  /api/workspaces/{workspaceId}/savings/withdrawals:
+    post:
+      summary: Registrar retiro de ahorro libre
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsMovementRequest'
+      responses:
+        '201':
+          description: Movimiento creado
+        '409':
+          description: El retiro supera el ahorro libre
+  /api/workspaces/{workspaceId}/savings/goals/{goalId}/allocations:
+    post:
+      summary: Asignar ahorro libre a una meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: goalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalSavingsMovementRequest'
+      responses:
+        '201':
+          description: Movimiento creado
+        '409':
+          description: La asignacion supera el ahorro libre
+  /api/workspaces/{workspaceId}/savings/goals/{goalId}/releases:
+    post:
+      summary: Liberar ahorro asignado de una meta
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: goalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalSavingsMovementRequest'
+      responses:
+        '201':
+          description: Movimiento creado
+  /api/workspaces/{workspaceId}/savings/income-impact:
+    get:
+      summary: Consultar impacto de ahorro para un ingreso hipotetico
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: number
+            format: decimal
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Impacto calculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomeImpactResponse'
+  /api/workspaces/{workspaceId}/analytics/summary:
+    get:
+      summary: Resumen financiero real
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Resumen
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [nombre, email, password]
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        moneda:
+          type: string
+          minLength: 3
+          maxLength: 3
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    GoogleAuthRequest:
+      type: object
+      required: [authorizationCode, codeVerifier, redirectUri]
+      properties:
+        authorizationCode:
+          type: string
+        codeVerifier:
+          type: string
+        redirectUri:
+          type: string
+    UserPatchRequest:
+      type: object
+      required: [nombre, email]
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        moneda:
+          type: string
+        locale:
+          type: string
+    WorkspaceCreateRequest:
+      type: object
+      required: [nombre, tipo]
+      properties:
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum: [PERSONAL, HOUSEHOLD, BUSINESS]
+    InvitationRequest:
+      type: object
+      required: [email, role]
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ADMIN, MEMBER, VIEWER]
+    MemberRoleRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [ADMIN, MEMBER, VIEWER]
+    SplitParticipantRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        percentage:
+          type: number
+          format: decimal
+    SharedExpenseRequest:
+      type: object
+      required: [description, amount, splitMethod]
+      properties:
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        date:
+          type: string
+          format: date
+        paidByUserId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        splitMethod:
+          type: string
+          enum: [EQUAL, PERCENTAGE, CUSTOM_AMOUNT]
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitParticipantRequest'
+    SettlementRequest:
+      type: object
+      required: [fromUserId, toUserId, amount]
+      properties:
+        fromUserId:
+          type: string
+          format: uuid
+        toUserId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        date:
+          type: string
+          format: date
+        note:
+          type: string
+    AuditLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        actorUserId:
+          type: string
+          format: uuid
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    CategoryRequest:
+      type: object
+      required: [nombre, type]
+      properties:
+        nombre:
+          type: string
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        icono:
+          type: string
+        color:
+          type: string
+    TransactionRequest:
+      type: object
+      required: [categoryId, type, amount, date]
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        date:
+          type: string
+          format: date
+    RecurringTransactionRequest:
+      type: object
+      required: [categoryId, type, amount, frequency, nextRunDate]
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        frequency:
+          type: string
+          enum: [WEEKLY, BIWEEKLY, MONTHLY, YEARLY, CUSTOM]
+        customIntervalDays:
+          type: integer
+          minimum: 1
+          default: 1
+        nextRunDate:
+          type: string
+          format: date
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        readAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    BudgetRequest:
+      type: object
+      required: [categoryId, amount, periodMonth]
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        periodMonth:
+          type: string
+          format: date
+    SavingsGoalRequest:
+      type: object
+      required: [name, targetAmount]
+      properties:
+        name:
+          type: string
+        currentAmount:
+          type: number
+          format: decimal
+        targetAmount:
+          type: number
+          format: decimal
+        color:
+          type: string
+        icono:
+          type: string
+        dueDate:
+          type: string
+          format: date
+    ContributionRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: decimal
+    SavingsConfigRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        percentage:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        effectiveFrom:
+          type: string
+          format: date
+    SavingsConfigResponse:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+        allocationMode:
+          type: string
+          enum: [PERCENTAGE]
+        percentage:
+          type: number
+          format: decimal
+        effectiveFrom:
+          type: string
+          format: date
+        version:
+          type: integer
+          format: int64
+    SavingsSummaryResponse:
+      type: object
+      properties:
+        ingresos:
+          type: number
+          format: decimal
+        gastos:
+          type: number
+          format: decimal
+        ahorroTotal:
+          type: number
+          format: decimal
+        ahorroAsignadoAMetas:
+          type: number
+          format: decimal
+        ahorroLibre:
+          type: number
+          format: decimal
+        retirosAcumulados:
+          type: number
+          format: decimal
+        saldoDisponibleNoAhorrado:
+          type: number
+          format: decimal
+        tasaAhorro:
+          type: number
+          format: decimal
+    SavingsMovementRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          exclusiveMinimum: true
+          minimum: 0
+        effectiveDate:
+          type: string
+          format: date
+        note:
+          type: string
+        idempotencyKey:
+          type: string
+    GoalSavingsMovementRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          exclusiveMinimum: true
+          minimum: 0
+        note:
+          type: string
+        idempotencyKey:
+          type: string
+    SavingsMovementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        sourceTransactionId:
+          type: string
+          format: uuid
+          nullable: true
+        goalId:
+          type: string
+          format: uuid
+          nullable: true
+        type:
+          type: string
+          enum: [AUTO_ALLOCATION, MANUAL_DEPOSIT, WITHDRAWAL, ADJUSTMENT, REVERSAL, GOAL_ALLOCATION, GOAL_RELEASE]
+        direction:
+          type: string
+          enum: [CREDIT, DEBIT]
+        amount:
+          type: number
+          format: decimal
+        effectiveDate:
+          type: string
+          format: date
+        note:
+          type: string
+        idempotencyKey:
+          type: string
+        reversedMovementId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    SavingsMovementPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavingsMovementResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+    IncomeImpactResponse:
+      type: object
+      properties:
+        incomeAmount:
+          type: number
+          format: decimal
+        percentage:
+          type: number
+          format: decimal
+        automaticSavings:
+          type: number
+          format: decimal
+        availableAfterSavings:
+          type: number
+          format: decimal
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errorCode:
+          type: string
+        correlationId:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string

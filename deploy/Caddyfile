@@ -1,0 +1,3 @@
+{$FINANZAS_DOMAIN} {
+    reverse_proxy backend:8080
+}
