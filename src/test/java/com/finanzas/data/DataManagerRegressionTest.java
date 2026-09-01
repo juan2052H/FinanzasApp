@@ -188,6 +188,28 @@ class DataManagerRegressionTest {
     }
 
     @Test
+    void settingsPersistAcrossLocalRestart() {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Settings User", "settings@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("settings@example.com", "secreto1"));
+
+        assertTrue(data.updateSettings("USD", "en-US", "UTC", "CODE_SUFFIX", "DARK", false, true, false));
+
+        DataManager.resetForTests();
+        DataManager reloaded = DataManager.getInstance();
+        assertTrue(reloaded.login("settings@example.com", "secreto1"));
+
+        assertEquals("USD", reloaded.getUsuario().getMoneda());
+        assertEquals("en-US", reloaded.getUsuario().getLocale());
+        assertEquals("UTC", reloaded.getUsuario().getTimeZone());
+        assertEquals("CODE_SUFFIX", reloaded.getUsuario().getMoneyFormat());
+        assertEquals("DARK", reloaded.getUsuario().getTheme());
+        assertFalse(reloaded.getUsuario().isNotifPresupuesto());
+        assertTrue(reloaded.getUsuario().isNotifMetas());
+        assertFalse(reloaded.getUsuario().isNotifConsejos());
+    }
+
+    @Test
     void customCategoriesCanBeArchivedAndRestored() {
         DataManager data = freshDataManager();
         assertTrue(data.register("Cat User", "cat@example.com", "secreto1", "COP", "Personal"));

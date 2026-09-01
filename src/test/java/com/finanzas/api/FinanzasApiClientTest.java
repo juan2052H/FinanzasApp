@@ -51,6 +51,12 @@ class FinanzasApiClientTest {
         BackendUser verified = client.confirmEmailVerification("verify-token");
         client.requestPasswordReset("ana@example.com");
         client.confirmPasswordReset("reset-token", "nueva-segura");
+        BackendUser currentUser = client.getCurrentUser("token");
+        BackendUser updatedUser = client.updateCurrentUser("token", "Ana", "Lopez", "ana@example.com",
+                "Medellin", "Colombia", "USD", "en-US");
+        BackendUserSettings settings = client.getUserSettings("token");
+        BackendUserSettings updatedSettings = client.updateUserSettings("token", "DARK", "en-US", "UTC",
+                "CODE_SUFFIX", false, true, false);
 
         assertEquals("ws-1", workspaces.get(0).getId());
         assertEquals("Casa", created.getNombre());
@@ -61,8 +67,14 @@ class FinanzasApiClientTest {
         assertEquals("ACCEPTED", accepted.getStatus());
         assertEquals("REJECTED", rejected.getStatus());
         assertTrue(verified.isEmailVerified());
+        assertEquals("Medellin", currentUser.getCiudad());
+        assertEquals("Colombia", updatedUser.getPais());
+        assertEquals("LIGHT", settings.getTheme());
+        assertEquals("DARK", updatedSettings.getTheme());
+        assertEquals(3L, updatedSettings.getVersion());
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/invitations/inv-1"));
         assertTrue(requests.contains("POST /api/auth/password/reset/confirm"));
+        assertTrue(requests.contains("PATCH /api/users/me/settings"));
     }
 
     private void handle(HttpExchange exchange) throws IOException {
@@ -123,6 +135,22 @@ class FinanzasApiClientTest {
             respond(exchange, 204, "");
             return;
         }
+        if ("GET".equals(method) && "/api/users/me".equals(path)) {
+            respond(exchange, 200, user());
+            return;
+        }
+        if ("PATCH".equals(method) && "/api/users/me".equals(path)) {
+            respond(exchange, 200, user("Medellin", "Colombia", "USD", "en-US"));
+            return;
+        }
+        if ("GET".equals(method) && "/api/users/me/settings".equals(path)) {
+            respond(exchange, 200, settings("LIGHT", "es-CO", "America/Bogota", "SYMBOL_GROUP_DECIMAL", true, true, true, 2));
+            return;
+        }
+        if ("PATCH".equals(method) && "/api/users/me/settings".equals(path)) {
+            respond(exchange, 200, settings("DARK", "en-US", "UTC", "CODE_SUFFIX", false, true, false, 3));
+            return;
+        }
         respond(exchange, 404, "{\"detail\":\"not found\"}");
     }
 
@@ -134,9 +162,24 @@ class FinanzasApiClientTest {
     }
 
     private String user() {
+        return user("Medellin", "Colombia", "COP", "es-CO");
+    }
+
+    private String user(String ciudad, String pais, String moneda, String locale) {
         return "{\"id\":\"u-1\",\"nombre\":\"Ana\",\"apellido\":\"Lopez\",\"email\":\"ana@example.com\","
-                + "\"moneda\":\"COP\",\"locale\":\"es-CO\",\"tipoCuenta\":\"PERSONAL\","
+                + "\"ciudad\":\"" + ciudad + "\",\"pais\":\"" + pais + "\","
+                + "\"moneda\":\"" + moneda + "\",\"locale\":\"" + locale + "\",\"tipoCuenta\":\"PERSONAL\","
                 + "\"avatarRef\":\"\",\"emailVerified\":true}";
+    }
+
+    private String settings(String theme, String locale, String timeZone, String moneyFormat,
+                            boolean notifPresupuesto, boolean notifMetas, boolean notifConsejos, long version) {
+        return "{\"theme\":\"" + theme + "\",\"locale\":\"" + locale + "\","
+                + "\"timeZone\":\"" + timeZone + "\",\"moneyFormat\":\"" + moneyFormat + "\","
+                + "\"notifPresupuesto\":" + notifPresupuesto + ","
+                + "\"notifMetas\":" + notifMetas + ","
+                + "\"notifConsejos\":" + notifConsejos + ","
+                + "\"version\":" + version + "}";
     }
 
     private void respond(HttpExchange exchange, int status, String body) throws IOException {

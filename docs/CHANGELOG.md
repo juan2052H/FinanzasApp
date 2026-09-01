@@ -21,5 +21,7 @@
 - Panel de hogar permite cambiar roles de miembros segun permisos OWNER/ADMIN.
 - Backend agrega tokens de verificacion de correo y recuperacion de contrasena con hash, TTL, mail sink local y revocacion de refresh tokens tras reset.
 - Login Swing permite solicitar recuperacion/verificacion y confirmar tokens del backend.
+- Perfil backend ahora incluye ciudad y pais; las preferencias de usuario usan `user_settings` con tema, locale, zona horaria, formato monetario y notificaciones.
+- Configuracion Swing permite cambiar tema claro/oscuro/sistema y guarda moneda/region/preferencias en local o backend.
 - Persistencia local agrega `ObjectInputFilter` y limites de restauracion ZIP.
 - OpenAPI se actualizo y se sincronizo entre backend y cliente.

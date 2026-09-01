@@ -22,7 +22,7 @@ public class CardPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(Color.WHITE);
+        g2.setColor(AppColors.CARD_BG);
         g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
         if (bordered) {
             g2.setColor(AppColors.BORDER);

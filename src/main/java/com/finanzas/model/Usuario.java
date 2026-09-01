@@ -14,6 +14,10 @@ public class Usuario implements Serializable {
     private boolean notifMetas;
     private boolean notifConsejos;
     private String moneda;
+    private String locale;
+    private String timeZone;
+    private String moneyFormat;
+    private String theme;
     private String tipoCuenta;
     private String profileImagePath;
 
@@ -27,6 +31,10 @@ public class Usuario implements Serializable {
         notifMetas = true;
         notifConsejos = true;
         moneda = "COP";
+        locale = "es-CO";
+        timeZone = "America/Bogota";
+        moneyFormat = "SYMBOL_GROUP_DECIMAL";
+        theme = "LIGHT";
         tipoCuenta = "Personal";
         profileImagePath = "";
     }
@@ -53,6 +61,10 @@ public class Usuario implements Serializable {
     public boolean isNotifMetas() { return notifMetas; }
     public boolean isNotifConsejos() { return notifConsejos; }
     public String getMoneda() { return moneda; }
+    public String getLocale() { return locale == null || locale.trim().isEmpty() ? "es-CO" : locale; }
+    public String getTimeZone() { return timeZone == null || timeZone.trim().isEmpty() ? "America/Bogota" : timeZone; }
+    public String getMoneyFormat() { return moneyFormat == null || moneyFormat.trim().isEmpty() ? "SYMBOL_GROUP_DECIMAL" : moneyFormat; }
+    public String getTheme() { return theme == null || theme.trim().isEmpty() ? "LIGHT" : theme; }
     public String getTipoCuenta() { return tipoCuenta; }
     public String getProfileImagePath() { return profileImagePath; }
 
@@ -65,6 +77,10 @@ public class Usuario implements Serializable {
     public void setNotifMetas(boolean notifMetas) { this.notifMetas = notifMetas; }
     public void setNotifConsejos(boolean notifConsejos) { this.notifConsejos = notifConsejos; }
     public void setMoneda(String moneda) { this.moneda = moneda; }
+    public void setLocale(String locale) { this.locale = locale == null || locale.trim().isEmpty() ? "es-CO" : locale.trim(); }
+    public void setTimeZone(String timeZone) { this.timeZone = timeZone == null || timeZone.trim().isEmpty() ? "America/Bogota" : timeZone.trim(); }
+    public void setMoneyFormat(String moneyFormat) { this.moneyFormat = moneyFormat == null || moneyFormat.trim().isEmpty() ? "SYMBOL_GROUP_DECIMAL" : moneyFormat.trim(); }
+    public void setTheme(String theme) { this.theme = theme == null || theme.trim().isEmpty() ? "LIGHT" : theme.trim(); }
     public void setTipoCuenta(String tipoCuenta) { this.tipoCuenta = tipoCuenta; }
     public void setProfileImagePath(String profileImagePath) { this.profileImagePath = profileImagePath == null ? "" : profileImagePath; }
 }

@@ -5,7 +5,7 @@
 FinanzasApp mantiene dos modos explicitos:
 
 - **Modo local**: cliente Java Swing con estado versionado en el directorio estable `~/.finanzasapp` o `FINANZAS_DATA_DIR`. No requiere backend.
-- **Modo API**: cliente Swing conectado a `finanzas-backend`; el backend REST es la fuente de verdad para usuarios, workspaces, categorias, transacciones, presupuestos, metas, recurrencias, hogar compartido, notificaciones, reportes, avatar y libro mayor de ahorro.
+- **Modo API**: cliente Swing conectado a `finanzas-backend`; el backend REST es la fuente de verdad para usuarios, preferencias, workspaces, categorias, transacciones, presupuestos, metas, recurrencias, hogar compartido, notificaciones, reportes, avatar y libro mayor de ahorro.
 
 ```mermaid
 flowchart LR
@@ -33,6 +33,7 @@ flowchart LR
 - El ahorro automatico usa libro mayor inmutable y movimientos compensatorios. Ver ADR `docs/adr/0002-savings-ledger.md`.
 - El avatar remoto usa clave portable y endpoint autenticado con cache HTTP. Ver ADR `docs/adr/0003-avatar-storage.md`.
 - OpenAPI canonico vive en el backend y se sincroniza al cliente. Ver ADR `docs/adr/0004-openapi-canonical-source.md`.
+- Las preferencias de usuario usan `user_settings` y tokens de tema propios para no introducir una dependencia Swing nueva en esta fase.
 
 ## Estado De Refactorizacion
 

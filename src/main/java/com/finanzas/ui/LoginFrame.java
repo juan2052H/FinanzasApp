@@ -466,6 +466,7 @@ public class LoginFrame extends JFrame {
     }
 
     private void openMainFrame() {
+        AppColors.applyTheme(data.getUsuario().getTheme());
         new MainFrame();
         dispose();
     }

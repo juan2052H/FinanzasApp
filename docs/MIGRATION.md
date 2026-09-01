@@ -5,6 +5,8 @@
 No se modificaron migraciones `V1` a `V3`. Se agrego:
 
 - `V4__savings_ledger.sql`: configuracion y libro mayor inmutable de ahorro.
+- `V5__auth_lifecycle_tokens.sql`: verificacion de correo y recuperacion de contrasena.
+- `V6__profile_settings.sql`: ciudad, pais y preferencias versionadas en `user_settings`.
 
 Validacion local:
 
@@ -12,7 +14,7 @@ Validacion local:
 .\mvnw.cmd -f finanzas-backend\pom.xml test
 ```
 
-La clase `FlywayPostgresMigrationTest` usa Testcontainers y migra una base PostgreSQL real desde V3 hasta V4 cuando Docker esta disponible.
+La clase `FlywayPostgresMigrationTest` usa Testcontainers y migra una base PostgreSQL real desde V3 hasta V6 cuando Docker esta disponible.
 
 ## Estado Local Legacy
 

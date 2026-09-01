@@ -39,6 +39,12 @@ public class UserEntity {
     @Column(nullable = false, length = 20)
     private String locale = "es-CO";
 
+    @Column(nullable = false, length = 120)
+    private String ciudad = "";
+
+    @Column(nullable = false, length = 120)
+    private String pais = "";
+
     @Column(name = "tipo_cuenta", nullable = false, length = 40)
     private String tipoCuenta = "PERSONAL";
 
@@ -90,6 +96,8 @@ public class UserEntity {
     public String getPasswordHash() { return passwordHash; }
     public String getMoneda() { return moneda; }
     public String getLocale() { return locale; }
+    public String getCiudad() { return ciudad; }
+    public String getPais() { return pais; }
     public String getTipoCuenta() { return tipoCuenta; }
     public String getAvatarRef() { return avatarRef; }
     public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
@@ -97,7 +105,7 @@ public class UserEntity {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
-    public void updateProfile(String nombre, String apellido, String email, String moneda, String locale) {
+    public void updateProfile(String nombre, String apellido, String email, String ciudad, String pais, String moneda, String locale) {
         this.nombre = required(nombre, "nombre");
         this.apellido = apellido == null ? "" : apellido.trim();
         String normalizedEmail = normalizeEmail(email);
@@ -105,9 +113,17 @@ public class UserEntity {
             this.emailVerifiedAt = null;
         }
         this.email = normalizedEmail;
+        this.ciudad = ciudad == null ? "" : ciudad.trim();
+        this.pais = pais == null ? "" : pais.trim();
         if (moneda != null && !moneda.trim().isEmpty()) {
             this.moneda = moneda.trim().toUpperCase(Locale.ROOT);
         }
+        if (locale != null && !locale.trim().isEmpty()) {
+            setLocale(locale);
+        }
+    }
+
+    public void setLocale(String locale) {
         if (locale != null && !locale.trim().isEmpty()) {
             this.locale = locale.trim();
         }

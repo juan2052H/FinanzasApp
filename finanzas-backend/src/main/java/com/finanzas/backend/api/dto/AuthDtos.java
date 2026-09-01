@@ -43,9 +43,11 @@ public final class AuthDtos {
     public record AuthResponse(String accessToken, String refreshToken, UserResponse user) {
     }
 
-    public record UserResponse(UUID id, String nombre, String apellido, String email, String moneda, String locale, String tipoCuenta, String avatarRef, boolean emailVerified) {
+    public record UserResponse(UUID id, String nombre, String apellido, String email, String ciudad, String pais,
+                               String moneda, String locale, String tipoCuenta, String avatarRef, boolean emailVerified) {
     }
 
-    public record UserPatchRequest(@NotBlank String nombre, String apellido, @Email @NotBlank String email, String moneda, String locale) {
+    public record UserPatchRequest(@NotBlank String nombre, String apellido, @Email @NotBlank String email,
+                                   String ciudad, String pais, String moneda, String locale) {
     }
 }

@@ -106,6 +106,21 @@ final class SimpleJson {
         }
     }
 
+    static long longValue(Map<String, Object> object, String key) {
+        Object value = object.get(key);
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        if (value == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
+    }
+
     private static String value(Object value) {
         if (value == null) {
             return "null";

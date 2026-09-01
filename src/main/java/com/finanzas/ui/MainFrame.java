@@ -39,6 +39,7 @@ public class MainFrame extends JFrame {
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(MainFrame.class.getName()).fine("No fue posible aplicar look and feel del sistema: " + ex.getMessage());
         }
+        AppColors.applyTheme(DataManager.getInstance().getUsuario().getTheme());
         buildUI();
         installCommandPaletteShortcut();
         setVisible(true);

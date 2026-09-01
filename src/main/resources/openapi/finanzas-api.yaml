@@ -169,6 +169,33 @@ paths:
       responses:
         '200':
           description: Perfil actualizado
+  /api/users/me/settings:
+    get:
+      summary: Obtener preferencias del usuario autenticado
+      responses:
+        '200':
+          description: Preferencias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+    patch:
+      summary: Actualizar preferencias del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettingsPatchRequest'
+      responses:
+        '200':
+          description: Preferencias actualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+        '422':
+          description: Preferencia invalida
   /api/users/me/avatar:
     get:
       summary: Descargar avatar autenticado normalizado
@@ -1152,7 +1179,7 @@ components:
           $ref: '#/components/schemas/UserResponse'
     UserResponse:
       type: object
-      required: [id, nombre, email, moneda, locale, tipoCuenta, avatarRef, emailVerified]
+      required: [id, nombre, email, ciudad, pais, moneda, locale, tipoCuenta, avatarRef, emailVerified]
       properties:
         id:
           type: string
@@ -1164,6 +1191,10 @@ components:
         email:
           type: string
           format: email
+        ciudad:
+          type: string
+        pais:
+          type: string
         moneda:
           type: string
         locale:
@@ -1195,10 +1226,56 @@ components:
         email:
           type: string
           format: email
+        ciudad:
+          type: string
+        pais:
+          type: string
         moneda:
           type: string
         locale:
           type: string
+    UserSettingsResponse:
+      type: object
+      required: [theme, locale, timeZone, moneyFormat, notifPresupuesto, notifMetas, notifConsejos, version]
+      properties:
+        theme:
+          type: string
+          enum: [LIGHT, DARK, SYSTEM]
+        locale:
+          type: string
+        timeZone:
+          type: string
+        moneyFormat:
+          type: string
+          enum: [SYMBOL_GROUP_DECIMAL, SYMBOL_COMMA_DECIMAL, CODE_SUFFIX]
+        notifPresupuesto:
+          type: boolean
+        notifMetas:
+          type: boolean
+        notifConsejos:
+          type: boolean
+        version:
+          type: integer
+          format: int64
+    UserSettingsPatchRequest:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum: [LIGHT, DARK, SYSTEM]
+        locale:
+          type: string
+        timeZone:
+          type: string
+        moneyFormat:
+          type: string
+          enum: [SYMBOL_GROUP_DECIMAL, SYMBOL_COMMA_DECIMAL, CODE_SUFFIX]
+        notifPresupuesto:
+          type: boolean
+        notifMetas:
+          type: boolean
+        notifConsejos:
+          type: boolean
     WorkspaceCreateRequest:
       type: object
       required: [nombre, tipo]

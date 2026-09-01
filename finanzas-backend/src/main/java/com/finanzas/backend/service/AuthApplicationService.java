@@ -305,6 +305,8 @@ public class AuthApplicationService {
                 user.getNombre(),
                 user.getApellido(),
                 user.getEmail(),
+                user.getCiudad(),
+                user.getPais(),
                 user.getMoneda(),
                 user.getLocale(),
                 user.getTipoCuenta(),

@@ -61,13 +61,13 @@ public class ConfiguracionPanel extends JPanel {
     private JPanel buildMenu() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         addMenuItem(panel, AppIcons.HOME, "Perfil de usuario", SECTION_PROFILE);
         addMenuItem(panel, AppIcons.ALERT, "Notificaciones", SECTION_NOTIFICATIONS);
         addMenuItem(panel, AppIcons.BUDGET, "Categorias", SECTION_CATEGORIES);
-        addMenuItem(panel, AppIcons.BUDGET, "Moneda y region", SECTION_CURRENCY);
+        addMenuItem(panel, AppIcons.BUDGET, "Tema, moneda y region", SECTION_CURRENCY);
         addMenuItem(panel, AppIcons.INFO, "Seguridad", SECTION_SECURITY);
         addMenuItem(panel, AppIcons.EXPORT, "Exportar datos", SECTION_EXPORT);
         addMenuItem(panel, AppIcons.APP, "Acerca de", SECTION_ABOUT);
@@ -77,7 +77,7 @@ public class ConfiguracionPanel extends JPanel {
     private void addMenuItem(JPanel parent, String iconText, String labelText, String section) {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
         boolean active = activeSection.equals(section);
-        row.setBackground(active ? new Color(0xEBF3FE) : Color.WHITE);
+        row.setBackground(menuItemBackground(active));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
@@ -99,17 +99,28 @@ public class ConfiguracionPanel extends JPanel {
 
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                row.setBackground(new Color(0xF5F8FF));
+                row.setBackground(menuHoverBackground());
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                row.setBackground(activeSection.equals(section) ? new Color(0xEBF3FE) : Color.WHITE);
+                row.setBackground(menuItemBackground(activeSection.equals(section)));
             }
         });
 
         parent.add(row);
         parent.add(Box.createVerticalStrut(2));
+    }
+
+    private Color menuItemBackground(boolean active) {
+        if (active) {
+            return AppColors.isDarkTheme() ? new Color(0x1e3a5f) : new Color(0xEBF3FE);
+        }
+        return AppColors.CARD_BG;
+    }
+
+    private Color menuHoverBackground() {
+        return AppColors.isDarkTheme() ? new Color(0x243449) : new Color(0xF5F8FF);
     }
 
     private JPanel buildContent(String section) {
@@ -165,21 +176,50 @@ public class ConfiguracionPanel extends JPanel {
         panel.add(saveButton, gbc);
 
         saveButton.addActionListener(e -> {
-            try {
-                data.updateProfile(
-                        nombreField.getText(),
-                        apellidoField.getText(),
-                        emailField.getText(),
-                        ciudadField.getText(),
-                        paisField.getText());
-                JOptionPane.showMessageDialog(this, "Perfil actualizado correctamente.", "Exito", JOptionPane.INFORMATION_MESSAGE);
-                buildUI();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            saveProfileAsync(
+                    nombreField.getText(),
+                    apellidoField.getText(),
+                    emailField.getText(),
+                    ciudadField.getText(),
+                    paisField.getText());
         });
 
         return wrapScroll(panel);
+    }
+
+    private void saveProfileAsync(String nombre, String apellido, String email, String ciudad, String pais) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            private String errorMessage = "";
+
+            @Override
+            protected Boolean doInBackground() {
+                try {
+                    data.updateProfile(nombre, apellido, email, ciudad, pais);
+                    return true;
+                } catch (Exception ex) {
+                    errorMessage = ex.getMessage() == null ? "No fue posible actualizar el perfil." : ex.getMessage();
+                    return false;
+                }
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    JOptionPane.showMessageDialog(ConfiguracionPanel.this, errorMessage, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                JOptionPane.showMessageDialog(ConfiguracionPanel.this, "Perfil actualizado correctamente.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+                buildUI();
+            }
+        }.execute();
     }
 
     private JComponent buildAvatarSection(Usuario user) {
@@ -235,11 +275,16 @@ public class ConfiguracionPanel extends JPanel {
         RoundedButton saveButton = new RoundedButton("Guardar preferencias", AppColors.ACCENT_BLUE);
         saveButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         saveButton.addActionListener(e -> {
-            user.setNotifPresupuesto(presupuesto.isSelected());
-            user.setNotifMetas(metas.isSelected());
-            user.setNotifConsejos(consejos.isSelected());
-            data.notifyListeners();
-            JOptionPane.showMessageDialog(this, "Preferencias guardadas.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            saveSettingsAsync(
+                    user.getMoneda(),
+                    user.getLocale(),
+                    user.getTimeZone(),
+                    user.getMoneyFormat(),
+                    user.getTheme(),
+                    presupuesto.isSelected(),
+                    metas.isSelected(),
+                    consejos.isSelected(),
+                    "Preferencias guardadas.");
         });
 
         panel.add(Box.createVerticalStrut(16));
@@ -264,7 +309,7 @@ public class ConfiguracionPanel extends JPanel {
             NotificationItem item = notifications.get(i);
             JPanel row = new JPanel();
             row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
-            row.setBackground(Color.WHITE);
+            row.setBackground(AppColors.CARD_BG);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
             row.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER),
@@ -298,7 +343,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JCheckBox createToggle(JPanel parent, String titleText, String description, boolean selected) {
         JPanel row = new JPanel(new BorderLayout(12, 0));
-        row.setBackground(Color.WHITE);
+        row.setBackground(AppColors.CARD_BG);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 64));
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER),
@@ -306,7 +351,7 @@ public class ConfiguracionPanel extends JPanel {
 
         JPanel text = new JPanel();
         text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
-        text.setBackground(Color.WHITE);
+        text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
         title.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -318,7 +363,7 @@ public class ConfiguracionPanel extends JPanel {
 
         JCheckBox checkBox = new JCheckBox();
         checkBox.setSelected(selected);
-        checkBox.setBackground(Color.WHITE);
+        checkBox.setBackground(AppColors.CARD_BG);
 
         text.add(title);
         text.add(subtitle);
@@ -470,7 +515,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JPanel categoryRow(FinancialCategory category) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setBackground(Color.WHITE);
+        row.setBackground(AppColors.CARD_BG);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER),
@@ -660,28 +705,56 @@ public class ConfiguracionPanel extends JPanel {
         });
         selectMoneda(monedaBox, data.getUsuario().getMoneda());
 
+        JComboBox<String> themeBox = new JComboBox<String>(new String[]{"Claro", "Oscuro", "Sistema"});
+        selectTheme(themeBox, data.getUsuario().getTheme());
+
+        JComboBox<String> localeBox = new JComboBox<String>(new String[]{
+                "es-CO - Espanol Colombia",
+                "es-MX - Espanol Mexico",
+                "en-US - English United States"
+        });
+        selectLocale(localeBox, data.getUsuario().getLocale());
+
+        JComboBox<String> timeZoneBox = new JComboBox<String>(new String[]{
+                "America/Bogota",
+                "America/Mexico_City",
+                "America/New_York",
+                "UTC"
+        });
+        timeZoneBox.setSelectedItem(data.getUsuario().getTimeZone());
+
         JComboBox<String> formatBox = new JComboBox<String>(new String[]{
                 "$1.000.000,00",
                 "$1,000,000.00",
                 "1 000 000 COP"
         });
+        selectMoneyFormat(formatBox, data.getUsuario().getMoneyFormat());
 
         FormSupport.addFormRow(panel, gbc, 0, "Moneda:", monedaBox);
-        FormSupport.addFormRow(panel, gbc, 1, "Formato:", formatBox);
+        FormSupport.addFormRow(panel, gbc, 1, "Tema:", themeBox);
+        FormSupport.addFormRow(panel, gbc, 2, "Idioma:", localeBox);
+        FormSupport.addFormRow(panel, gbc, 3, "Zona horaria:", timeZoneBox);
+        FormSupport.addFormRow(panel, gbc, 4, "Formato:", formatBox);
 
         RoundedButton saveButton = new RoundedButton("Guardar", AppColors.ACCENT_BLUE);
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
         panel.add(saveButton, gbc);
 
         saveButton.addActionListener(e -> {
             String selected = (String) monedaBox.getSelectedItem();
-            if (selected != null) {
-                data.getUsuario().setMoneda(selected.substring(0, 3));
-            }
-            data.notifyListeners();
-            JOptionPane.showMessageDialog(this, "Configuracion de moneda guardada.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            String moneda = selected == null ? data.getUsuario().getMoneda() : selected.substring(0, 3);
+            saveSettingsAsync(
+                    moneda,
+                    selectedLocale(localeBox),
+                    String.valueOf(timeZoneBox.getSelectedItem()),
+                    selectedMoneyFormat(formatBox),
+                    selectedTheme(themeBox),
+                    data.getUsuario().isNotifPresupuesto(),
+                    data.getUsuario().isNotifMetas(),
+                    data.getUsuario().isNotifConsejos(),
+                    "Configuracion guardada.");
         });
 
         return wrapScroll(panel);
@@ -701,6 +774,107 @@ public class ConfiguracionPanel extends JPanel {
             return;
         }
         monedaBox.setSelectedItem("COP - Peso Colombiano");
+    }
+
+    private void selectTheme(JComboBox<String> themeBox, String theme) {
+        if ("DARK".equalsIgnoreCase(theme)) {
+            themeBox.setSelectedItem("Oscuro");
+        } else if ("SYSTEM".equalsIgnoreCase(theme)) {
+            themeBox.setSelectedItem("Sistema");
+        } else {
+            themeBox.setSelectedItem("Claro");
+        }
+    }
+
+    private String selectedTheme(JComboBox<String> themeBox) {
+        String selected = String.valueOf(themeBox.getSelectedItem());
+        if ("Oscuro".equals(selected)) {
+            return "DARK";
+        }
+        if ("Sistema".equals(selected)) {
+            return "SYSTEM";
+        }
+        return "LIGHT";
+    }
+
+    private void selectLocale(JComboBox<String> localeBox, String locale) {
+        String value = locale == null ? "" : locale.trim();
+        if (value.startsWith("es-MX")) {
+            localeBox.setSelectedItem("es-MX - Espanol Mexico");
+        } else if (value.startsWith("en-US")) {
+            localeBox.setSelectedItem("en-US - English United States");
+        } else {
+            localeBox.setSelectedItem("es-CO - Espanol Colombia");
+        }
+    }
+
+    private String selectedLocale(JComboBox<String> localeBox) {
+        String selected = String.valueOf(localeBox.getSelectedItem());
+        return selected.length() >= 5 ? selected.substring(0, 5) : "es-CO";
+    }
+
+    private void selectMoneyFormat(JComboBox<String> formatBox, String moneyFormat) {
+        if ("SYMBOL_COMMA_DECIMAL".equalsIgnoreCase(moneyFormat)) {
+            formatBox.setSelectedItem("$1,000,000.00");
+        } else if ("CODE_SUFFIX".equalsIgnoreCase(moneyFormat)) {
+            formatBox.setSelectedItem("1 000 000 COP");
+        } else {
+            formatBox.setSelectedItem("$1.000.000,00");
+        }
+    }
+
+    private String selectedMoneyFormat(JComboBox<String> formatBox) {
+        String selected = String.valueOf(formatBox.getSelectedItem());
+        if ("$1,000,000.00".equals(selected)) {
+            return "SYMBOL_COMMA_DECIMAL";
+        }
+        if ("1 000 000 COP".equals(selected)) {
+            return "CODE_SUFFIX";
+        }
+        return "SYMBOL_GROUP_DECIMAL";
+    }
+
+    private void saveSettingsAsync(String moneda, String locale, String timeZone, String moneyFormat, String theme,
+                                   boolean notifPresupuesto, boolean notifMetas, boolean notifConsejos,
+                                   String successMessage) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return data.updateSettings(moneda, locale, timeZone, moneyFormat, theme,
+                        notifPresupuesto, notifMetas, notifConsejos);
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    JOptionPane.showMessageDialog(
+                            ConfiguracionPanel.this,
+                            data.getLastErrorMessage().isEmpty() ? "No fue posible guardar la configuracion." : data.getLastErrorMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                AppColors.applyTheme(data.getUsuario().getTheme());
+                refreshWindows();
+                JOptionPane.showMessageDialog(ConfiguracionPanel.this, successMessage, "Exito", JOptionPane.INFORMATION_MESSAGE);
+                buildUI();
+            }
+        }.execute();
+    }
+
+    private void refreshWindows() {
+        for (Window window : Window.getWindows()) {
+            SwingUtilities.updateComponentTreeUI(window);
+            window.repaint();
+        }
     }
 
     private JPanel buildSeguridadPanel() {
@@ -768,7 +942,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JPanel createActionRow(String titleText, String description, String buttonText, Runnable action) {
         JPanel row = new JPanel(new BorderLayout(12, 0));
-        row.setBackground(Color.WHITE);
+        row.setBackground(AppColors.CARD_BG);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER),
@@ -776,7 +950,7 @@ public class ConfiguracionPanel extends JPanel {
 
         JPanel text = new JPanel();
         text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
-        text.setBackground(Color.WHITE);
+        text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
         title.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -801,7 +975,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JPanel createDualActionRow(String titleText, String description, String leftButtonText, Runnable leftAction, String rightButtonText, Runnable rightAction) {
         JPanel row = new JPanel(new BorderLayout(12, 0));
-        row.setBackground(Color.WHITE);
+        row.setBackground(AppColors.CARD_BG);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER),
@@ -809,7 +983,7 @@ public class ConfiguracionPanel extends JPanel {
 
         JPanel text = new JPanel();
         text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
-        text.setBackground(Color.WHITE);
+        text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
         title.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -1235,7 +1409,7 @@ public class ConfiguracionPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(inner);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(AppColors.CARD_BG);
         outer.add(scrollPane, BorderLayout.CENTER);
         return outer;
     }

@@ -89,6 +89,45 @@ public final class FinanzasApiClient {
         post("/api/auth/password/reset/confirm", SimpleJson.stringify(body), null);
     }
 
+    public BackendUser getCurrentUser(String accessToken) throws IOException, InterruptedException {
+        return toUser(SimpleJson.asObject(SimpleJson.parse(get("/api/users/me", accessToken))));
+    }
+
+    public BackendUser updateCurrentUser(String accessToken, String nombre, String apellido, String email,
+                                         String ciudad, String pais, String moneda, String locale)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("nombre", nombre);
+        body.put("apellido", apellido);
+        body.put("email", email);
+        body.put("ciudad", ciudad);
+        body.put("pais", pais);
+        body.put("moneda", moneda);
+        body.put("locale", locale);
+        return toUser(SimpleJson.asObject(SimpleJson.parse(
+                patch("/api/users/me", SimpleJson.stringify(body), accessToken))));
+    }
+
+    public BackendUserSettings getUserSettings(String accessToken) throws IOException, InterruptedException {
+        return toUserSettings(SimpleJson.asObject(SimpleJson.parse(get("/api/users/me/settings", accessToken))));
+    }
+
+    public BackendUserSettings updateUserSettings(String accessToken, String theme, String locale, String timeZone,
+                                                  String moneyFormat, boolean notifPresupuesto,
+                                                  boolean notifMetas, boolean notifConsejos)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("theme", theme);
+        body.put("locale", locale);
+        body.put("timeZone", timeZone);
+        body.put("moneyFormat", moneyFormat);
+        body.put("notifPresupuesto", notifPresupuesto);
+        body.put("notifMetas", notifMetas);
+        body.put("notifConsejos", notifConsejos);
+        return toUserSettings(SimpleJson.asObject(SimpleJson.parse(
+                patch("/api/users/me/settings", SimpleJson.stringify(body), accessToken))));
+    }
+
     public List<BackendWorkspace> listWorkspaces(String accessToken) throws IOException, InterruptedException {
         String response = send(HttpRequest.newBuilder(uri("/api/workspaces"))
                 .timeout(Duration.ofSeconds(12))
@@ -646,11 +685,25 @@ public final class FinanzasApiClient {
                 SimpleJson.string(object, "nombre"),
                 SimpleJson.string(object, "apellido"),
                 SimpleJson.string(object, "email"),
+                SimpleJson.string(object, "ciudad"),
+                SimpleJson.string(object, "pais"),
                 SimpleJson.string(object, "moneda"),
                 SimpleJson.string(object, "locale"),
                 SimpleJson.string(object, "tipoCuenta"),
                 SimpleJson.string(object, "avatarRef"),
                 SimpleJson.bool(object, "emailVerified"));
+    }
+
+    private BackendUserSettings toUserSettings(Map<String, Object> object) {
+        return new BackendUserSettings(
+                SimpleJson.string(object, "theme"),
+                SimpleJson.string(object, "locale"),
+                SimpleJson.string(object, "timeZone"),
+                SimpleJson.string(object, "moneyFormat"),
+                SimpleJson.bool(object, "notifPresupuesto"),
+                SimpleJson.bool(object, "notifMetas"),
+                SimpleJson.bool(object, "notifConsejos"),
+                SimpleJson.longValue(object, "version"));
     }
 
     private BackendWorkspace toWorkspace(Map<String, Object> object) {

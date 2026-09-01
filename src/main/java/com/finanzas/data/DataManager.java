@@ -17,6 +17,7 @@ import com.finanzas.api.BackendSharedExpense;
 import com.finanzas.api.BackendSession;
 import com.finanzas.api.BackendTransaction;
 import com.finanzas.api.BackendUser;
+import com.finanzas.api.BackendUserSettings;
 import com.finanzas.api.BackendWorkspace;
 import com.finanzas.api.FinanzasApiClient;
 import com.finanzas.api.GoogleAuthorizationResult;
@@ -206,6 +207,11 @@ public class DataManager {
             throw new IllegalStateException("No hay una sesion activa.");
         }
 
+        if (backendSession != null) {
+            updateBackendProfile(nombre, apellido, email, ciudad, pais);
+            return;
+        }
+
         String normalizedEmail = AuthService.normalizeEmail(email);
         if (!AuthService.isValidEmail(normalizedEmail)) {
             throw new IllegalArgumentException("Ingresa un correo electronico valido.");
@@ -230,6 +236,45 @@ public class DataManager {
 
         replaceHouseholdMemberName(profile, previousName, profile.usuario.getNombreCompleto());
         notifyListeners();
+    }
+
+    private void updateBackendProfile(String nombre, String apellido, String email, String ciudad, String pais) {
+        UserProfile profile = p();
+        String previousKey = currentUser;
+        String previousName = profile.usuario.getNombreCompleto();
+        try {
+            BackendUser updatedUser = callBackend(token -> apiClient.updateCurrentUser(
+                    token,
+                    nombre,
+                    apellido,
+                    email,
+                    ciudad,
+                    pais,
+                    profile.usuario.getMoneda(),
+                    profile.usuario.getLocale()));
+            applyBackendUser(profile, updatedUser);
+            String normalizedEmail = AuthService.normalizeEmail(updatedUser.getEmail());
+            if (!previousKey.equals(normalizedEmail)) {
+                profiles.remove(previousKey);
+                profiles.put(normalizedEmail, profile);
+                currentUser = normalizedEmail;
+            }
+            backendSession = new BackendSession(
+                    backendSession.getAccessToken(),
+                    backendSession.getRefreshToken(),
+                    updatedUser,
+                    backendSession.getWorkspaces());
+            replaceHouseholdMemberName(profile, previousName, profile.usuario.getNombreCompleto());
+            lastErrorMessage = "";
+            notifyListeners();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Actualizacion de perfil interrumpida.";
+            throw new IllegalStateException(lastErrorMessage, ex);
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible actualizar el perfil en el backend.", ex);
+            throw new IllegalStateException(lastErrorMessage, ex);
+        }
     }
 
     public List<String> getAllUsers() {
@@ -329,6 +374,7 @@ public class DataManager {
         }
         try {
             reloadBackendWorkspaces();
+            syncBackendUserSettings();
             syncBackendSnapshot();
             notifyListeners();
             return true;
@@ -374,6 +420,7 @@ public class DataManager {
             applyBackendSession(session);
             lastErrorMessage = "";
             try {
+                syncBackendUserSettings();
                 syncBackendSnapshot();
             } catch (Exception syncError) {
                 lastErrorMessage = "Sesion iniciada, pero no fue posible sincronizar datos financieros del backend.";
@@ -415,6 +462,7 @@ public class DataManager {
             applyBackendSession(session);
             lastErrorMessage = "";
             try {
+                syncBackendUserSettings();
                 syncBackendSnapshot();
             } catch (Exception syncError) {
                 lastErrorMessage = "Sesion iniciada, pero no fue posible sincronizar datos financieros del backend.";
@@ -530,7 +578,10 @@ public class DataManager {
         profile.usuario.setNombre(user.getNombre());
         profile.usuario.setApellido(user.getApellido());
         profile.usuario.setEmail(normalizedEmail);
+        profile.usuario.setCiudad(user.getCiudad());
+        profile.usuario.setPais(user.getPais());
         profile.usuario.setMoneda(user.getMoneda());
+        profile.usuario.setLocale(user.getLocale());
         profile.usuario.setTipoCuenta(mapBackendAccountType(user.getTipoCuenta()));
         profile.selectedBackendWorkspaceId = selectedBackendWorkspaceId(profile.selectedBackendWorkspaceId, session.getWorkspaces());
         if (user.getAvatarRef().isEmpty()) {
@@ -544,6 +595,40 @@ public class DataManager {
         ensureProfileInitialized(normalizedEmail, profile);
         currentUser = normalizedEmail;
         backendSession = session;
+    }
+
+    private void applyBackendUser(UserProfile profile, BackendUser user) {
+        if (profile == null || user == null) {
+            return;
+        }
+        profile.usuario.setNombre(user.getNombre());
+        profile.usuario.setApellido(user.getApellido());
+        profile.usuario.setEmail(AuthService.normalizeEmail(user.getEmail()));
+        profile.usuario.setCiudad(user.getCiudad());
+        profile.usuario.setPais(user.getPais());
+        profile.usuario.setMoneda(user.getMoneda());
+        profile.usuario.setLocale(user.getLocale());
+        profile.usuario.setTipoCuenta(mapBackendAccountType(user.getTipoCuenta()));
+    }
+
+    private void syncBackendUserSettings() throws IOException, InterruptedException {
+        if (backendSession == null || p() == null) {
+            return;
+        }
+        applyBackendSettings(p(), callBackend(apiClient::getUserSettings));
+    }
+
+    private void applyBackendSettings(UserProfile profile, BackendUserSettings settings) {
+        if (profile == null || settings == null) {
+            return;
+        }
+        profile.usuario.setTheme(settings.getTheme());
+        profile.usuario.setLocale(settings.getLocale());
+        profile.usuario.setTimeZone(settings.getTimeZone());
+        profile.usuario.setMoneyFormat(settings.getMoneyFormat());
+        profile.usuario.setNotifPresupuesto(settings.isNotifPresupuesto());
+        profile.usuario.setNotifMetas(settings.isNotifMetas());
+        profile.usuario.setNotifConsejos(settings.isNotifConsejos());
     }
 
     private void revokeBackendSession() {
@@ -1249,6 +1334,75 @@ public class DataManager {
 
     public Usuario getUsuario() {
         return p() != null ? p().usuario : new Usuario();
+    }
+
+    public boolean updateSettings(String moneda, String locale, String timeZone, String moneyFormat, String theme,
+                                  boolean notifPresupuesto, boolean notifMetas, boolean notifConsejos) {
+        UserProfile profile = p();
+        if (profile == null) {
+            lastErrorMessage = "No hay una sesion activa.";
+            return false;
+        }
+        String safeMoneda = safeTrim(moneda);
+        if (safeMoneda.length() != 3) {
+            lastErrorMessage = "Selecciona una moneda valida.";
+            return false;
+        }
+        try {
+            if (backendSession != null) {
+                BackendUser updatedUser = callBackend(token -> apiClient.updateCurrentUser(
+                        token,
+                        profile.usuario.getNombre(),
+                        profile.usuario.getApellido(),
+                        profile.usuario.getEmail(),
+                        profile.usuario.getCiudad(),
+                        profile.usuario.getPais(),
+                        safeMoneda,
+                        locale));
+                BackendUserSettings updatedSettings = callBackend(token -> apiClient.updateUserSettings(
+                        token,
+                        theme,
+                        locale,
+                        timeZone,
+                        moneyFormat,
+                        notifPresupuesto,
+                        notifMetas,
+                        notifConsejos));
+                applyBackendUser(profile, updatedUser);
+                applyBackendSettings(profile, updatedSettings);
+                backendSession = new BackendSession(
+                        backendSession.getAccessToken(),
+                        backendSession.getRefreshToken(),
+                        updatedUser,
+                        backendSession.getWorkspaces());
+            } else {
+                applyLocalSettings(profile, safeMoneda, locale, timeZone, moneyFormat, theme,
+                        notifPresupuesto, notifMetas, notifConsejos);
+            }
+            lastErrorMessage = "";
+            notifyListeners();
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Actualizacion de preferencias interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible guardar las preferencias.", ex);
+            return false;
+        }
+    }
+
+    private void applyLocalSettings(UserProfile profile, String moneda, String locale, String timeZone,
+                                    String moneyFormat, String theme, boolean notifPresupuesto,
+                                    boolean notifMetas, boolean notifConsejos) {
+        profile.usuario.setMoneda(moneda);
+        profile.usuario.setLocale(locale);
+        profile.usuario.setTimeZone(timeZone);
+        profile.usuario.setMoneyFormat(moneyFormat);
+        profile.usuario.setTheme(theme);
+        profile.usuario.setNotifPresupuesto(notifPresupuesto);
+        profile.usuario.setNotifMetas(notifMetas);
+        profile.usuario.setNotifConsejos(notifConsejos);
     }
 
     public boolean needsOnboarding() {
@@ -2537,6 +2691,7 @@ public class DataManager {
         if (profile.usuario == null) {
             profile.usuario = new Usuario();
         }
+        ensureUserSettingsDefaults(profile.usuario);
         String normalizedKey = AuthService.normalizeEmail(profileKey);
         if (profile.usuario.getEmail() == null || profile.usuario.getEmail().trim().isEmpty()) {
             profile.usuario.setEmail(normalizedKey);
@@ -2611,6 +2766,19 @@ public class DataManager {
             if (!ownName.isEmpty() && !profile.miembrosHogar.contains(ownName)) {
                 profile.miembrosHogar.add(ownName);
             }
+        }
+    }
+
+    private void ensureUserSettingsDefaults(Usuario usuario) {
+        if (usuario == null) {
+            return;
+        }
+        usuario.setLocale(usuario.getLocale());
+        usuario.setTimeZone(usuario.getTimeZone());
+        usuario.setMoneyFormat(usuario.getMoneyFormat());
+        usuario.setTheme(usuario.getTheme());
+        if (usuario.getMoneda() == null || usuario.getMoneda().trim().isEmpty()) {
+            usuario.setMoneda("COP");
         }
     }
 

@@ -1,10 +1,12 @@
 package com.finanzas.backend.api;
 
 import com.finanzas.backend.api.dto.AuthDtos;
+import com.finanzas.backend.api.dto.UserSettingsDtos;
 import com.finanzas.backend.domain.UserEntity;
 import com.finanzas.backend.repo.UserRepository;
 import com.finanzas.backend.service.AuthApplicationService;
 import com.finanzas.backend.service.AvatarStorageService;
+import com.finanzas.backend.service.UserSettingsService;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -33,10 +35,12 @@ import java.util.concurrent.TimeUnit;
 public class UserController {
     private final UserRepository users;
     private final AvatarStorageService avatarStorage;
+    private final UserSettingsService userSettings;
 
-    public UserController(UserRepository users, AvatarStorageService avatarStorage) {
+    public UserController(UserRepository users, AvatarStorageService avatarStorage, UserSettingsService userSettings) {
         this.users = users;
         this.avatarStorage = avatarStorage;
+        this.userSettings = userSettings;
     }
 
     @GetMapping
@@ -54,8 +58,21 @@ public class UserController {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese correo ya esta en uso.");
             }
         });
-        user.updateProfile(request.nombre(), request.apellido(), normalizedEmail, request.moneda(), request.locale());
+        user.updateProfile(request.nombre(), request.apellido(), normalizedEmail,
+                request.ciudad(), request.pais(), request.moneda(), request.locale());
         return AuthApplicationService.toUserResponse(user);
+    }
+
+    @GetMapping("/settings")
+    public UserSettingsDtos.UserSettingsResponse settings(Authentication authentication) {
+        return userSettings.get(requireUser(authentication));
+    }
+
+    @PatchMapping("/settings")
+    public UserSettingsDtos.UserSettingsResponse updateSettings(
+            Authentication authentication,
+            @RequestBody UserSettingsDtos.UserSettingsPatchRequest request) {
+        return userSettings.update(requireUser(authentication), request);
     }
 
     @GetMapping(value = "/avatar", produces = MediaType.IMAGE_PNG_VALUE)
