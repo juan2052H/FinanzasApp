@@ -1,6 +1,7 @@
 package com.finanzas.ui;
 
 import com.finanzas.api.BackendInvitation;
+import com.finanzas.api.BackendWorkspace;
 import com.finanzas.data.DataManager;
 import com.finanzas.model.FinancialCategory;
 import com.finanzas.model.GastoHogar;
@@ -224,14 +225,60 @@ public class FinanzasHogarPanel extends JPanel {
                 panel.repaint();
             });
 
+            JPanel memberActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+            memberActions.setOpaque(false);
+            if (data.isBackendSessionActive()) {
+                memberActions.add(roleComponent(entry.getKey()));
+            }
+            memberActions.add(delete);
+
             row.add(name, BorderLayout.WEST);
             row.add(balanceLabel, BorderLayout.CENTER);
-            row.add(delete, BorderLayout.EAST);
+            row.add(memberActions, BorderLayout.EAST);
             panel.add(row);
             panel.add(Box.createVerticalStrut(4));
         }
         panel.revalidate();
         panel.repaint();
+    }
+
+    private JComponent roleComponent(String memberName) {
+        String role = normalizedRole(data.getBackendMemberRole(memberName));
+        BackendWorkspace workspace = data.getActiveBackendWorkspace();
+        boolean actorIsOwner = workspace != null && "OWNER".equalsIgnoreCase(workspace.getRole());
+        boolean canChange = data.canManageActiveBackendWorkspace()
+                && !"OWNER".equals(role)
+                && (actorIsOwner || !"ADMIN".equals(role));
+        if (!canChange) {
+            return roleLabel(role);
+        }
+        JComboBox<String> roleBox = new JComboBox<String>(actorIsOwner
+                ? new String[]{"ADMIN", "MEMBER", "VIEWER"}
+                : new String[]{"MEMBER", "VIEWER"});
+        roleBox.setSelectedItem(role);
+        roleBox.setPreferredSize(new Dimension(92, 24));
+        roleBox.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        roleBox.setFocusable(false);
+        roleBox.setEnabled(!backendActionRunning);
+        roleBox.addActionListener(e -> {
+            String selected = (String) roleBox.getSelectedItem();
+            if (selected != null && !selected.equals(role)) {
+                runBackendHouseholdAction("", () -> data.changeBackendMemberRole(memberName, selected));
+            }
+        });
+        return roleBox;
+    }
+
+    private JLabel roleLabel(String role) {
+        JLabel label = new JLabel(role);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        label.setForeground(AppColors.TEXT_MUTED);
+        label.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        return label;
+    }
+
+    private String normalizedRole(String role) {
+        return role == null || role.trim().isEmpty() ? "MEMBER" : role.trim().toUpperCase(Locale.ROOT);
     }
 
     private void refreshInvitationsPanel() {

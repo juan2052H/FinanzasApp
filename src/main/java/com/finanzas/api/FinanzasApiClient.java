@@ -484,6 +484,14 @@ public final class FinanzasApiClient {
         delete("/api/workspaces/" + workspaceId + "/members/" + memberId, accessToken);
     }
 
+    public BackendMember changeMemberRole(String accessToken, String workspaceId, String memberId, String role)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("role", role);
+        return toMember(SimpleJson.asObject(SimpleJson.parse(
+                patch("/api/workspaces/" + workspaceId + "/members/" + memberId, SimpleJson.stringify(body), accessToken))));
+    }
+
     public List<BackendSharedExpense> listSharedExpenses(String accessToken, String workspaceId)
             throws IOException, InterruptedException {
         String response = get("/api/workspaces/" + workspaceId + "/shared-expenses", accessToken);

@@ -1,6 +1,6 @@
 ﻿# Inventario inicial
 
-Generado: 2026-08-31 21:05:46 -05:00
+Generado: 2026-08-31 21:10:29 -05:00
 
 Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 
@@ -339,7 +339,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SavingsServiceTest.java: SavingsServiceTest (6 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SharedExpenseSplitCalculatorTest.java: SharedExpenseSplitCalculatorTest (4 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceAccessServiceTest.java: WorkspaceAccessServiceTest (2 tests anotados)
-- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceCollaborationServiceTest.java: WorkspaceCollaborationServiceTest (3 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceCollaborationServiceTest.java: WorkspaceCollaborationServiceTest (4 tests anotados)
 - src\test\java\com\finanzas\api\FinanzasApiClientTest.java: FinanzasApiClientTest (1 tests anotados)
 - src\test\java\com\finanzas\api\SimpleJsonTest.java: SimpleJsonTest (2 tests anotados)
 - src\test\java\com\finanzas\data\DataManagerRegressionTest.java: DataManagerRegressionTest (12 tests anotados)

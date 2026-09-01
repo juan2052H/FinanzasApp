@@ -7,6 +7,7 @@ import com.finanzas.backend.domain.UserEntity;
 import com.finanzas.backend.domain.WorkspaceEntity;
 import com.finanzas.backend.domain.WorkspaceInvitationEntity;
 import com.finanzas.backend.domain.WorkspaceMemberEntity;
+import com.finanzas.backend.domain.WorkspaceMemberId;
 import com.finanzas.backend.domain.WorkspaceRole;
 import com.finanzas.backend.domain.WorkspaceType;
 import com.finanzas.backend.repo.UserRepository;
@@ -124,6 +125,29 @@ class WorkspaceCollaborationServiceTest {
 
         assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
         assertEquals(InvitationStatus.PENDING, invitation.getStatus());
+    }
+
+    @Test
+    void ownerCanChangeMemberRole() {
+        UUID ownerId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        UUID workspaceId = UUID.randomUUID();
+        WorkspaceMemberEntity ownerMember = new WorkspaceMemberEntity(workspaceId, ownerId, WorkspaceRole.OWNER);
+        WorkspaceMemberEntity targetMember = new WorkspaceMemberEntity(workspaceId, memberId, WorkspaceRole.MEMBER);
+        UserEntity memberUser = user(memberId, "Ana", "Lopez", "ana@example.com");
+
+        when(access.requireMember(ownerId, workspaceId)).thenReturn(ownerMember);
+        when(members.findById(new WorkspaceMemberId(workspaceId, memberId))).thenReturn(Optional.of(targetMember));
+        when(users.findById(memberId)).thenReturn(Optional.of(memberUser));
+
+        HouseholdDtos.MemberResponse response = service.changeRole(
+                ownerId,
+                workspaceId,
+                memberId,
+                new HouseholdDtos.MemberRoleRequest(WorkspaceRole.VIEWER));
+
+        assertEquals(WorkspaceRole.VIEWER, response.role());
+        assertEquals(WorkspaceRole.VIEWER, targetMember.getRole());
     }
 
     private WorkspaceEntity workspace(UUID workspaceId, UUID ownerId) {

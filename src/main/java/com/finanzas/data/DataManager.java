@@ -73,6 +73,7 @@ public class DataManager {
         public List<FinancialCategory> categories = new ArrayList<FinancialCategory>();
         public transient List<NotificationItem> backendNotifications = new ArrayList<NotificationItem>();
         public transient Map<String, String> backendMemberIdsByName = new LinkedHashMap<String, String>();
+        public transient Map<String, String> backendMemberRolesByName = new LinkedHashMap<String, String>();
         public transient List<BackendInvitation> backendReceivedInvitations = new ArrayList<BackendInvitation>();
         public transient List<BackendInvitation> backendWorkspaceInvitations = new ArrayList<BackendInvitation>();
         public transient BackendSavingsSummary backendSavingsSummary;
@@ -799,12 +800,14 @@ public class DataManager {
     private void syncBackendHousehold(UserProfile profile, String workspaceId, Map<String, String> categoryNameById)
             throws IOException, InterruptedException {
         profile.backendMemberIdsByName.clear();
+        profile.backendMemberRolesByName.clear();
         profile.miembrosHogar.clear();
         for (BackendMember member : callBackend(token -> apiClient.listMembers(token, workspaceId))) {
             String name = member.getDisplayName();
             if (name != null && !name.trim().isEmpty()) {
                 profile.miembrosHogar.add(name);
                 profile.backendMemberIdsByName.put(name, member.getUserId());
+                profile.backendMemberRolesByName.put(name, member.getRole());
             }
         }
 
@@ -1934,6 +1937,45 @@ public class DataManager {
         }
     }
 
+    public String getBackendMemberRole(String nombre) {
+        UserProfile profile = p();
+        if (profile == null || profile.backendMemberRolesByName == null) {
+            return "";
+        }
+        String role = profile.backendMemberRolesByName.get(nombre);
+        return role == null ? "" : role;
+    }
+
+    public boolean changeBackendMemberRole(String nombre, String role) {
+        if (!hasBackendFinancialSession()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        if (!canManageActiveBackendWorkspace()) {
+            lastErrorMessage = "No tienes permisos para administrar miembros.";
+            return false;
+        }
+        String safeRole = role == null || role.trim().isEmpty() ? "MEMBER" : role.trim();
+        if ("OWNER".equalsIgnoreCase(safeRole)) {
+            lastErrorMessage = "El rol OWNER no se asigna desde este flujo.";
+            return false;
+        }
+        try {
+            runBackend(token -> apiClient.changeMemberRole(
+                    token,
+                    activeBackendWorkspaceId(),
+                    backendMemberIdForName(nombre),
+                    safeRole));
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible cambiar el rol del miembro.", ex);
+            return false;
+        }
+    }
+
     public void removeMiembro(String nombre) {
         if (p() != null) {
             if (hasBackendFinancialSession()) {
@@ -2530,6 +2572,9 @@ public class DataManager {
         if (profile.backendMemberIdsByName == null) {
             profile.backendMemberIdsByName = new LinkedHashMap<String, String>();
         }
+        if (profile.backendMemberRolesByName == null) {
+            profile.backendMemberRolesByName = new LinkedHashMap<String, String>();
+        }
         if (profile.backendReceivedInvitations == null) {
             profile.backendReceivedInvitations = new ArrayList<BackendInvitation>();
         }
@@ -2539,6 +2584,7 @@ public class DataManager {
         if (!BackendConfig.isEnabled()) {
             profile.backendSavingsSummary = null;
             profile.backendMonthlySavingsSummary = null;
+            profile.backendMemberRolesByName.clear();
             profile.backendReceivedInvitations.clear();
             profile.backendWorkspaceInvitations.clear();
         }

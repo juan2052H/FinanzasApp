@@ -43,6 +43,7 @@ class FinanzasApiClientTest {
         BackendInvitation sent = client.inviteMember("token", "ws-1", "ana@example.com", "MEMBER");
         List<BackendInvitation> workspaceInvitations = client.listWorkspaceInvitations("token", "ws-1");
         List<BackendInvitation> mine = client.listMyInvitations("token");
+        BackendMember changedMember = client.changeMemberRole("token", "ws-1", "u-2", "VIEWER");
         BackendInvitation accepted = client.acceptInvitation("token", "inv-1");
         BackendInvitation rejected = client.rejectInvitation("token", "inv-1");
         client.cancelInvitation("token", "ws-1", "inv-1");
@@ -56,6 +57,7 @@ class FinanzasApiClientTest {
         assertEquals("ana@example.com", sent.getInvitedEmail());
         assertEquals(1, workspaceInvitations.size());
         assertEquals("Casa", mine.get(0).getWorkspaceName());
+        assertEquals("VIEWER", changedMember.getRole());
         assertEquals("ACCEPTED", accepted.getStatus());
         assertEquals("REJECTED", rejected.getStatus());
         assertTrue(verified.isEmailVerified());
@@ -87,6 +89,10 @@ class FinanzasApiClientTest {
         }
         if ("DELETE".equals(method) && "/api/workspaces/ws-1/invitations/inv-1".equals(path)) {
             respond(exchange, 204, "");
+            return;
+        }
+        if ("PATCH".equals(method) && "/api/workspaces/ws-1/members/u-2".equals(path)) {
+            respond(exchange, 200, "{\"userId\":\"u-2\",\"nombre\":\"Ana\",\"apellido\":\"Lopez\",\"email\":\"ana@example.com\",\"role\":\"VIEWER\"}");
             return;
         }
         if ("GET".equals(method) && "/api/invitations/mine".equals(path)) {
