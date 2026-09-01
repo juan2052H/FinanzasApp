@@ -46,6 +46,10 @@ class FinanzasApiClientTest {
         BackendInvitation accepted = client.acceptInvitation("token", "inv-1");
         BackendInvitation rejected = client.rejectInvitation("token", "inv-1");
         client.cancelInvitation("token", "ws-1", "inv-1");
+        client.requestEmailVerification("ana@example.com");
+        BackendUser verified = client.confirmEmailVerification("verify-token");
+        client.requestPasswordReset("ana@example.com");
+        client.confirmPasswordReset("reset-token", "nueva-segura");
 
         assertEquals("ws-1", workspaces.get(0).getId());
         assertEquals("Casa", created.getNombre());
@@ -54,7 +58,9 @@ class FinanzasApiClientTest {
         assertEquals("Casa", mine.get(0).getWorkspaceName());
         assertEquals("ACCEPTED", accepted.getStatus());
         assertEquals("REJECTED", rejected.getStatus());
+        assertTrue(verified.isEmailVerified());
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/invitations/inv-1"));
+        assertTrue(requests.contains("POST /api/auth/password/reset/confirm"));
     }
 
     private void handle(HttpExchange exchange) throws IOException {
@@ -95,6 +101,22 @@ class FinanzasApiClientTest {
             respond(exchange, 200, invitation("REJECTED"));
             return;
         }
+        if ("POST".equals(method) && "/api/auth/email/verification/request".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("POST".equals(method) && "/api/auth/email/verification/confirm".equals(path)) {
+            respond(exchange, 200, user());
+            return;
+        }
+        if ("POST".equals(method) && "/api/auth/password/reset/request".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("POST".equals(method) && "/api/auth/password/reset/confirm".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
         respond(exchange, 404, "{\"detail\":\"not found\"}");
     }
 
@@ -103,6 +125,12 @@ class FinanzasApiClientTest {
                 + "\"invitedEmail\":\"ana@example.com\",\"invitedByUserId\":\"u-1\","
                 + "\"role\":\"MEMBER\",\"status\":\"" + status + "\","
                 + "\"expiresAt\":\"2026-09-14T00:00:00Z\",\"createdAt\":\"2026-09-01T00:00:00Z\"}";
+    }
+
+    private String user() {
+        return "{\"id\":\"u-1\",\"nombre\":\"Ana\",\"apellido\":\"Lopez\",\"email\":\"ana@example.com\","
+                + "\"moneda\":\"COP\",\"locale\":\"es-CO\",\"tipoCuenta\":\"PERSONAL\","
+                + "\"avatarRef\":\"\",\"emailVerified\":true}";
     }
 
     private void respond(HttpExchange exchange, int status, String body) throws IOException {

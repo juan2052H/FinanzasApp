@@ -18,5 +18,7 @@
 - Cliente API agrega creacion de workspaces y flujo de invitaciones internas.
 - Header Swing agrega selector persistente de workspace activo y creacion de workspace.
 - Panel de hogar agrega bandeja de invitaciones recibidas/enviadas con aceptar, rechazar, cancelar y refrescar.
+- Backend agrega tokens de verificacion de correo y recuperacion de contrasena con hash, TTL, mail sink local y revocacion de refresh tokens tras reset.
+- Login Swing permite solicitar recuperacion/verificacion y confirmar tokens del backend.
 - Persistencia local agrega `ObjectInputFilter` y limites de restauracion ZIP.
 - OpenAPI se actualizo y se sincronizo entre backend y cliente.

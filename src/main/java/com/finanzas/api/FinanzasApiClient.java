@@ -63,6 +63,32 @@ public final class FinanzasApiClient {
         return parseAuthResponse(post("/api/auth/refresh", SimpleJson.stringify(body), null));
     }
 
+    public void requestEmailVerification(String email) throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("email", email);
+        post("/api/auth/email/verification/request", SimpleJson.stringify(body), null);
+    }
+
+    public BackendUser confirmEmailVerification(String token) throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("token", token);
+        return toUser(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/auth/email/verification/confirm", SimpleJson.stringify(body), null))));
+    }
+
+    public void requestPasswordReset(String email) throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("email", email);
+        post("/api/auth/password/reset/request", SimpleJson.stringify(body), null);
+    }
+
+    public void confirmPasswordReset(String token, String password) throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("token", token);
+        body.put("password", password);
+        post("/api/auth/password/reset/confirm", SimpleJson.stringify(body), null);
+    }
+
     public List<BackendWorkspace> listWorkspaces(String accessToken) throws IOException, InterruptedException {
         String response = send(HttpRequest.newBuilder(uri("/api/workspaces"))
                 .timeout(Duration.ofSeconds(12))
@@ -615,7 +641,8 @@ public final class FinanzasApiClient {
                 SimpleJson.string(object, "moneda"),
                 SimpleJson.string(object, "locale"),
                 SimpleJson.string(object, "tipoCuenta"),
-                SimpleJson.string(object, "avatarRef"));
+                SimpleJson.string(object, "avatarRef"),
+                SimpleJson.bool(object, "emailVerified"));
     }
 
     private BackendWorkspace toWorkspace(Map<String, Object> object) {

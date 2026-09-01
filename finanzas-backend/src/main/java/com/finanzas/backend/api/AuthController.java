@@ -41,6 +41,29 @@ public class AuthController {
         auth.logout(request.refreshToken());
     }
 
+    @PostMapping("/email/verification/request")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void requestEmailVerification(@Valid @RequestBody AuthDtos.EmailRequest request) {
+        auth.requestEmailVerification(request);
+    }
+
+    @PostMapping("/email/verification/confirm")
+    public AuthDtos.UserResponse confirmEmail(@Valid @RequestBody AuthDtos.TokenRequest request) {
+        return auth.confirmEmail(request);
+    }
+
+    @PostMapping("/password/reset/request")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void requestPasswordReset(@Valid @RequestBody AuthDtos.EmailRequest request) {
+        auth.requestPasswordReset(request);
+    }
+
+    @PostMapping("/password/reset/confirm")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmPasswordReset(@Valid @RequestBody AuthDtos.PasswordResetConfirmRequest request) {
+        auth.confirmPasswordReset(request);
+    }
+
     @PostMapping("/google")
     public AuthDtos.AuthResponse google(@Valid @RequestBody AuthDtos.GoogleRequest request) {
         return auth.google(request);

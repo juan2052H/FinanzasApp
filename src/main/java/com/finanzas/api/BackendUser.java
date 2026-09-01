@@ -9,8 +9,14 @@ public final class BackendUser {
     private final String locale;
     private final String tipoCuenta;
     private final String avatarRef;
+    private final boolean emailVerified;
 
     public BackendUser(String id, String nombre, String apellido, String email, String moneda, String locale, String tipoCuenta, String avatarRef) {
+        this(id, nombre, apellido, email, moneda, locale, tipoCuenta, avatarRef, false);
+    }
+
+    public BackendUser(String id, String nombre, String apellido, String email, String moneda, String locale,
+                       String tipoCuenta, String avatarRef, boolean emailVerified) {
         this.id = id;
         this.nombre = nombre == null ? "" : nombre;
         this.apellido = apellido == null ? "" : apellido;
@@ -19,6 +25,7 @@ public final class BackendUser {
         this.locale = locale == null ? "es-CO" : locale;
         this.tipoCuenta = tipoCuenta == null || tipoCuenta.trim().isEmpty() ? "PERSONAL" : tipoCuenta;
         this.avatarRef = avatarRef == null ? "" : avatarRef;
+        this.emailVerified = emailVerified;
     }
 
     public String getId() { return id; }
@@ -29,4 +36,5 @@ public final class BackendUser {
     public String getLocale() { return locale; }
     public String getTipoCuenta() { return tipoCuenta; }
     public String getAvatarRef() { return avatarRef; }
+    public boolean isEmailVerified() { return emailVerified; }
 }

@@ -1,6 +1,6 @@
 ﻿# Inventario inicial
 
-Generado: 2026-08-31 20:56:30 -05:00
+Generado: 2026-08-31 21:05:46 -05:00
 
 Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 
@@ -21,7 +21,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\api\CurrentUser.java: com.finanzas.backend.api - class CurrentUser
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AnalyticsDtos.java: com.finanzas.backend.api.dto - class AnalyticsDtos, record SummaryResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuditDtos.java: com.finanzas.backend.api.dto - class AuditDtos, record AuditLogResponse
-- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuthDtos.java: com.finanzas.backend.api.dto - class AuthDtos, record RegisterRequest, record LoginRequest, record RefreshRequest, record LogoutRequest, record GoogleRequest, record AuthResponse, record UserResponse, record UserPatchRequest
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuthDtos.java: com.finanzas.backend.api.dto - class AuthDtos, record RegisterRequest, record LoginRequest, record RefreshRequest, record LogoutRequest, record EmailRequest, record TokenRequest, record PasswordResetConfirmRequest, record GoogleRequest, record AuthResponse, record UserResponse, record UserPatchRequest
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\BudgetDtos.java: com.finanzas.backend.api.dto - class BudgetDtos, record BudgetRequest, record BudgetResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\CategoryDtos.java: com.finanzas.backend.api.dto - class CategoryDtos, record CategoryRequest, record CategoryResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\HouseholdDtos.java: com.finanzas.backend.api.dto - class HouseholdDtos, record InvitationRequest, record InvitationResponse, record MemberResponse, record MemberRoleRequest, record SplitParticipantRequest, record SharedExpenseRequest, record ExpenseSplitResponse, record SharedExpenseResponse, record SettlementRequest, record SettlementResponse, record MemberBalanceResponse
@@ -45,6 +45,8 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceController.java: com.finanzas.backend.api - class WorkspaceController
 - finanzas-backend\src\main\java\com\finanzas\backend\api\WorkspaceMemberController.java: com.finanzas.backend.api - class WorkspaceMemberController
 - finanzas-backend\src\main\java\com\finanzas\backend\config\ProductionSafetyValidator.java: com.finanzas.backend.config - class ProductionSafetyValidator
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\AccountTokenEntity.java: com.finanzas.backend.domain - class AccountTokenEntity
+- finanzas-backend\src\main\java\com\finanzas\backend\domain\AccountTokenType.java: com.finanzas.backend.domain - enum AccountTokenType
 - finanzas-backend\src\main\java\com\finanzas\backend\domain\AuditLogEntity.java: com.finanzas.backend.domain - class AuditLogEntity
 - finanzas-backend\src\main\java\com\finanzas\backend\domain\AuthProvider.java: com.finanzas.backend.domain - enum AuthProvider
 - finanzas-backend\src\main\java\com\finanzas\backend\domain\BudgetEntity.java: com.finanzas.backend.domain - class BudgetEntity
@@ -76,6 +78,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceRole.java: com.finanzas.backend.domain - enum WorkspaceRole
 - finanzas-backend\src\main\java\com\finanzas\backend\domain\WorkspaceType.java: com.finanzas.backend.domain - enum WorkspaceType
 - finanzas-backend\src\main\java\com\finanzas\backend\FinanzasBackendApplication.java: com.finanzas.backend - class FinanzasBackendApplication
+- finanzas-backend\src\main\java\com\finanzas\backend\repo\AccountTokenRepository.java: com.finanzas.backend.repo - interface AccountTokenRepository
 - finanzas-backend\src\main\java\com\finanzas\backend\repo\AuditLogRepository.java: com.finanzas.backend.repo - interface AuditLogRepository
 - finanzas-backend\src\main\java\com\finanzas\backend\repo\BudgetRepository.java: com.finanzas.backend.repo - interface BudgetRepository
 - finanzas-backend\src\main\java\com\finanzas\backend\repo\CategoryRepository.java: com.finanzas.backend.repo - interface CategoryRepository
@@ -97,6 +100,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\security\JwtAuthenticationFilter.java: com.finanzas.backend.security - class JwtAuthenticationFilter
 - finanzas-backend\src\main\java\com\finanzas\backend\security\JwtService.java: com.finanzas.backend.security - class JwtService
 - finanzas-backend\src\main\java\com\finanzas\backend\security\SecurityConfig.java: com.finanzas.backend.security - class SecurityConfig
+- finanzas-backend\src\main\java\com\finanzas\backend\service\AccountTokenService.java: com.finanzas.backend.service - class AccountTokenService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\AnalyticsService.java: com.finanzas.backend.service - class AnalyticsService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\AuditLogService.java: com.finanzas.backend.service - class AuditLogService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\AuthApplicationService.java: com.finanzas.backend.service - class AuthApplicationService
@@ -104,6 +108,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\service\BudgetService.java: com.finanzas.backend.service - class BudgetService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\CategoryService.java: com.finanzas.backend.service - class CategoryService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\DefaultCategoryService.java: com.finanzas.backend.service - class DefaultCategoryService
+- finanzas-backend\src\main\java\com\finanzas\backend\service\EmailDeliveryService.java: com.finanzas.backend.service - class EmailDeliveryService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\LoginRateLimiter.java: com.finanzas.backend.service - class LoginRateLimiter
 - finanzas-backend\src\main\java\com\finanzas\backend\service\NotificationService.java: com.finanzas.backend.service - class NotificationService
 - finanzas-backend\src\main\java\com\finanzas\backend\service\RecurringTransactionService.java: com.finanzas.backend.service - class RecurringTransactionService
@@ -221,6 +226,10 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
   - POST /api/auth/login
   - POST /api/auth/refresh
   - POST /api/auth/logout
+  - POST /api/auth/email/verification/request
+  - POST /api/auth/email/verification/confirm
+  - POST /api/auth/password/reset/request
+  - POST /api/auth/password/reset/confirm
   - POST /api/auth/google
 - finanzas-backend\src\main\java\com\finanzas\backend\api\BudgetController.java (BudgetController), base /api/workspaces/{workspaceId}/budgets
   - ANY /api/workspaces/{workspaceId}/budgets/api/workspaces/{workspaceId}/budgets
@@ -302,23 +311,29 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\resources\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
 - finanzas-backend\src\main\resources\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
 - finanzas-backend\src\main\resources\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- finanzas-backend\src\main\resources\db\migration\V5__auth_lifecycle_tokens.sql: table account_tokens; index idx_account_tokens_user_type_active; index idx_account_tokens_expires_at; alter users
 - finanzas-backend\target\classes\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
 - finanzas-backend\target\classes\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
 - finanzas-backend\target\classes\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
 - finanzas-backend\target\classes\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- finanzas-backend\target\classes\db\migration\V5__auth_lifecycle_tokens.sql: table account_tokens; index idx_account_tokens_user_type_active; index idx_account_tokens_expires_at; alter users
 - src\main\resources\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
 - src\main\resources\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
 - src\main\resources\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
 - src\main\resources\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- src\main\resources\db\migration\V5__auth_lifecycle_tokens.sql: table account_tokens; index idx_account_tokens_user_type_active; index idx_account_tokens_expires_at; alter users
 - target\classes\db\migration\V1__initial_finanzas_schema.sql: table users; table workspaces; table workspace_members; table workspace_invitations; table categories; table transactions; table budgets; table savings_goals; table recurring_transactions; table shared_expenses; table expense_splits; table settlements; table user_settings; table notifications; table audit_logs; index idx_workspace_members_user; index idx_invitations_workspace_status; index idx_categories_workspace; index idx_transactions_workspace_date; index idx_transactions_category; index idx_transactions_user; index idx_budgets_workspace_period; index idx_goals_workspace_status; index idx_recurring_workspace_next_run; index idx_shared_expenses_workspace_status; index idx_splits_user; index idx_settlements_workspace_date; index idx_notifications_user_read; index idx_audit_workspace_created
 - target\classes\db\migration\V2__persistent_refresh_tokens.sql: table refresh_tokens; index idx_refresh_tokens_user_active; index idx_refresh_tokens_expires_at
 - target\classes\db\migration\V3__recurring_custom_interval.sql: alter recurring_transactions
 - target\classes\db\migration\V4__savings_ledger.sql: table savings_config; table savings_movements; index idx_savings_config_workspace; index idx_savings_movements_workspace_date; index idx_savings_movements_source_transaction; index idx_savings_movements_goal
+- target\classes\db\migration\V5__auth_lifecycle_tokens.sql: table account_tokens; index idx_account_tokens_user_type_active; index idx_account_tokens_expires_at; alter users
 
 ## Pruebas
 
 - finanzas-backend\src\test\java\com\finanzas\backend\db\FlywayPostgresMigrationTest.java: FlywayPostgresMigrationTest (2 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\domain\RecurringTransactionEntityTest.java: RecurringTransactionEntityTest (3 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\AccountTokenServiceTest.java: AccountTokenServiceTest (2 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\AuthApplicationServiceTest.java: AuthApplicationServiceTest (3 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\AvatarStorageServiceTest.java: AvatarStorageServiceTest (8 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\RefreshTokenServiceTest.java: RefreshTokenServiceTest (1 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SavingsServiceTest.java: SavingsServiceTest (6 tests anotados)

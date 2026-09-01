@@ -20,6 +20,10 @@ paths:
       responses:
         '201':
           description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
   /api/auth/login:
     post:
       summary: Iniciar sesion
@@ -33,6 +37,10 @@ paths:
       responses:
         '200':
           description: Sesion iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
   /api/auth/google:
     post:
       summary: Completar Google OpenID Connect con Authorization Code + PKCE
@@ -46,18 +54,104 @@ paths:
       responses:
         '200':
           description: Sesion iniciada o cuenta vinculada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
   /api/auth/refresh:
     post:
       summary: Renovar sesion
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200':
           description: Token renovado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
   /api/auth/logout:
     post:
       summary: Cerrar sesion actual
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
       responses:
         '204':
           description: Sesion cerrada
+  /api/auth/email/verification/request:
+    post:
+      summary: Solicitar email de verificacion
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '204':
+          description: Solicitud recibida sin revelar si el correo existe
+  /api/auth/email/verification/confirm:
+    post:
+      summary: Confirmar email con token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Email confirmado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Token invalido
+        '410':
+          description: Token expirado
+  /api/auth/password/reset/request:
+    post:
+      summary: Solicitar recuperacion de contrasena
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '204':
+          description: Solicitud recibida sin revelar si el correo existe
+  /api/auth/password/reset/confirm:
+    post:
+      summary: Confirmar recuperacion de contrasena
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '204':
+          description: Contrasena actualizada y sesiones revocadas
+        '400':
+          description: Token invalido
+        '410':
+          description: Token expirado
   /api/users/me:
     get:
       summary: Obtener perfil autenticado
@@ -1012,6 +1106,74 @@ components:
           format: email
         password:
           type: string
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    LogoutRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    TokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    PasswordResetConfirmRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserResponse'
+    UserResponse:
+      type: object
+      required: [id, nombre, email, moneda, locale, tipoCuenta, avatarRef, emailVerified]
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        moneda:
+          type: string
+        locale:
+          type: string
+        tipoCuenta:
+          type: string
+        avatarRef:
+          type: string
+        emailVerified:
+          type: boolean
     GoogleAuthRequest:
       type: object
       required: [authorizationCode, codeVerifier, redirectUri]

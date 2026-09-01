@@ -10,7 +10,14 @@ Usa `.env.example` como base. En produccion no uses los valores de desarrollo:
 - `POSTGRES_PASSWORD`
 - `FINANZAS_JWT_SECRET`
 - `FINANZAS_STORAGE_DIR`
+- `FINANZAS_PUBLIC_BASE_URL`
+- `FINANZAS_EMAIL_MODE=file|log|disabled`
+- `FINANZAS_EMAIL_SINK_DIR`
+- `FINANZAS_EMAIL_VERIFICATION_HOURS`
+- `FINANZAS_PASSWORD_RESET_MINUTES`
 - `GOOGLE_OAUTH_CLIENT_ID`
+
+En dev, los emails de verificacion/reset se escriben como `.eml` en `FINANZAS_EMAIL_SINK_DIR`.
 
 ## Docker Compose
 

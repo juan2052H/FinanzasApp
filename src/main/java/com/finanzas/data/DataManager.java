@@ -428,6 +428,93 @@ public class DataManager {
         }
     }
 
+    public boolean requestBackendEmailVerification(String email) {
+        if (!BackendConfig.isEnabled()) {
+            lastErrorMessage = "Activa FINANZAS_API_ENABLED=true para verificar correo con backend.";
+            return false;
+        }
+        try {
+            apiClient.requestEmailVerification(email == null ? "" : email.trim());
+            lastErrorMessage = "";
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Solicitud interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible solicitar verificacion de correo." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Solicitud de verificacion de correo fallida.", ex);
+            return false;
+        }
+    }
+
+    public boolean confirmBackendEmailVerification(String token) {
+        if (!BackendConfig.isEnabled()) {
+            lastErrorMessage = "Activa FINANZAS_API_ENABLED=true para verificar correo con backend.";
+            return false;
+        }
+        try {
+            BackendUser verified = apiClient.confirmEmailVerification(token == null ? "" : token.trim());
+            if (verified != null && currentUser != null && AuthService.normalizeEmail(verified.getEmail()).equals(currentUser)) {
+                UserProfile profile = p();
+                if (profile != null) {
+                    profile.usuario.setEmail(verified.getEmail());
+                }
+            }
+            lastErrorMessage = "";
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Confirmacion interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible confirmar el correo." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Confirmacion de correo fallida.", ex);
+            return false;
+        }
+    }
+
+    public boolean requestBackendPasswordReset(String email) {
+        if (!BackendConfig.isEnabled()) {
+            lastErrorMessage = "Activa FINANZAS_API_ENABLED=true para recuperar contrasena con backend.";
+            return false;
+        }
+        try {
+            apiClient.requestPasswordReset(email == null ? "" : email.trim());
+            lastErrorMessage = "";
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Solicitud interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible solicitar recuperacion de contrasena." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Solicitud de recuperacion fallida.", ex);
+            return false;
+        }
+    }
+
+    public boolean confirmBackendPasswordReset(String token, String password) {
+        if (!BackendConfig.isEnabled()) {
+            lastErrorMessage = "Activa FINANZAS_API_ENABLED=true para recuperar contrasena con backend.";
+            return false;
+        }
+        try {
+            apiClient.confirmPasswordReset(token == null ? "" : token.trim(), password == null ? "" : password);
+            backendSession = null;
+            lastErrorMessage = "";
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Confirmacion interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible actualizar la contrasena." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Confirmacion de recuperacion fallida.", ex);
+            return false;
+        }
+    }
+
     private void applyBackendSession(BackendSession session) {
         if (session == null || session.getUser() == null) {
             throw new IllegalArgumentException("El backend no devolvio una sesion valida.");

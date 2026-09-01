@@ -35,10 +35,17 @@ management:
         enabled: true
 
 finanzas:
+  public-base-url: ${FINANZAS_PUBLIC_BASE_URL:http://localhost:8080}
   jwt:
     secret: ${FINANZAS_JWT_SECRET:dev-only-change-this-secret-before-real-use}
     access-token-minutes: ${FINANZAS_ACCESS_TOKEN_MINUTES:15}
     refresh-token-days: ${FINANZAS_REFRESH_TOKEN_DAYS:14}
+  account:
+    email-verification-hours: ${FINANZAS_EMAIL_VERIFICATION_HOURS:48}
+    password-reset-minutes: ${FINANZAS_PASSWORD_RESET_MINUTES:30}
+  email:
+    mode: ${FINANZAS_EMAIL_MODE:file}
+    sink-dir: ${FINANZAS_EMAIL_SINK_DIR:./storage/mail}
   storage:
     root: ${FINANZAS_STORAGE_DIR:./storage}
   google:

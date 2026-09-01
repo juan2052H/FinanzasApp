@@ -28,13 +28,22 @@ public final class AuthDtos {
     public record LogoutRequest(@NotBlank String refreshToken) {
     }
 
+    public record EmailRequest(@Email @NotBlank String email) {
+    }
+
+    public record TokenRequest(@NotBlank String token) {
+    }
+
+    public record PasswordResetConfirmRequest(@NotBlank String token, @NotBlank @Size(min = 8) String password) {
+    }
+
     public record GoogleRequest(@NotBlank String authorizationCode, @NotBlank String codeVerifier, @NotBlank String redirectUri) {
     }
 
     public record AuthResponse(String accessToken, String refreshToken, UserResponse user) {
     }
 
-    public record UserResponse(UUID id, String nombre, String apellido, String email, String moneda, String locale, String tipoCuenta, String avatarRef) {
+    public record UserResponse(UUID id, String nombre, String apellido, String email, String moneda, String locale, String tipoCuenta, String avatarRef, boolean emailVerified) {
     }
 
     public record UserPatchRequest(@NotBlank String nombre, String apellido, @Email @NotBlank String email, String moneda, String locale) {

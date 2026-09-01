@@ -17,7 +17,7 @@
 | SAV-008 concurrencia | Maxima | UC-013 | `SavingsService` | V4 | `/withdrawals` | No hay prueba concurrente real | Pendiente | Pendiente | Requiere test transaccional DB |
 | SAV-010 analytics/reportes | Maxima | UC-023 | `AnalyticsService`, `ReportService`, `DataManager` | V4 | `/analytics/summary`, `/reports/summary` | Compilacion/tests ahorro | Revisar resumen | Parcial | Backend y dashboard API usan libro mayor |
 | Avatar remoto completo | Maxima | UC-004 | `AvatarStorageService`, `UserController`, API client, cache local | N/A | `GET/POST/DELETE /api/users/me/avatar` | `AvatarStorageServiceTest` | Subir desde dos clientes | Parcial alto | Falta E2E dos clientes/cache 304 |
-| Perfil backend | Alta | UC-004 | `UserController`, `AuthDtos` | N/A | `/api/users/me` | Compilacion | Editar perfil | Parcial | Ciudad/pais/settings pendientes |
+| Perfil backend | Alta | UC-004 | `UserController`, `AuthDtos`, `UserEntity` | V5 | `/api/users/me` | Backend tests | Editar perfil | Parcial | `emailVerified` expuesto; ciudad/pais/settings pendientes |
 | Refresh token automatico cliente | Alta | UC-002, UC-028 | `FinanzasApiClient`, `DataManager` | N/A | `/auth/refresh` | Compilacion | Forzar 401 | Parcial | Retry unico tras 401 |
 | Categorias buscador/restauracion/color | Alta | UC-016 | `CategoryService`, `CategoryController`, `ConfiguracionPanel`, modelo | N/A | `/categories`, `/restore` | Cliente tests existentes | Buscar cafe/Cafe | Parcial | Falta test API dedicado |
 | OpenAPI sin deriva | Alta | UC-023 | OpenAPI backend/cliente, `sync-openapi.ps1`, CI | N/A | Todos | `cmp` en CI | Comparar archivos | Implementado | Rutas nuevas documentadas |
@@ -27,8 +27,8 @@
 | Workspaces selector activo | Alta | UC-006 | `DataManager`, `HeaderPanel`, `FinanzasApiClient` | N/A | `/workspaces` | `FinanzasApiClientTest` | Cambiar workspace desde header | Implementado cliente | Selector persistido por usuario, crea workspace y sincroniza snapshot |
 | Invitaciones Swing completas | Alta | UC-008 | `FinanzasHogarPanel`, `DataManager`, `FinanzasApiClient`, `WorkspaceCollaborationServiceTest` | N/A | `/invitations/*`, `/members` | Cliente HTTP + backend service tests | Invitar/aceptar/rechazar/cancelar desde UI | Parcial alto | Bandeja interna lista; falta E2E real dos clientes y cambio de rol UI |
 | Sincronizacion incremental continua | Alta | UC-028 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | Snapshot manual/parcial |
-| Email provider/sink | Media | UC-008, UC-003 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | Invitacion interna aun posible por API |
-| Password reset/verificacion/sesiones | Alta | UC-003 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | No implementado |
+| Email provider/sink | Media | UC-008, UC-003 | `EmailDeliveryService`, `.env.example`, `docker-compose.yml` | N/A | Auth email/reset | `AuthApplicationServiceTest` | Revisar `storage/mail` | Parcial | Sink file/log/disabled; SMTP real pendiente |
+| Password reset/verificacion/sesiones | Alta | UC-003 | `AccountTokenService`, `AuthApplicationService`, `AuthController`, `LoginFrame` | V5 | `/auth/email/verification/*`, `/auth/password/reset/*` | `AccountTokenServiceTest`, `AuthApplicationServiceTest`, `FinanzasApiClientTest` | Solicitar y pegar token desde mail sink | Parcial alto | Reset/verificacion implementados; listado/revocacion individual de sesiones pendiente |
 | Tema claro/oscuro/settings | Media | UC-025 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | `user_settings` no conectado |
 | Facturas/compras | Media | UC-017 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | No implementado |
 | Simulador avanzado/calculadora | Media | UC-021, UC-022 | Simulador existente parcial | N/A | N/A | Tests simulacion | Pendiente | Parcial | Calculadora no completa |

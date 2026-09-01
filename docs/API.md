@@ -17,6 +17,10 @@ La CI verifica que ambas copias sean iguales con `cmp`.
 - `GET /api/users/me/avatar`: devuelve PNG autenticado con `ETag` y `Last-Modified`.
 - `POST /api/users/me/avatar`: sube multipart, valida PNG/JPEG real y normaliza a PNG cuadrado.
 - `DELETE /api/users/me/avatar`: elimina avatar remoto.
+- `POST /api/auth/email/verification/request`: solicita email de verificacion sin revelar si la cuenta existe.
+- `POST /api/auth/email/verification/confirm`: confirma correo con token de un solo uso.
+- `POST /api/auth/password/reset/request`: solicita recuperacion de contrasena sin enumerar cuentas.
+- `POST /api/auth/password/reset/confirm`: actualiza contrasena y revoca refresh tokens activos.
 - `GET /api/workspaces/{workspaceId}/categories?type=&includeArchived=&q=`: busqueda/filtros.
 - `POST /api/workspaces/{workspaceId}/categories/{categoryId}/restore`: restaura sin cambiar UUID.
 - `GET/PUT /api/workspaces/{workspaceId}/savings/config`.
@@ -50,3 +54,4 @@ Los errores REST usan `ProblemDetail` con `errorCode`, `correlationId` y, cuando
 
 - Se retiraron del OpenAPI rutas de analytics que no existen en controladores (`cash-flow`, `categories`, `health`).
 - PDF/XLSX estan expuestos por backend, pero el generador actual sigue siendo minimo. La sustitucion por PDFBox/OpenPDF y Apache POI queda en limitaciones.
+- En dev/test los emails se entregan a `FINANZAS_EMAIL_SINK_DIR` cuando `FINANZAS_EMAIL_MODE=file`.

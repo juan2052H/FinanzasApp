@@ -1,6 +1,7 @@
 package com.finanzas.backend.service;
 
 import com.finanzas.backend.api.dto.AuthDtos;
+import com.finanzas.backend.domain.AccountTokenType;
 import com.finanzas.backend.domain.AuthProvider;
 import com.finanzas.backend.domain.UserEntity;
 import com.finanzas.backend.domain.WorkspaceEntity;
@@ -25,12 +26,17 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Service
 public class AuthApplicationService {
+    private static final Logger LOGGER = Logger.getLogger(AuthApplicationService.class.getName());
+
     private final UserRepository users;
     private final WorkspaceRepository workspaces;
     private final WorkspaceMemberRepository members;
@@ -40,7 +46,10 @@ public class AuthApplicationService {
     private final LoginRateLimiter rateLimiter;
     private final DefaultCategoryService defaultCategories;
     private final AuditLogService auditLogs;
+    private final AccountTokenService accountTokens;
+    private final EmailDeliveryService emailDelivery;
     private final String googleClientId;
+    private final String publicBaseUrl;
     private final RestClient restClient = RestClient.create();
 
     public AuthApplicationService(UserRepository users,
@@ -52,7 +61,10 @@ public class AuthApplicationService {
                                   LoginRateLimiter rateLimiter,
                                   DefaultCategoryService defaultCategories,
                                   AuditLogService auditLogs,
-                                  @Value("${finanzas.google.client-id:}") String googleClientId) {
+                                  AccountTokenService accountTokens,
+                                  EmailDeliveryService emailDelivery,
+                                  @Value("${finanzas.google.client-id:}") String googleClientId,
+                                  @Value("${finanzas.public-base-url:http://localhost:8080}") String publicBaseUrl) {
         this.users = users;
         this.workspaces = workspaces;
         this.members = members;
@@ -62,7 +74,10 @@ public class AuthApplicationService {
         this.rateLimiter = rateLimiter;
         this.defaultCategories = defaultCategories;
         this.auditLogs = auditLogs;
+        this.accountTokens = accountTokens;
+        this.emailDelivery = emailDelivery;
         this.googleClientId = googleClientId == null ? "" : googleClientId.trim();
+        this.publicBaseUrl = trimTrailingSlash(publicBaseUrl == null ? "http://localhost:8080" : publicBaseUrl.trim());
     }
 
     @Transactional
@@ -88,6 +103,7 @@ public class AuthApplicationService {
         auditLogs.record(workspace.getId(), user.getId(), "USER_REGISTERED", "User", user.getId(), Map.of(
                 "provider", AuthProvider.PASSWORD.name(),
                 "workspaceType", workspaceType.name()));
+        trySendEmailVerification(user);
         return issue(user);
     }
 
@@ -108,6 +124,39 @@ public class AuthApplicationService {
         }
         rateLimiter.recordSuccess(email);
         return issue(user);
+    }
+
+    @Transactional
+    public void requestEmailVerification(AuthDtos.EmailRequest request) {
+        String email = UserEntity.normalizeEmail(request.email());
+        users.findByEmail(email)
+                .filter(user -> !user.isEmailVerified())
+                .ifPresent(this::sendEmailVerification);
+    }
+
+    @Transactional
+    public AuthDtos.UserResponse confirmEmail(AuthDtos.TokenRequest request) {
+        UUID userId = accountTokens.consume(request.token(), AccountTokenType.EMAIL_VERIFICATION);
+        UserEntity user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        user.markEmailVerified(Instant.now());
+        return toUserResponse(user);
+    }
+
+    @Transactional
+    public void requestPasswordReset(AuthDtos.EmailRequest request) {
+        String email = UserEntity.normalizeEmail(request.email());
+        users.findByEmail(email).ifPresent(this::sendPasswordReset);
+    }
+
+    @Transactional
+    public void confirmPasswordReset(AuthDtos.PasswordResetConfirmRequest request) {
+        UUID userId = accountTokens.consume(request.token(), AccountTokenType.PASSWORD_RESET);
+        UserEntity user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        refreshTokens.revokeAll(userId);
+        rateLimiter.recordSuccess(user.getEmail());
     }
 
     @Transactional
@@ -136,6 +185,7 @@ public class AuthApplicationService {
         if (!jwt.getAudience().contains(googleClientId)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El token de Google no corresponde a este cliente.");
         }
+        boolean emailVerified = Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified"));
         String email = UserEntity.normalizeEmail(jwt.getClaimAsString("email"));
         String name = jwt.getClaimAsString("given_name");
         String family = jwt.getClaimAsString("family_name");
@@ -153,6 +203,9 @@ public class AuthApplicationService {
                         "COP",
                         "PERSONAL",
                         AuthProvider.GOOGLE)));
+        if (emailVerified) {
+            user.markEmailVerified(Instant.now());
+        }
         ensurePersonalWorkspace(user);
         return issue(user);
     }
@@ -194,6 +247,44 @@ public class AuthApplicationService {
         }
     }
 
+    private void trySendEmailVerification(UserEntity user) {
+        try {
+            sendEmailVerification(user);
+        } catch (RuntimeException ex) {
+            LOGGER.log(Level.WARNING, "Cuenta registrada, pero no fue posible emitir email de verificacion.", ex);
+        }
+    }
+
+    private void sendEmailVerification(UserEntity user) {
+        String token = accountTokens.issue(user.getId(), AccountTokenType.EMAIL_VERIFICATION);
+        String link = publicBaseUrl + "/verify-email?token=" + token;
+        emailDelivery.sendAccountEmail(
+                user.getEmail(),
+                "Confirma tu correo en FinanzasApp",
+                "Confirma tu correo en FinanzasApp:" + System.lineSeparator()
+                        + link + System.lineSeparator()
+                        + "Este enlace vence segun la politica de seguridad configurada.");
+    }
+
+    private void sendPasswordReset(UserEntity user) {
+        String token = accountTokens.issue(user.getId(), AccountTokenType.PASSWORD_RESET);
+        String link = publicBaseUrl + "/reset-password?token=" + token;
+        emailDelivery.sendAccountEmail(
+                user.getEmail(),
+                "Restablece tu contrasena en FinanzasApp",
+                "Restablece tu contrasena en FinanzasApp:" + System.lineSeparator()
+                        + link + System.lineSeparator()
+                        + "Si no solicitaste este cambio, ignora este mensaje.");
+    }
+
+    private String trimTrailingSlash(String value) {
+        String result = value == null || value.trim().isEmpty() ? "http://localhost:8080" : value.trim();
+        while (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
     private WorkspaceType parseWorkspaceType(String tipoCuenta) {
         if (tipoCuenta == null) {
             return WorkspaceType.PERSONAL;
@@ -217,6 +308,7 @@ public class AuthApplicationService {
                 user.getMoneda(),
                 user.getLocale(),
                 user.getTipoCuenta(),
-                user.getAvatarRef() == null || user.getAvatarRef().isBlank() ? "" : AvatarStorageService.publicRef(user.getId()));
+                user.getAvatarRef() == null || user.getAvatarRef().isBlank() ? "" : AvatarStorageService.publicRef(user.getId()),
+                user.isEmailVerified());
     }
 }

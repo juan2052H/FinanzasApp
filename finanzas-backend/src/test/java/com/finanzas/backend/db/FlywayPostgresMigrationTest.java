@@ -34,9 +34,10 @@ class FlywayPostgresMigrationTest {
         Flyway latest = flyway().load();
         latest.migrate();
 
-        assertEquals("4", currentVersion());
+        assertEquals("5", currentVersion());
         assertTrue(tableExists("savings_config"));
         assertTrue(tableExists("savings_movements"));
+        assertTrue(tableExists("account_tokens"));
     }
 
     private FluentConfiguration flyway() {

@@ -45,6 +45,9 @@ public class UserEntity {
     @Column(name = "avatar_ref", length = 1024)
     private String avatarRef;
 
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "proveedor_autenticacion", nullable = false, length = 40)
     private AuthProvider authProvider = AuthProvider.PASSWORD;
@@ -89,6 +92,7 @@ public class UserEntity {
     public String getLocale() { return locale; }
     public String getTipoCuenta() { return tipoCuenta; }
     public String getAvatarRef() { return avatarRef; }
+    public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
     public AuthProvider getAuthProvider() { return authProvider; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
@@ -96,7 +100,11 @@ public class UserEntity {
     public void updateProfile(String nombre, String apellido, String email, String moneda, String locale) {
         this.nombre = required(nombre, "nombre");
         this.apellido = apellido == null ? "" : apellido.trim();
-        this.email = normalizeEmail(email);
+        String normalizedEmail = normalizeEmail(email);
+        if (!normalizedEmail.equals(this.email)) {
+            this.emailVerifiedAt = null;
+        }
+        this.email = normalizedEmail;
         if (moneda != null && !moneda.trim().isEmpty()) {
             this.moneda = moneda.trim().toUpperCase(Locale.ROOT);
         }
@@ -111,6 +119,16 @@ public class UserEntity {
 
     public void setAvatarRef(String avatarRef) {
         this.avatarRef = avatarRef;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
+    }
+
+    public void markEmailVerified(Instant when) {
+        if (emailVerifiedAt == null) {
+            emailVerifiedAt = when == null ? Instant.now() : when;
+        }
     }
 
     public void linkGoogle() {

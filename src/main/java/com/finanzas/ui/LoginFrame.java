@@ -105,6 +105,10 @@ public class LoginFrame extends JFrame {
         }
 
         JButton registerLink = linkButton("No tienes cuenta? Registrate");
+        JButton resetPasswordLink = linkButton("Olvidaste tu contrasena?");
+        JButton verifyEmailLink = linkButton("Verificar correo");
+        resetPasswordLink.setEnabled(BackendConfig.isEnabled());
+        verifyEmailLink.setEnabled(BackendConfig.isEnabled());
 
         loginButton.addActionListener(e -> {
             String email = emailField.getText().trim();
@@ -147,6 +151,8 @@ public class LoginFrame extends JFrame {
         });
 
         registerLink.addActionListener(e -> cardLayout.show(cards, "register"));
+        resetPasswordLink.addActionListener(e -> showPasswordResetRequestDialog());
+        verifyEmailLink.addActionListener(e -> showEmailVerificationDialog());
 
         addField(card, gbc, 0, heading);
         addField(card, gbc, 1, helper);
@@ -158,6 +164,8 @@ public class LoginFrame extends JFrame {
         addField(card, gbc, 7, separatorLabel("O"));
         addField(card, gbc, 8, socialButton);
         addField(card, gbc, 9, registerLink);
+        addField(card, gbc, 10, resetPasswordLink);
+        addField(card, gbc, 11, verifyEmailLink);
         return card;
     }
 
@@ -238,7 +246,9 @@ public class LoginFrame extends JFrame {
             }
 
             JOptionPane.showMessageDialog(this,
-                    "Cuenta creada correctamente. Ahora puedes iniciar sesion.",
+                    BackendConfig.isEnabled()
+                            ? "Cuenta creada correctamente. Revisa el email de verificacion y luego inicia sesion."
+                            : "Cuenta creada correctamente. Ahora puedes iniciar sesion.",
                     "Registro exitoso",
                     JOptionPane.INFORMATION_MESSAGE);
             nameField.setText("");
@@ -320,6 +330,135 @@ public class LoginFrame extends JFrame {
         button.setFocusPainted(false);
         button.setHorizontalAlignment(SwingConstants.LEFT);
         return button;
+    }
+
+    private void showPasswordResetRequestDialog() {
+        if (!BackendConfig.isEnabled()) {
+            showError("Activa FINANZAS_API_ENABLED=true para recuperar contrasena.");
+            return;
+        }
+        JTextField emailField = new JTextField();
+        JPanel form = new JPanel(new GridLayout(1, 2, 8, 8));
+        form.add(new JLabel("Correo:"));
+        form.add(emailField);
+        int result = JOptionPane.showConfirmDialog(this, form, "Recuperar contrasena", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        String email = emailField.getText().trim();
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            showError("Ingresa un correo electronico valido.");
+            return;
+        }
+        runAccountAction(
+                () -> data.requestBackendPasswordReset(email),
+                "Si el correo existe, se enviaron instrucciones de recuperacion.",
+                this::showPasswordResetConfirmDialog);
+    }
+
+    private void showPasswordResetConfirmDialog() {
+        JPasswordField passwordField = new JPasswordField();
+        JPasswordField confirmField = new JPasswordField();
+        JTextField tokenField = new JTextField();
+        JPanel form = new JPanel(new GridLayout(3, 2, 8, 8));
+        form.add(new JLabel("Token:"));
+        form.add(tokenField);
+        form.add(new JLabel("Nueva contrasena:"));
+        form.add(passwordField);
+        form.add(new JLabel("Confirmar:"));
+        form.add(confirmField);
+        int result = JOptionPane.showConfirmDialog(this, form, "Confirmar recuperacion", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        String token = tokenField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        String confirm = new String(confirmField.getPassword());
+        if (token.isEmpty()) {
+            showError("Ingresa el token recibido.");
+            return;
+        }
+        if (password.length() < 8) {
+            showError("La contrasena debe tener al menos 8 caracteres.");
+            return;
+        }
+        if (!password.equals(confirm)) {
+            showError("La confirmacion de contrasena no coincide.");
+            return;
+        }
+        runAccountAction(
+                () -> data.confirmBackendPasswordReset(token, password),
+                "Contrasena actualizada. Inicia sesion nuevamente.",
+                null);
+    }
+
+    private void showEmailVerificationDialog() {
+        if (!BackendConfig.isEnabled()) {
+            showError("Activa FINANZAS_API_ENABLED=true para verificar correo.");
+            return;
+        }
+        JTextField emailField = new JTextField();
+        JTextField tokenField = new JTextField();
+        JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
+        form.add(new JLabel("Correo:"));
+        form.add(emailField);
+        form.add(new JLabel("Token:"));
+        form.add(tokenField);
+        int result = JOptionPane.showConfirmDialog(this, form, "Verificar correo", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        String token = tokenField.getText().trim();
+        if (token.isEmpty()) {
+            String email = emailField.getText().trim();
+            if (!EMAIL_PATTERN.matcher(email).matches()) {
+                showError("Ingresa un correo electronico valido.");
+                return;
+            }
+            runAccountAction(
+                    () -> data.requestBackendEmailVerification(email),
+                    "Si el correo existe y esta pendiente, se envio una nueva verificacion.",
+                    null);
+            return;
+        }
+        runAccountAction(
+                () -> data.confirmBackendEmailVerification(token),
+                "Correo verificado correctamente.",
+                null);
+    }
+
+    private void runAccountAction(AccountAction action, String successMessage, Runnable afterSuccess) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return action.run();
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = get();
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    String message = data.getLastErrorMessage();
+                    showError(message == null || message.trim().isEmpty() ? "No fue posible completar la accion." : message);
+                    return;
+                }
+                JOptionPane.showMessageDialog(LoginFrame.this, successMessage, "FinanzasApp", JOptionPane.INFORMATION_MESSAGE);
+                if (afterSuccess != null) {
+                    afterSuccess.run();
+                }
+            }
+        }.execute();
+    }
+
+    private interface AccountAction {
+        boolean run();
     }
 
     private void showError(String message) {
