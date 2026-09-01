@@ -13,6 +13,7 @@ import com.finanzas.api.BackendRecurringTransaction;
 import com.finanzas.api.BackendSettlement;
 import com.finanzas.api.BackendSavingsGoal;
 import com.finanzas.api.BackendSavingsSummary;
+import com.finanzas.api.BackendSessionInfo;
 import com.finanzas.api.BackendSharedExpense;
 import com.finanzas.api.BackendSession;
 import com.finanzas.api.BackendTransaction;
@@ -194,11 +195,97 @@ public class DataManager {
         if (p() == null) {
             return false;
         }
+        if (backendSession != null) {
+            try {
+                runBackend(token -> apiClient.changePassword(token, currentPassword, newPassword));
+                BackendSession freshSession = apiClient.login(p().usuario.getEmail(), newPassword);
+                applyBackendSession(freshSession);
+                syncBackendUserSettings();
+                syncBackendSnapshot();
+                lastErrorMessage = "";
+                notifyListeners();
+                return true;
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                lastErrorMessage = "Cambio de contrasena interrumpido.";
+                return false;
+            } catch (Exception ex) {
+                lastErrorMessage = ex.getMessage() == null ? "No fue posible cambiar la contrasena." : ex.getMessage();
+                LOGGER.log(Level.WARNING, "Cambio de contrasena backend fallido.", ex);
+                return false;
+            }
+        }
         boolean changed = AuthService.changePassword(p(), currentPassword, newPassword);
         if (changed) {
             notifyListeners();
+            lastErrorMessage = "";
+        } else {
+            lastErrorMessage = "La contrasena actual no es valida.";
         }
         return changed;
+    }
+
+    public List<BackendSessionInfo> listBackendSessions() {
+        if (backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return Collections.emptyList();
+        }
+        try {
+            List<BackendSessionInfo> sessions = callBackend(apiClient::listSessions);
+            lastErrorMessage = "";
+            return sessions;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Listado de sesiones interrumpido.";
+            return Collections.emptyList();
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible listar sesiones." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Listado de sesiones backend fallido.", ex);
+            return Collections.emptyList();
+        }
+    }
+
+    public boolean revokeBackendSession(String sessionId) {
+        if (backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            runBackend(token -> apiClient.revokeSession(token, sessionId));
+            lastErrorMessage = "";
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Revocacion interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible revocar la sesion." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Revocacion de sesion backend fallida.", ex);
+            return false;
+        }
+    }
+
+    public boolean revokeAllBackendSessions() {
+        if (backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            runBackend(apiClient::revokeAllSessions);
+            backendSession = null;
+            currentUser = null;
+            lastErrorMessage = "";
+            notifyListeners();
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Revocacion interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible cerrar las sesiones." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Revocacion total de sesiones backend fallida.", ex);
+            return false;
+        }
     }
 
     public void updateProfile(String nombre, String apellido, String email, String ciudad, String pais) {
@@ -400,6 +487,45 @@ public class DataManager {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new IOException("Exportacion interrumpida.", ex);
+        }
+    }
+
+    public File exportBackendAccount(File destination) throws IOException {
+        if (backendSession == null) {
+            throw new IOException("No hay una sesion backend activa.");
+        }
+        File target = ensureExtension(destination, ".json");
+        try {
+            String json = callBackend(apiClient::exportAccount);
+            Files.write(target.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            lastErrorMessage = "";
+            return target;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Exportacion de cuenta interrumpida.", ex);
+        }
+    }
+
+    public boolean deleteBackendAccount(String confirmEmail, String password) {
+        if (backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            runBackend(token -> apiClient.deleteAccount(token, confirmEmail, password));
+            backendSession = null;
+            currentUser = null;
+            lastErrorMessage = "";
+            notifyListeners();
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            lastErrorMessage = "Eliminacion de cuenta interrumpida.";
+            return false;
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "No fue posible eliminar la cuenta." : ex.getMessage();
+            LOGGER.log(Level.WARNING, "Eliminacion de cuenta backend fallida.", ex);
+            return false;
         }
     }
 

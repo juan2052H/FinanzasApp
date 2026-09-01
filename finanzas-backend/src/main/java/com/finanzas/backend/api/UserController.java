@@ -1,11 +1,13 @@
 package com.finanzas.backend.api;
 
+import com.finanzas.backend.api.dto.AccountDtos;
 import com.finanzas.backend.api.dto.AuthDtos;
 import com.finanzas.backend.api.dto.UserSettingsDtos;
 import com.finanzas.backend.domain.UserEntity;
 import com.finanzas.backend.repo.UserRepository;
 import com.finanzas.backend.service.AuthApplicationService;
 import com.finanzas.backend.service.AvatarStorageService;
+import com.finanzas.backend.service.UserAccountService;
 import com.finanzas.backend.service.UserSettingsService;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
@@ -28,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -35,11 +38,16 @@ import java.util.concurrent.TimeUnit;
 public class UserController {
     private final UserRepository users;
     private final AvatarStorageService avatarStorage;
+    private final UserAccountService userAccounts;
     private final UserSettingsService userSettings;
 
-    public UserController(UserRepository users, AvatarStorageService avatarStorage, UserSettingsService userSettings) {
+    public UserController(UserRepository users,
+                          AvatarStorageService avatarStorage,
+                          UserAccountService userAccounts,
+                          UserSettingsService userSettings) {
         this.users = users;
         this.avatarStorage = avatarStorage;
+        this.userAccounts = userAccounts;
         this.userSettings = userSettings;
     }
 
@@ -73,6 +81,19 @@ public class UserController {
             Authentication authentication,
             @RequestBody UserSettingsDtos.UserSettingsPatchRequest request) {
         return userSettings.update(requireUser(authentication), request);
+    }
+
+    @GetMapping("/export")
+    public Map<String, Object> exportAccount(Authentication authentication) {
+        return userAccounts.export(CurrentUser.id(authentication));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAccount(
+            Authentication authentication,
+            @Valid @RequestBody AccountDtos.DeleteAccountRequest request) {
+        userAccounts.delete(CurrentUser.id(authentication), request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping(value = "/avatar", produces = MediaType.IMAGE_PNG_VALUE)
@@ -112,7 +133,11 @@ public class UserController {
     }
 
     private UserEntity requireUser(Authentication authentication) {
-        return users.findById(CurrentUser.id(authentication))
+        UserEntity user = users.findById(CurrentUser.id(authentication))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        if (user.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La cuenta fue eliminada.");
+        }
+        return user;
     }
 }

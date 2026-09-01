@@ -51,6 +51,12 @@ class FinanzasApiClientTest {
         BackendUser verified = client.confirmEmailVerification("verify-token");
         client.requestPasswordReset("ana@example.com");
         client.confirmPasswordReset("reset-token", "nueva-segura");
+        client.changePassword("token", "actual", "nueva-segura");
+        List<BackendSessionInfo> sessions = client.listSessions("token");
+        client.revokeSession("token", "session-1");
+        client.revokeAllSessions("token");
+        String accountExport = client.exportAccount("token");
+        client.deleteAccount("token", "ana@example.com", "actual");
         BackendUser currentUser = client.getCurrentUser("token");
         BackendUser updatedUser = client.updateCurrentUser("token", "Ana", "Lopez", "ana@example.com",
                 "Medellin", "Colombia", "USD", "en-US");
@@ -67,6 +73,8 @@ class FinanzasApiClientTest {
         assertEquals("ACCEPTED", accepted.getStatus());
         assertEquals("REJECTED", rejected.getStatus());
         assertTrue(verified.isEmailVerified());
+        assertEquals("session-1", sessions.get(0).getId());
+        assertTrue(accountExport.contains("\"profile\""));
         assertEquals("Medellin", currentUser.getCiudad());
         assertEquals("Colombia", updatedUser.getPais());
         assertEquals("LIGHT", settings.getTheme());
@@ -74,6 +82,11 @@ class FinanzasApiClientTest {
         assertEquals(3L, updatedSettings.getVersion());
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/invitations/inv-1"));
         assertTrue(requests.contains("POST /api/auth/password/reset/confirm"));
+        assertTrue(requests.contains("PATCH /api/auth/password"));
+        assertTrue(requests.contains("DELETE /api/auth/sessions/session-1"));
+        assertTrue(requests.contains("DELETE /api/auth/sessions"));
+        assertTrue(requests.contains("GET /api/users/me/export"));
+        assertTrue(requests.contains("DELETE /api/users/me"));
         assertTrue(requests.contains("PATCH /api/users/me/settings"));
     }
 
@@ -132,6 +145,30 @@ class FinanzasApiClientTest {
             return;
         }
         if ("POST".equals(method) && "/api/auth/password/reset/confirm".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("PATCH".equals(method) && "/api/auth/password".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("GET".equals(method) && "/api/auth/sessions".equals(path)) {
+            respond(exchange, 200, "[{\"id\":\"session-1\",\"createdAt\":\"2026-09-01T00:00:00Z\",\"lastUsedAt\":\"2026-09-01T01:00:00Z\",\"expiresAt\":\"2026-09-15T00:00:00Z\"}]");
+            return;
+        }
+        if ("DELETE".equals(method) && "/api/auth/sessions/session-1".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("DELETE".equals(method) && "/api/auth/sessions".equals(path)) {
+            respond(exchange, 204, "");
+            return;
+        }
+        if ("GET".equals(method) && "/api/users/me/export".equals(path)) {
+            respond(exchange, 200, "{\"profile\":" + user() + ",\"workspaces\":[]}");
+            return;
+        }
+        if ("DELETE".equals(method) && "/api/users/me".equals(path)) {
             respond(exchange, 204, "");
             return;
         }

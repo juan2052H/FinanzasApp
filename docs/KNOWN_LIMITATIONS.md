@@ -13,4 +13,4 @@
 - No hay pruebas E2E de dos usuarios/dos clientes ni suite Swing automatizada.
 - Docker Compose no fue ejecutado localmente por falta de Docker.
 - El backfill historico de ahorro no se ejecuta automaticamente; se requiere asistente con dry-run.
-- No existe listado/revocacion individual de sesiones, exportacion completa de usuario ni eliminacion de cuenta.
+- La eliminacion de cuenta bloquea owners de workspaces compartidos; falta flujo de transferencia de propiedad desde UI/API.

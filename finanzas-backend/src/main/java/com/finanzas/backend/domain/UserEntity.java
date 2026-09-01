@@ -54,6 +54,9 @@ public class UserEntity {
     @Column(name = "email_verified_at")
     private Instant emailVerifiedAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "proveedor_autenticacion", nullable = false, length = 40)
     private AuthProvider authProvider = AuthProvider.PASSWORD;
@@ -101,6 +104,7 @@ public class UserEntity {
     public String getTipoCuenta() { return tipoCuenta; }
     public String getAvatarRef() { return avatarRef; }
     public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
+    public Instant getDeletedAt() { return deletedAt; }
     public AuthProvider getAuthProvider() { return authProvider; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
@@ -141,6 +145,10 @@ public class UserEntity {
         return emailVerifiedAt != null;
     }
 
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
     public void markEmailVerified(Instant when) {
         if (emailVerifiedAt == null) {
             emailVerifiedAt = when == null ? Instant.now() : when;
@@ -149,6 +157,19 @@ public class UserEntity {
 
     public void linkGoogle() {
         this.authProvider = AuthProvider.GOOGLE;
+    }
+
+    public void deleteAccount(Instant when) {
+        Instant deletionTime = when == null ? Instant.now() : when;
+        this.nombre = "Usuario";
+        this.apellido = "Eliminado";
+        this.ciudad = "";
+        this.pais = "";
+        this.email = "deleted+" + id + "@deleted.finanzasapp.local";
+        this.passwordHash = null;
+        this.avatarRef = null;
+        this.emailVerifiedAt = null;
+        this.deletedAt = deletionTime;
     }
 
     public static String normalizeEmail(String email) {

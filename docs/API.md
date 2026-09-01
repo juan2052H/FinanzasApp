@@ -21,8 +21,14 @@ La CI verifica que ambas copias sean iguales con `cmp`.
 - `POST /api/auth/email/verification/confirm`: confirma correo con token de un solo uso.
 - `POST /api/auth/password/reset/request`: solicita recuperacion de contrasena sin enumerar cuentas.
 - `POST /api/auth/password/reset/confirm`: actualiza contrasena y revoca refresh tokens activos.
+- `PATCH /api/auth/password`: cambia contrasena autenticada y revoca refresh tokens previos.
+- `GET /api/auth/sessions`: lista sesiones activas del usuario autenticado.
+- `DELETE /api/auth/sessions/{sessionId}`: revoca una sesion activa propia.
+- `DELETE /api/auth/sessions`: revoca todas las sesiones activas propias.
 - `GET /api/users/me`: devuelve perfil con ciudad, pais, moneda, locale y estado de verificacion.
 - `PATCH /api/users/me`: actualiza perfil en backend; si cambia correo reinicia la verificacion.
+- `GET /api/users/me/export`: exporta perfil, preferencias, sesiones y workspaces visibles de la cuenta.
+- `DELETE /api/users/me`: anonimiza la cuenta, elimina avatar/preferencias y revoca sesiones; bloquea si aun es owner de un workspace compartido.
 - `GET /api/users/me/settings`: devuelve tema, locale, zona horaria, formato monetario y preferencias de notificacion.
 - `PATCH /api/users/me/settings`: persiste preferencias del usuario con validacion de locale/zona/formato.
 - `GET /api/workspaces/{workspaceId}/categories?type=&includeArchived=&q=`: busqueda/filtros.
@@ -60,3 +66,4 @@ Los errores REST usan `ProblemDetail` con `errorCode`, `correlationId` y, cuando
 - PDF/XLSX estan expuestos por backend, pero el generador actual sigue siendo minimo. La sustitucion por PDFBox/OpenPDF y Apache POI queda en limitaciones.
 - En dev/test los emails se entregan a `FINANZAS_EMAIL_SINK_DIR` cuando `FINANZAS_EMAIL_MODE=file`.
 - `user_settings` se expone por API desde V6; la copia OpenAPI del cliente se sincroniza desde el YAML del backend.
+- `deleted_at` se agrega en V7 para eliminacion anonimizada de cuenta sin romper auditoria referencial.

@@ -1,5 +1,6 @@
 package com.finanzas.ui;
 
+import com.finanzas.api.BackendSessionInfo;
 import com.finanzas.data.DataManager;
 import com.finanzas.data.ExportService;
 import com.finanzas.data.NotificationItem;
@@ -21,6 +22,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.text.Normalizer;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -905,22 +908,205 @@ public class ConfiguracionPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Ingresa tu contrasena actual.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (nueva.length() < 6) {
-                JOptionPane.showMessageDialog(this, "La contrasena debe tener al menos 6 caracteres.", "Error", JOptionPane.ERROR_MESSAGE);
+            int minLength = data.isBackendSessionActive() ? 8 : 6;
+            if (nueva.length() < minLength) {
+                JOptionPane.showMessageDialog(this, "La contrasena debe tener al menos " + minLength + " caracteres.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (!nueva.equals(confirmar)) {
                 JOptionPane.showMessageDialog(this, "Las contrasenas no coinciden.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (!data.changePassword(actual, nueva)) {
-                JOptionPane.showMessageDialog(this, "La contrasena actual no es valida.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            JOptionPane.showMessageDialog(this, "Contrasena actualizada correctamente.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            changePasswordAsync(actual, nueva);
         });
 
+        if (data.isBackendSessionActive()) {
+            JPanel sessionActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+            sessionActions.setOpaque(false);
+            RoundedButton listSessions = new RoundedButton("Ver sesiones", AppColors.TEXT_MUTED);
+            RoundedButton closeAll = new RoundedButton("Cerrar todas", AppColors.ACCENT_RED);
+            listSessions.setPreferredSize(new Dimension(130, 30));
+            closeAll.setPreferredSize(new Dimension(130, 30));
+            listSessions.addActionListener(e -> showBackendSessionsDialog());
+            closeAll.addActionListener(e -> closeAllBackendSessions());
+            sessionActions.add(listSessions);
+            sessionActions.add(closeAll);
+            FormSupport.addFormRow(panel, gbc, 4, "Sesiones:", sessionActions);
+        }
+
         return wrapScroll(panel);
+    }
+
+    private void changePasswordAsync(String actual, String nueva) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return data.changePassword(actual, nueva);
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    JOptionPane.showMessageDialog(
+                            ConfiguracionPanel.this,
+                            data.getLastErrorMessage().isEmpty() ? "La contrasena actual no es valida." : data.getLastErrorMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                JOptionPane.showMessageDialog(ConfiguracionPanel.this, "Contrasena actualizada correctamente.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }.execute();
+    }
+
+    private void showBackendSessionsDialog() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<List<BackendSessionInfo>, Void>() {
+            @Override
+            protected List<BackendSessionInfo> doInBackground() {
+                return data.listBackendSessions();
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                try {
+                    showSessionsTable(get());
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(ConfiguracionPanel.this, "No fue posible cargar sesiones.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    private void showSessionsTable(List<BackendSessionInfo> sessions) {
+        if (sessions == null || sessions.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    data.getLastErrorMessage().isEmpty() ? "No hay sesiones activas." : data.getLastErrorMessage(),
+                    "Sesiones",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"ID", "Creada", "Ultimo uso", "Expira"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        for (BackendSessionInfo session : sessions) {
+            model.addRow(new Object[]{
+                    session.getId(),
+                    formatInstant(session.getCreatedAt()),
+                    formatInstant(session.getLastUsedAt()),
+                    formatInstant(session.getExpiresAt())
+            });
+        }
+        JTable table = new JTable(model);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowHeight(22);
+        if (model.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        }
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setPreferredSize(new Dimension(700, 240));
+        int option = JOptionPane.showOptionDialog(
+                this,
+                scroll,
+                "Sesiones activas",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                new Object[]{"Revocar seleccionada", "Cerrar"},
+                "Cerrar");
+        if (option == 0 && table.getSelectedRow() >= 0) {
+            revokeBackendSessionAsync(String.valueOf(model.getValueAt(table.getSelectedRow(), 0)));
+        }
+    }
+
+    private void revokeBackendSessionAsync(String sessionId) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return data.revokeBackendSession(sessionId);
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                JOptionPane.showMessageDialog(
+                        ConfiguracionPanel.this,
+                        ok ? "Sesion revocada." : data.getLastErrorMessage(),
+                        ok ? "Sesiones" : "Error",
+                        ok ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+            }
+        }.execute();
+    }
+
+    private void closeAllBackendSessions() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Cerrar todas las sesiones revocara tambien esta sesion. Deseas continuar?",
+                "Cerrar sesiones",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return data.revokeAllBackendSessions();
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    JOptionPane.showMessageDialog(ConfiguracionPanel.this, data.getLastErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                new LoginFrame().setVisible(true);
+                Window window = SwingUtilities.getWindowAncestor(ConfiguracionPanel.this);
+                if (window != null) {
+                    window.dispose();
+                }
+            }
+        }.execute();
+    }
+
+    private String formatInstant(java.time.Instant instant) {
+        if (instant == null) {
+            return "";
+        }
+        try {
+            return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                    .withZone(ZoneId.of(data.getUsuario().getTimeZone()))
+                    .format(instant);
+        } catch (Exception ex) {
+            return instant.toString();
+        }
     }
 
     private JPanel buildExportarPanel() {
@@ -933,6 +1119,9 @@ public class ConfiguracionPanel extends JPanel {
         panel.add(createActionRow(AppIcons.BUDGET + " Exportar a Excel (.xls)", "Genera una hoja de calculo con resumen, transacciones, metas y presupuestos", "Exportar", this::exportarExcel));
         panel.add(createActionRow(AppIcons.EXPORT + " Exportar a PDF", "Genera un reporte financiero en PDF listo para compartir", "Exportar", this::exportarPdf));
         panel.add(createActionRow(AppIcons.REPORTS + " Exportar a CSV", "Exporta las transacciones en formato separado por comas", "Exportar", this::exportarCsv));
+        if (data.isBackendSessionActive()) {
+            panel.add(createDualActionRow(AppIcons.SETTINGS + " Cuenta backend", "Exporta tus datos de cuenta o elimina la cuenta activa de forma confirmada", "Exportar JSON", this::exportarCuentaBackend, "Eliminar", this::eliminarCuentaBackend));
+        }
         panel.add(createDualActionRow(AppIcons.EXPORT + " Respaldo completo", "Guarda o restaura el estado persistido de la aplicacion, incluida la imagen de perfil", "Respaldar", this::crearRespaldoCompleto, "Restaurar", this::restaurarRespaldoCompleto));
         panel.add(createDualActionRow(AppIcons.PLUS + " Importar transacciones CSV", "Carga fecha, tipo, categoria, descripcion y monto", "Plantilla", this::descargarPlantillaTransacciones, "Importar", this::importarTransaccionesCsv));
         panel.add(createDualActionRow(AppIcons.GOALS + " Importar metas CSV", "Carga nombre, icono, monto actual, monto objetivo, progreso y fecha limite", "Plantilla", this::descargarPlantillaMetas, "Importar", this::importarMetasCsv));
@@ -1029,6 +1218,114 @@ public class ConfiguracionPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Error al exportar CSV: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void exportarCuentaBackend() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Guardar datos de cuenta");
+        chooser.setSelectedFile(new File("cuenta_finanzasapp.json"));
+        chooser.setFileFilter(new FileNameExtensionFilter("Archivo JSON (*.json)", "json"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<File, Void>() {
+            @Override
+            protected File doInBackground() throws Exception {
+                return data.exportBackendAccount(chooser.getSelectedFile());
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                try {
+                    File exported = get();
+                    JOptionPane.showMessageDialog(ConfiguracionPanel.this,
+                            "Datos de cuenta exportados en:\n" + exported.getAbsolutePath(),
+                            "Exito",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(ConfiguracionPanel.this,
+                            "No fue posible exportar la cuenta: " + data.getLastErrorMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    private void eliminarCuentaBackend() {
+        Usuario usuario = data.getUsuario();
+        JTextField emailField = new JTextField(usuario == null ? "" : usuario.getEmail());
+        JPasswordField passwordField = new JPasswordField();
+        JPanel form = new JPanel(new GridLayout(0, 1, 0, 6));
+        form.add(new JLabel("Correo de confirmacion:"));
+        form.add(emailField);
+        form.add(new JLabel("Contrasena:"));
+        form.add(passwordField);
+
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                form,
+                "Eliminar cuenta",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (option != JOptionPane.OK_OPTION) {
+            return;
+        }
+        String confirmEmail = emailField.getText() == null ? "" : emailField.getText().trim();
+        if (confirmEmail.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Ingresa el correo de confirmacion.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int finalConfirm = JOptionPane.showConfirmDialog(
+                this,
+                "La cuenta sera anonimizada y se cerraran sus sesiones. Deseas continuar?",
+                "Confirmar eliminacion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (finalConfirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        runDeleteBackendAccount(confirmEmail, new String(passwordField.getPassword()));
+    }
+
+    private void runDeleteBackendAccount(String confirmEmail, String password) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return data.deleteBackendAccount(confirmEmail, password);
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = Boolean.TRUE.equals(get());
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (!ok) {
+                    JOptionPane.showMessageDialog(
+                            ConfiguracionPanel.this,
+                            data.getLastErrorMessage().isEmpty() ? "No fue posible eliminar la cuenta." : data.getLastErrorMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                JOptionPane.showMessageDialog(ConfiguracionPanel.this,
+                        "Cuenta eliminada correctamente.",
+                        "Cuenta",
+                        JOptionPane.INFORMATION_MESSAGE);
+                new LoginFrame().setVisible(true);
+                Window window = SwingUtilities.getWindowAncestor(ConfiguracionPanel.this);
+                if (window != null) {
+                    window.dispose();
+                }
+            }
+        }.execute();
     }
 
     private void exportarExcel() {

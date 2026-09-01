@@ -11,6 +11,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -67,6 +69,25 @@ public class RefreshTokenService {
     public void revokeAll(UUID userId) {
         Instant now = Instant.now();
         refreshTokens.findByUserIdAndRevokedAtIsNull(userId).forEach(token -> token.revoke(now));
+    }
+
+    @Transactional(readOnly = true)
+    public List<RefreshTokenEntity> listActive(UUID userId) {
+        Instant now = Instant.now();
+        return refreshTokens.findByUserIdAndRevokedAtIsNullOrderByCreatedAtDesc(userId).stream()
+                .filter(token -> !token.isExpired(now))
+                .sorted(Comparator.comparing(RefreshTokenEntity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+    }
+
+    @Transactional
+    public boolean revokeById(UUID userId, UUID tokenId) {
+        RefreshTokenEntity token = refreshTokens.findByIdAndUserIdAndRevokedAtIsNull(tokenId, userId).orElse(null);
+        if (token == null) {
+            return false;
+        }
+        token.revoke(Instant.now());
+        return true;
     }
 
     @Transactional

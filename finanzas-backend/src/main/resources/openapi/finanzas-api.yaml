@@ -88,6 +88,54 @@ paths:
       responses:
         '204':
           description: Sesion cerrada
+  /api/auth/password:
+    patch:
+      summary: Cambiar contrasena del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '204':
+          description: Contrasena actualizada y sesiones revocadas
+        '401':
+          description: Contrasena actual invalida
+        '409':
+          description: Cuenta sin contrasena local
+  /api/auth/sessions:
+    get:
+      summary: Listar sesiones activas del usuario autenticado
+      responses:
+        '200':
+          description: Sesiones activas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+    delete:
+      summary: Revocar todas las sesiones del usuario autenticado
+      responses:
+        '204':
+          description: Sesiones revocadas
+  /api/auth/sessions/{sessionId}:
+    delete:
+      summary: Revocar una sesion activa del usuario autenticado
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Sesion revocada
+        '404':
+          description: Sesion no encontrada
   /api/auth/email/verification/request:
     post:
       summary: Solicitar email de verificacion
@@ -169,6 +217,31 @@ paths:
       responses:
         '200':
           description: Perfil actualizado
+    delete:
+      summary: Eliminar cuenta autenticada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '204':
+          description: Cuenta anonimizada y sesiones revocadas
+        '409':
+          description: La cuenta aun es propietaria de un workspace con miembros
+        '422':
+          description: Confirmacion invalida
+  /api/users/me/export:
+    get:
+      summary: Exportar datos de cuenta autenticada
+      responses:
+        '200':
+          description: Datos de cuenta exportados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountExportResponse'
   /api/users/me/settings:
     get:
       summary: Obtener preferencias del usuario autenticado
@@ -1167,6 +1240,43 @@ components:
         password:
           type: string
           minLength: 8
+    PasswordChangeRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+    SessionResponse:
+      type: object
+      required: [id, createdAt, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+    DeleteAccountRequest:
+      type: object
+      required: [confirmEmail]
+      properties:
+        confirmEmail:
+          type: string
+          format: email
+        password:
+          type: string
+    AccountExportResponse:
+      type: object
+      additionalProperties: true
     AuthResponse:
       type: object
       required: [accessToken, refreshToken, user]

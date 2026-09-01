@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, UUID> {
     Optional<RefreshTokenEntity> findByTokenHashAndRevokedAtIsNull(String tokenHash);
     List<RefreshTokenEntity> findByUserIdAndRevokedAtIsNull(UUID userId);
+    List<RefreshTokenEntity> findByUserIdAndRevokedAtIsNullOrderByCreatedAtDesc(UUID userId);
+    Optional<RefreshTokenEntity> findByIdAndUserIdAndRevokedAtIsNull(UUID id, UUID userId);
 
     long deleteByExpiresAtBefore(Instant instant);
 }

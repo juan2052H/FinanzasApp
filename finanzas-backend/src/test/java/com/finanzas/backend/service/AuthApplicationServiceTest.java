@@ -99,6 +99,22 @@ class AuthApplicationServiceTest {
         assertEquals("encoded-password", user.getPasswordHash());
     }
 
+    @Test
+    void changePasswordValidatesCurrentPasswordAndRevokesSessions() {
+        UUID userId = UUID.randomUUID();
+        UserEntity user = user(userId, "change@example.com");
+
+        when(users.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("actual", "old-password")).thenReturn(true);
+        when(passwordEncoder.encode("nueva-segura")).thenReturn("new-hash");
+
+        auth.changePassword(userId, new AuthDtos.PasswordChangeRequest("actual", "nueva-segura"));
+
+        assertEquals("new-hash", user.getPasswordHash());
+        verify(refreshTokens).revokeAll(userId);
+        verify(rateLimiter).recordSuccess("change@example.com");
+    }
+
     private UserEntity user(UUID userId, String email) {
         UserEntity user = new UserEntity("Nombre", "Apellido", email, "old-password", "COP", "PERSONAL", AuthProvider.PASSWORD);
         ReflectionTestUtils.setField(user, "id", userId);

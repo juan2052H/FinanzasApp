@@ -11,6 +11,10 @@
 - Avatares autenticados, con validacion de extension, MIME declarado, formato real via `ImageIO`, dimensiones maximas, limite de 5 MB y clave portable.
 - Persistencia local con `ObjectInputFilter` para limitar clases permitidas al leer `app-state.bin`.
 - Restauracion ZIP con proteccion de path traversal, limite de entradas y limite de bytes por entrada/imagen.
+- Verificacion de correo y recuperacion de contrasena con tokens de un solo uso almacenados como hash.
+- Cambio de contrasena autenticado con validacion de password actual y revocacion de refresh tokens.
+- Listado y revocacion de sesiones activas por usuario.
+- Exportacion de cuenta autenticada y eliminacion anonimizada con confirmacion de email/password, borrado de avatar/preferencias y bloqueo cuando la cuenta aun posee workspaces compartidos.
 - `.gitignore` excluye secretos, datos locales, respaldos reales, storage, target/out/dist y logs.
 
 ## Pendiente
@@ -18,7 +22,6 @@
 - Rate limiting distribuido para despliegues multiinstancia.
 - Pruebas IDOR amplias por todos los endpoints y roles.
 - Pruebas automatizadas de logs sin datos sensibles.
-- Listado/revocacion de sesiones por usuario desde API.
-- Recuperacion de contrasena y verificacion de correo con token de un solo uso.
+- Proveedor SMTP/transaccional real y plantillas HTML firmadas.
 - Migracion completa desde serializacion Java a persistencia local no ejecutable.
 - Analisis de vulnerabilidades de dependencias en CI.

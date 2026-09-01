@@ -23,5 +23,7 @@
 - Login Swing permite solicitar recuperacion/verificacion y confirmar tokens del backend.
 - Perfil backend ahora incluye ciudad y pais; las preferencias de usuario usan `user_settings` con tema, locale, zona horaria, formato monetario y notificaciones.
 - Configuracion Swing permite cambiar tema claro/oscuro/sistema y guarda moneda/region/preferencias en local o backend.
+- Seguridad de cuenta agrega cambio de contrasena autenticado, listado/revocacion de sesiones, exportacion JSON de cuenta y eliminacion anonimizada con confirmacion.
+- Flyway agrega `V7__account_deletion.sql` con `users.deleted_at`.
 - Persistencia local agrega `ObjectInputFilter` y limites de restauracion ZIP.
 - OpenAPI se actualizo y se sincronizo entre backend y cliente.

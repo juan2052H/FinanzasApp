@@ -11,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -87,6 +88,43 @@ public final class FinanzasApiClient {
         body.put("token", token);
         body.put("password", password);
         post("/api/auth/password/reset/confirm", SimpleJson.stringify(body), null);
+    }
+
+    public void changePassword(String accessToken, String currentPassword, String newPassword)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("currentPassword", currentPassword);
+        body.put("newPassword", newPassword);
+        patch("/api/auth/password", SimpleJson.stringify(body), accessToken);
+    }
+
+    public List<BackendSessionInfo> listSessions(String accessToken) throws IOException, InterruptedException {
+        String response = get("/api/auth/sessions", accessToken);
+        List<BackendSessionInfo> result = new ArrayList<BackendSessionInfo>();
+        for (Object item : SimpleJson.asArray(SimpleJson.parse(response))) {
+            result.add(toSessionInfo(SimpleJson.asObject(item)));
+        }
+        return result;
+    }
+
+    public void revokeSession(String accessToken, String sessionId) throws IOException, InterruptedException {
+        delete("/api/auth/sessions/" + sessionId, accessToken);
+    }
+
+    public void revokeAllSessions(String accessToken) throws IOException, InterruptedException {
+        delete("/api/auth/sessions", accessToken);
+    }
+
+    public String exportAccount(String accessToken) throws IOException, InterruptedException {
+        return get("/api/users/me/export", accessToken);
+    }
+
+    public void deleteAccount(String accessToken, String confirmEmail, String password)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("confirmEmail", confirmEmail);
+        body.put("password", password);
+        deleteWithBody("/api/users/me", SimpleJson.stringify(body), accessToken);
     }
 
     public BackendUser getCurrentUser(String accessToken) throws IOException, InterruptedException {
@@ -653,6 +691,18 @@ public final class FinanzasApiClient {
         send(builder.build());
     }
 
+    private void deleteWithBody(String path, String jsonBody, String accessToken) throws IOException, InterruptedException {
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri(path))
+                .timeout(Duration.ofSeconds(12))
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(jsonBody));
+        if (accessToken != null && !accessToken.trim().isEmpty()) {
+            builder.header("Authorization", "Bearer " + accessToken);
+        }
+        send(builder.build());
+    }
+
     private String send(HttpRequest request) throws IOException, InterruptedException {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
@@ -704,6 +754,19 @@ public final class FinanzasApiClient {
                 SimpleJson.bool(object, "notifMetas"),
                 SimpleJson.bool(object, "notifConsejos"),
                 SimpleJson.longValue(object, "version"));
+    }
+
+    private BackendSessionInfo toSessionInfo(Map<String, Object> object) {
+        return new BackendSessionInfo(
+                SimpleJson.string(object, "id"),
+                instant(object, "createdAt"),
+                instant(object, "lastUsedAt"),
+                instant(object, "expiresAt"));
+    }
+
+    private Instant instant(Map<String, Object> object, String key) {
+        String value = SimpleJson.string(object, key);
+        return value.isEmpty() ? null : Instant.parse(value);
     }
 
     private BackendWorkspace toWorkspace(Map<String, Object> object) {

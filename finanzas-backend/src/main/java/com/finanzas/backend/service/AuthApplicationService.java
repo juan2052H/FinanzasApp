@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -118,6 +119,10 @@ public class AuthApplicationService {
                     rateLimiter.recordFailure(email);
                     return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas.");
                 });
+        if (user.isDeleted()) {
+            rateLimiter.recordFailure(email);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas.");
+        }
         if (user.getPasswordHash() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             rateLimiter.recordFailure(email);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas.");
@@ -130,6 +135,7 @@ public class AuthApplicationService {
     public void requestEmailVerification(AuthDtos.EmailRequest request) {
         String email = UserEntity.normalizeEmail(request.email());
         users.findByEmail(email)
+                .filter(user -> !user.isDeleted())
                 .filter(user -> !user.isEmailVerified())
                 .ifPresent(this::sendEmailVerification);
     }
@@ -137,8 +143,7 @@ public class AuthApplicationService {
     @Transactional
     public AuthDtos.UserResponse confirmEmail(AuthDtos.TokenRequest request) {
         UUID userId = accountTokens.consume(request.token(), AccountTokenType.EMAIL_VERIFICATION);
-        UserEntity user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        UserEntity user = requireActiveUser(userId);
         user.markEmailVerified(Instant.now());
         return toUserResponse(user);
     }
@@ -146,14 +151,15 @@ public class AuthApplicationService {
     @Transactional
     public void requestPasswordReset(AuthDtos.EmailRequest request) {
         String email = UserEntity.normalizeEmail(request.email());
-        users.findByEmail(email).ifPresent(this::sendPasswordReset);
+        users.findByEmail(email)
+                .filter(user -> !user.isDeleted())
+                .ifPresent(this::sendPasswordReset);
     }
 
     @Transactional
     public void confirmPasswordReset(AuthDtos.PasswordResetConfirmRequest request) {
         UUID userId = accountTokens.consume(request.token(), AccountTokenType.PASSWORD_RESET);
-        UserEntity user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        UserEntity user = requireActiveUser(userId);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         refreshTokens.revokeAll(userId);
         rateLimiter.recordSuccess(user.getEmail());
@@ -165,13 +171,52 @@ public class AuthApplicationService {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token invalido.");
         }
-        UserEntity user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        UserEntity user = requireActiveUser(userId);
         return issue(user);
     }
 
     public void logout(String refreshToken) {
         refreshTokens.revoke(refreshToken);
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, AuthDtos.PasswordChangeRequest request) {
+        UserEntity user = requireActiveUser(userId);
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Esta cuenta no tiene contrasena local.");
+        }
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La contrasena actual no es valida.");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        refreshTokens.revokeAll(userId);
+        rateLimiter.recordSuccess(user.getEmail());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuthDtos.SessionResponse> listSessions(UUID userId) {
+        requireActiveUser(userId);
+        return refreshTokens.listActive(userId).stream()
+                .map(token -> new AuthDtos.SessionResponse(
+                        token.getId(),
+                        token.getCreatedAt(),
+                        token.getLastUsedAt(),
+                        token.getExpiresAt()))
+                .toList();
+    }
+
+    @Transactional
+    public void revokeSession(UUID userId, UUID sessionId) {
+        requireActiveUser(userId);
+        if (!refreshTokens.revokeById(userId, sessionId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesion no encontrada.");
+        }
+    }
+
+    @Transactional
+    public void revokeAllSessions(UUID userId) {
+        requireActiveUser(userId);
+        refreshTokens.revokeAll(userId);
     }
 
     @Transactional
@@ -192,6 +237,9 @@ public class AuthApplicationService {
 
         UserEntity user = users.findByEmail(email)
                 .map(existing -> {
+                    if (existing.isDeleted()) {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La cuenta fue eliminada.");
+                    }
                     existing.linkGoogle();
                     return existing;
                 })
@@ -230,10 +278,22 @@ public class AuthApplicationService {
     }
 
     private AuthDtos.AuthResponse issue(UserEntity user) {
+        if (user.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La cuenta fue eliminada.");
+        }
         return new AuthDtos.AuthResponse(
                 jwtService.createAccessToken(user.getId(), user.getEmail()),
                 refreshTokens.issue(user.getId()),
                 toUserResponse(user));
+    }
+
+    private UserEntity requireActiveUser(UUID userId) {
+        UserEntity user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado."));
+        if (user.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La cuenta fue eliminada.");
+        }
+        return user;
     }
 
     private void ensurePersonalWorkspace(UserEntity user) {

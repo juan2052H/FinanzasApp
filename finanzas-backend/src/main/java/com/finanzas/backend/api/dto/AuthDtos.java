@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public final class AuthDtos {
@@ -37,6 +38,9 @@ public final class AuthDtos {
     public record PasswordResetConfirmRequest(@NotBlank String token, @NotBlank @Size(min = 8) String password) {
     }
 
+    public record PasswordChangeRequest(@NotBlank String currentPassword, @NotBlank @Size(min = 8) String newPassword) {
+    }
+
     public record GoogleRequest(@NotBlank String authorizationCode, @NotBlank String codeVerifier, @NotBlank String redirectUri) {
     }
 
@@ -49,5 +53,8 @@ public final class AuthDtos {
 
     public record UserPatchRequest(@NotBlank String nombre, String apellido, @Email @NotBlank String email,
                                    String ciudad, String pais, String moneda, String locale) {
+    }
+
+    public record SessionResponse(UUID id, Instant createdAt, Instant lastUsedAt, Instant expiresAt) {
     }
 }
