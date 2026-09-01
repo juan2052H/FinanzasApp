@@ -6,6 +6,7 @@ import com.finanzas.api.BackendApiException;
 import com.finanzas.api.BackendBudget;
 import com.finanzas.api.BackendCategory;
 import com.finanzas.api.BackendExpenseSplit;
+import com.finanzas.api.BackendInvitation;
 import com.finanzas.api.BackendMember;
 import com.finanzas.api.BackendNotification;
 import com.finanzas.api.BackendRecurringTransaction;
@@ -72,8 +73,11 @@ public class DataManager {
         public List<FinancialCategory> categories = new ArrayList<FinancialCategory>();
         public transient List<NotificationItem> backendNotifications = new ArrayList<NotificationItem>();
         public transient Map<String, String> backendMemberIdsByName = new LinkedHashMap<String, String>();
+        public transient List<BackendInvitation> backendReceivedInvitations = new ArrayList<BackendInvitation>();
+        public transient List<BackendInvitation> backendWorkspaceInvitations = new ArrayList<BackendInvitation>();
         public transient BackendSavingsSummary backendSavingsSummary;
         public transient BackendSavingsSummary backendMonthlySavingsSummary;
+        public String selectedBackendWorkspaceId = "";
         public boolean onboardingCompleted;
         public BigDecimal estimatedMonthlyIncome = Money.ZERO;
         public String primaryGoal = "";
@@ -247,11 +251,83 @@ public class DataManager {
         return backendSession == null ? new ArrayList<BackendWorkspace>() : backendSession.getWorkspaces();
     }
 
+    public BackendWorkspace getActiveBackendWorkspace() {
+        String selectedWorkspaceId = activeBackendWorkspaceId();
+        if (selectedWorkspaceId.isEmpty() || backendSession == null) {
+            return null;
+        }
+        for (BackendWorkspace workspace : backendSession.getWorkspaces()) {
+            if (selectedWorkspaceId.equals(workspace.getId())) {
+                return workspace;
+            }
+        }
+        return null;
+    }
+
+    public boolean canManageActiveBackendWorkspace() {
+        BackendWorkspace workspace = getActiveBackendWorkspace();
+        if (workspace == null) {
+            return false;
+        }
+        return "OWNER".equalsIgnoreCase(workspace.getRole()) || "ADMIN".equalsIgnoreCase(workspace.getRole());
+    }
+
+    public boolean selectBackendWorkspace(String workspaceId) {
+        UserProfile profile = p();
+        if (profile == null || backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        BackendWorkspace selected = findBackendWorkspace(workspaceId);
+        if (selected == null) {
+            lastErrorMessage = "El workspace seleccionado no esta disponible para esta cuenta.";
+            return false;
+        }
+        String previousWorkspaceId = profile.selectedBackendWorkspaceId;
+        profile.selectedBackendWorkspaceId = selected.getId();
+        try {
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            profile.selectedBackendWorkspaceId = previousWorkspaceId;
+            handleBackendMutationError("No fue posible cambiar el workspace activo.", ex);
+            return false;
+        }
+    }
+
+    public boolean createBackendWorkspace(String nombre, String tipo) {
+        if (backendSession == null) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            BackendWorkspace created = callBackend(token -> apiClient.createWorkspace(
+                    token,
+                    nombre == null ? "" : nombre.trim(),
+                    tipo == null || tipo.trim().isEmpty() ? "PERSONAL" : tipo.trim()));
+            reloadBackendWorkspaces();
+            UserProfile profile = p();
+            if (profile != null && created != null && !created.getId().isEmpty()) {
+                profile.selectedBackendWorkspaceId = created.getId();
+            }
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible crear el workspace.", ex);
+            return false;
+        }
+    }
+
     public boolean refreshBackendData() {
         if (backendSession == null) {
             return true;
         }
         try {
+            reloadBackendWorkspaces();
             syncBackendSnapshot();
             notifyListeners();
             return true;
@@ -368,6 +444,7 @@ public class DataManager {
         profile.usuario.setEmail(normalizedEmail);
         profile.usuario.setMoneda(user.getMoneda());
         profile.usuario.setTipoCuenta(mapBackendAccountType(user.getTipoCuenta()));
+        profile.selectedBackendWorkspaceId = selectedBackendWorkspaceId(profile.selectedBackendWorkspaceId, session.getWorkspaces());
         if (user.getAvatarRef().isEmpty()) {
             profile.usuario.setProfileImagePath("");
         } else {
@@ -431,6 +508,55 @@ public class DataManager {
                 throw ex;
             }
         }
+    }
+
+    private void reloadBackendWorkspaces() throws IOException, InterruptedException {
+        if (backendSession == null) {
+            return;
+        }
+        List<BackendWorkspace> workspaces = callBackend(token -> apiClient.listWorkspaces(token));
+        BackendSession currentSession = backendSession;
+        backendSession = new BackendSession(
+                currentSession.getAccessToken(),
+                currentSession.getRefreshToken(),
+                currentSession.getUser(),
+                workspaces);
+        UserProfile profile = p();
+        if (profile != null) {
+            profile.selectedBackendWorkspaceId = selectedBackendWorkspaceId(profile.selectedBackendWorkspaceId, workspaces);
+        }
+    }
+
+    private BackendWorkspace findBackendWorkspace(String workspaceId) {
+        if (backendSession == null || workspaceId == null) {
+            return null;
+        }
+        for (BackendWorkspace workspace : backendSession.getWorkspaces()) {
+            if (workspaceId.equals(workspace.getId())) {
+                return workspace;
+            }
+        }
+        return null;
+    }
+
+    private String selectedBackendWorkspaceId(String requestedWorkspaceId, List<BackendWorkspace> workspaces) {
+        if (workspaces == null || workspaces.isEmpty()) {
+            return "";
+        }
+        String requested = requestedWorkspaceId == null ? "" : requestedWorkspaceId.trim();
+        if (!requested.isEmpty()) {
+            for (BackendWorkspace workspace : workspaces) {
+                if (requested.equals(workspace.getId())) {
+                    return requested;
+                }
+            }
+        }
+        for (BackendWorkspace workspace : workspaces) {
+            if (workspace.getId() != null && !workspace.getId().trim().isEmpty()) {
+                return workspace.getId();
+            }
+        }
+        return "";
     }
 
     private String mapBackendAccountType(String tipoCuenta) {
@@ -558,7 +684,29 @@ public class DataManager {
         for (BackendNotification remote : callBackend(token -> apiClient.refreshNotifications(token, workspaceId))) {
             profile.backendNotifications.add(toNotificationItem(remote));
         }
+        refreshBackendInvitationCaches(profile, workspaceId);
         refreshBudgetUsage(profile);
+    }
+
+    private void refreshBackendInvitationCaches(UserProfile profile, String workspaceId) {
+        if (profile == null || backendSession == null) {
+            return;
+        }
+        profile.backendReceivedInvitations.clear();
+        profile.backendWorkspaceInvitations.clear();
+        try {
+            profile.backendReceivedInvitations.addAll(callBackend(token -> apiClient.listMyInvitations(token)));
+        } catch (Exception ex) {
+            LOGGER.log(Level.FINE, "No fue posible cargar invitaciones recibidas.", ex);
+        }
+        if (!canManageActiveBackendWorkspace() || workspaceId == null || workspaceId.trim().isEmpty()) {
+            return;
+        }
+        try {
+            profile.backendWorkspaceInvitations.addAll(callBackend(token -> apiClient.listWorkspaceInvitations(token, workspaceId)));
+        } catch (Exception ex) {
+            LOGGER.log(Level.FINE, "No fue posible cargar invitaciones del workspace.", ex);
+        }
     }
 
     private void syncBackendHousehold(UserProfile profile, String workspaceId, Map<String, String> categoryNameById)
@@ -700,7 +848,13 @@ public class DataManager {
         if (backendSession == null || backendSession.getWorkspaces().isEmpty()) {
             return "";
         }
-        return backendSession.getWorkspaces().get(0).getId();
+        UserProfile profile = p();
+        String selected = profile == null ? "" : profile.selectedBackendWorkspaceId;
+        String resolved = selectedBackendWorkspaceId(selected, backendSession.getWorkspaces());
+        if (profile != null && !resolved.equals(profile.selectedBackendWorkspaceId)) {
+            profile.selectedBackendWorkspaceId = resolved;
+        }
+        return resolved;
     }
 
     private boolean hasBackendFinancialSession() {
@@ -1583,6 +1737,39 @@ public class DataManager {
         }
     }
 
+    public List<BackendInvitation> getBackendReceivedInvitations() {
+        UserProfile profile = p();
+        if (profile == null || profile.backendReceivedInvitations == null) {
+            return new ArrayList<BackendInvitation>();
+        }
+        return new ArrayList<BackendInvitation>(profile.backendReceivedInvitations);
+    }
+
+    public List<BackendInvitation> getBackendWorkspaceInvitations() {
+        UserProfile profile = p();
+        if (profile == null || profile.backendWorkspaceInvitations == null) {
+            return new ArrayList<BackendInvitation>();
+        }
+        return new ArrayList<BackendInvitation>(profile.backendWorkspaceInvitations);
+    }
+
+    public boolean refreshBackendInvitations() {
+        if (!isBackendSessionActive()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            reloadBackendWorkspaces();
+            refreshBackendInvitationCaches(p(), activeBackendWorkspaceId());
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible actualizar las invitaciones.", ex);
+            return false;
+        }
+    }
+
     public boolean inviteBackendMember(String email, String role) {
         if (!hasBackendFinancialSession()) {
             lastErrorMessage = "No hay una sesion backend activa.";
@@ -1600,6 +1787,62 @@ public class DataManager {
             return true;
         } catch (Exception ex) {
             handleBackendMutationError("No fue posible enviar la invitacion.", ex);
+            return false;
+        }
+    }
+
+    public boolean acceptBackendInvitation(String invitationId) {
+        if (!isBackendSessionActive()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            BackendInvitation accepted = callBackend(token -> apiClient.acceptInvitation(token, invitationId));
+            reloadBackendWorkspaces();
+            UserProfile profile = p();
+            if (profile != null && accepted != null && !accepted.getWorkspaceId().isEmpty()) {
+                profile.selectedBackendWorkspaceId = accepted.getWorkspaceId();
+            }
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible aceptar la invitacion.", ex);
+            return false;
+        }
+    }
+
+    public boolean rejectBackendInvitation(String invitationId) {
+        if (!isBackendSessionActive()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            callBackend(token -> apiClient.rejectInvitation(token, invitationId));
+            refreshBackendInvitationCaches(p(), activeBackendWorkspaceId());
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible rechazar la invitacion.", ex);
+            return false;
+        }
+    }
+
+    public boolean cancelBackendInvitation(String invitationId) {
+        if (!hasBackendFinancialSession()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        try {
+            runBackend(token -> apiClient.cancelInvitation(token, activeBackendWorkspaceId(), invitationId));
+            refreshBackendInvitationCaches(p(), activeBackendWorkspaceId());
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible cancelar la invitacion.", ex);
             return false;
         }
     }
@@ -2200,9 +2443,20 @@ public class DataManager {
         if (profile.backendMemberIdsByName == null) {
             profile.backendMemberIdsByName = new LinkedHashMap<String, String>();
         }
+        if (profile.backendReceivedInvitations == null) {
+            profile.backendReceivedInvitations = new ArrayList<BackendInvitation>();
+        }
+        if (profile.backendWorkspaceInvitations == null) {
+            profile.backendWorkspaceInvitations = new ArrayList<BackendInvitation>();
+        }
         if (!BackendConfig.isEnabled()) {
             profile.backendSavingsSummary = null;
             profile.backendMonthlySavingsSummary = null;
+            profile.backendReceivedInvitations.clear();
+            profile.backendWorkspaceInvitations.clear();
+        }
+        if (profile.selectedBackendWorkspaceId == null) {
+            profile.selectedBackendWorkspaceId = "";
         }
         ensureDefaultCategories(profile);
         if (profile.estimatedMonthlyIncome == null) {

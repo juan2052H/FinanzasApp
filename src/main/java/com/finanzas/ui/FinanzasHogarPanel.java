@@ -1,5 +1,6 @@
 package com.finanzas.ui;
 
+import com.finanzas.api.BackendInvitation;
 import com.finanzas.data.DataManager;
 import com.finanzas.model.FinancialCategory;
 import com.finanzas.model.GastoHogar;
@@ -31,8 +32,11 @@ public class FinanzasHogarPanel extends JPanel {
     private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private JPanel debtCards;
+    private JPanel membersListPanel;
+    private JPanel invitationsPanel;
     private DefaultTableModel tableModel;
     private List<GastoHogar> currentList;
+    private boolean backendActionRunning;
 
     public FinanzasHogarPanel() {
         setBackground(AppColors.MAIN_BG);
@@ -103,30 +107,52 @@ public class FinanzasHogarPanel extends JPanel {
         JPanel membersList = new JPanel();
         membersList.setLayout(new BoxLayout(membersList, BoxLayout.Y_AXIS));
         membersList.setOpaque(false);
-        refreshMembersList(membersList);
+        membersListPanel = membersList;
+        refreshMembersList(membersListPanel);
+
+        invitationsPanel = new JPanel();
+        invitationsPanel.setLayout(new BoxLayout(invitationsPanel, BoxLayout.Y_AXIS));
+        invitationsPanel.setOpaque(false);
+        refreshInvitationsPanel();
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+        content.add(membersListPanel);
+        content.add(Box.createVerticalStrut(8));
+        content.add(invitationsPanel);
 
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         buttonRow.setOpaque(false);
-        RoundedButton addMember = new RoundedButton(AppIcons.PLUS + " Agregar", AppColors.ACCENT_BLUE);
+        boolean backendSession = data.isBackendSessionActive();
+        boolean canManageWorkspace = !backendSession || data.canManageActiveBackendWorkspace();
+        RoundedButton addMember = new RoundedButton(AppIcons.PLUS + (backendSession ? " Invitar" : " Agregar"), AppColors.ACCENT_BLUE);
         addMember.setPreferredSize(new Dimension(120, 28));
         addMember.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        addMember.setEnabled(!backendActionRunning && canManageWorkspace);
+        addMember.setToolTipText(canManageWorkspace ? "" : "Solo OWNER o ADMIN pueden invitar miembros.");
         addMember.addActionListener(e -> {
-            if (data.isBackendSessionActive()) {
+            if (backendSession) {
                 showInviteMemberDialog();
                 return;
             }
             String name = JOptionPane.showInputDialog(this, "Nombre del nuevo miembro:", "Agregar miembro", JOptionPane.QUESTION_MESSAGE);
             if (name != null && !name.trim().isEmpty()) {
                 data.addMiembro(name.trim());
-                refreshMembersList(membersList);
-                membersList.revalidate();
-                membersList.repaint();
             }
         });
         buttonRow.add(addMember);
+        if (backendSession) {
+            RoundedButton refreshButton = new RoundedButton("Actualizar", AppColors.TEXT_MUTED);
+            refreshButton.setPreferredSize(new Dimension(110, 28));
+            refreshButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            refreshButton.setEnabled(!backendActionRunning);
+            refreshButton.addActionListener(e -> runBackendHouseholdAction("", () -> data.refreshBackendInvitations()));
+            buttonRow.add(refreshButton);
+        }
 
         card.add(title, BorderLayout.NORTH);
-        card.add(membersList, BorderLayout.CENTER);
+        card.add(content, BorderLayout.CENTER);
         card.add(buttonRow, BorderLayout.SOUTH);
         return card;
     }
@@ -144,11 +170,9 @@ public class FinanzasHogarPanel extends JPanel {
         if (result != JOptionPane.OK_OPTION) {
             return;
         }
-        if (data.inviteBackendMember(emailField.getText().trim(), (String) roleBox.getSelectedItem())) {
-            JOptionPane.showMessageDialog(this, "Invitacion enviada.", "Miembros backend", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, data.getLastErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        runBackendHouseholdAction(
+                "Invitacion enviada.",
+                () -> data.inviteBackendMember(emailField.getText().trim(), (String) roleBox.getSelectedItem()));
     }
 
     private void refreshMembersList(JPanel panel) {
@@ -175,15 +199,22 @@ public class FinanzasHogarPanel extends JPanel {
             delete.setBorderPainted(false);
             delete.setContentAreaFilled(false);
             delete.setForeground(AppColors.TEXT_MUTED);
+            delete.setEnabled(!backendActionRunning && (!data.isBackendSessionActive() || data.canManageActiveBackendWorkspace()));
+            if (data.isBackendSessionActive() && !data.canManageActiveBackendWorkspace()) {
+                delete.setToolTipText("Solo OWNER o ADMIN pueden eliminar miembros.");
+            }
             delete.addActionListener(e -> {
                 if (data.isBackendSessionActive()) {
                     int confirm = JOptionPane.showConfirmDialog(this, "Eliminar a " + entry.getKey() + " del workspace?", "Confirmar", JOptionPane.YES_NO_OPTION);
                     if (confirm == JOptionPane.YES_OPTION) {
-                        try {
-                            data.removeMiembro(entry.getKey());
-                        } catch (Exception ex) {
-                            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                        }
+                        runBackendHouseholdAction("", () -> {
+                            try {
+                                data.removeMiembro(entry.getKey());
+                                return true;
+                            } catch (Exception ex) {
+                                return false;
+                            }
+                        });
                     }
                     return;
                 }
@@ -199,6 +230,127 @@ public class FinanzasHogarPanel extends JPanel {
             panel.add(row);
             panel.add(Box.createVerticalStrut(4));
         }
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    private void refreshInvitationsPanel() {
+        if (invitationsPanel == null) {
+            return;
+        }
+        invitationsPanel.removeAll();
+        if (!data.isBackendSessionActive()) {
+            invitationsPanel.revalidate();
+            invitationsPanel.repaint();
+            return;
+        }
+
+        boolean hasRows = false;
+        List<BackendInvitation> received = pendingOnly(data.getBackendReceivedInvitations());
+        if (!received.isEmpty()) {
+            addSmallSectionTitle(invitationsPanel, "Invitaciones recibidas");
+            for (BackendInvitation invitation : received) {
+                invitationsPanel.add(invitationRow(
+                        invitation.getWorkspaceName() + " - " + invitation.getRole(),
+                        "Aceptar",
+                        () -> data.acceptBackendInvitation(invitation.getId()),
+                        "Rechazar",
+                        () -> data.rejectBackendInvitation(invitation.getId())));
+                invitationsPanel.add(Box.createVerticalStrut(4));
+            }
+            hasRows = true;
+        }
+
+        List<BackendInvitation> workspaceInvitations = data.getBackendWorkspaceInvitations();
+        if (!workspaceInvitations.isEmpty()) {
+            invitationsPanel.add(Box.createVerticalStrut(4));
+            addSmallSectionTitle(invitationsPanel, "Invitaciones del workspace");
+            for (BackendInvitation invitation : workspaceInvitations) {
+                String detail = invitation.getInvitedEmail() + " - " + invitation.getRole() + " - " + invitation.getStatus();
+                if (invitation.isPending()) {
+                    invitationsPanel.add(invitationRow(
+                            detail,
+                            "Cancelar",
+                            () -> data.cancelBackendInvitation(invitation.getId()),
+                            "",
+                            null));
+                } else {
+                    invitationsPanel.add(readOnlyInvitationRow(detail));
+                }
+                invitationsPanel.add(Box.createVerticalStrut(4));
+            }
+            hasRows = true;
+        }
+
+        if (!hasRows) {
+            JLabel empty = new JLabel("Sin invitaciones pendientes.");
+            empty.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            empty.setForeground(AppColors.TEXT_MUTED);
+            empty.setAlignmentX(Component.LEFT_ALIGNMENT);
+            invitationsPanel.add(empty);
+        }
+        invitationsPanel.revalidate();
+        invitationsPanel.repaint();
+    }
+
+    private List<BackendInvitation> pendingOnly(List<BackendInvitation> invitations) {
+        List<BackendInvitation> result = new ArrayList<BackendInvitation>();
+        for (BackendInvitation invitation : invitations) {
+            if (invitation.isPending()) {
+                result.add(invitation);
+            }
+        }
+        return result;
+    }
+
+    private void addSmallSectionTitle(JPanel panel, String text) {
+        JLabel title = new JLabel(text);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        title.setForeground(AppColors.TEXT_PRIMARY);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(title);
+        panel.add(Box.createVerticalStrut(4));
+    }
+
+    private JComponent readOnlyInvitationRow(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setForeground(AppColors.TEXT_MUTED);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
+    }
+
+    private JComponent invitationRow(String text, String primaryLabel, BackendAction primary,
+                                     String secondaryLabel, BackendAction secondary) {
+        JPanel row = new JPanel(new BorderLayout(6, 0));
+        row.setOpaque(false);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setForeground(AppColors.TEXT_SECONDARY);
+        row.add(label, BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        actions.setOpaque(false);
+        if (primary != null && primaryLabel != null && !primaryLabel.trim().isEmpty()) {
+            actions.add(compactActionButton(primaryLabel, primary));
+        }
+        if (secondary != null && secondaryLabel != null && !secondaryLabel.trim().isEmpty()) {
+            actions.add(compactActionButton(secondaryLabel, secondary));
+        }
+        row.add(actions, BorderLayout.EAST);
+        return row;
+    }
+
+    private JButton compactActionButton(String label, BackendAction action) {
+        JButton button = new JButton(label);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        button.setFocusPainted(false);
+        button.setEnabled(!backendActionRunning);
+        button.addActionListener(e -> runBackendHouseholdAction("", action));
+        return button;
     }
 
     private JPanel buildDebtsCard() {
@@ -381,9 +533,54 @@ public class FinanzasHogarPanel extends JPanel {
         }
     }
 
+    private void runBackendHouseholdAction(String successMessage, BackendAction action) {
+        if (backendActionRunning || action == null) {
+            return;
+        }
+        backendActionRunning = true;
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        refresh();
+        new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return action.run();
+            }
+
+            @Override
+            protected void done() {
+                backendActionRunning = false;
+                setCursor(Cursor.getDefaultCursor());
+                boolean ok = false;
+                try {
+                    ok = get();
+                } catch (Exception ex) {
+                    ok = false;
+                }
+                if (ok && successMessage != null && !successMessage.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(FinanzasHogarPanel.this, successMessage, "Hogar", JOptionPane.INFORMATION_MESSAGE);
+                } else if (!ok) {
+                    String message = data.getLastErrorMessage();
+                    JOptionPane.showMessageDialog(FinanzasHogarPanel.this,
+                            message == null || message.trim().isEmpty() ? "No fue posible completar la accion." : message,
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                refresh();
+            }
+        }.execute();
+    }
+
     private void refresh() {
+        if (membersListPanel != null) {
+            refreshMembersList(membersListPanel);
+        }
+        refreshInvitationsPanel();
         refreshDebtCards();
         refreshTable();
+    }
+
+    private interface BackendAction {
+        boolean run();
     }
 
     public void openNewHouseholdExpenseDialog() {

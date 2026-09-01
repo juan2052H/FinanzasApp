@@ -24,8 +24,8 @@
 | Reportes PDF/XLSX backend | Media | UC-023 | `ReportController`, `ReportService`, OpenAPI | N/A | `/reports/export.pdf`, `/export.xlsx` | Compilacion | Abrir archivos | Parcial | Generadores minimos |
 | Seguridad local serializacion/ZIP | Alta | UC-026 | `PersistenceService` | N/A | N/A | Cliente tests | Restaurar ZIP malicioso pendiente | Parcial | ObjectInputFilter y limites |
 | Testcontainers PostgreSQL | Alta | QA | `FlywayPostgresMigrationTest` | V1-V4 | N/A | Omitido sin Docker | Ejecutar en Docker/CI | Parcial | Prueba existe; Docker ausente |
-| Workspaces selector activo | Alta | UC-006 | N/A | N/A | `/workspaces` | N/A | Pendiente | Pendiente | Sigue primer workspace |
-| Invitaciones Swing completas | Alta | UC-008 | Backend existente; UI parcial | N/A | `/invitations/*` | N/A | Pendiente | Pendiente | Falta bandeja/aceptar/rechazar |
+| Workspaces selector activo | Alta | UC-006 | `DataManager`, `HeaderPanel`, `FinanzasApiClient` | N/A | `/workspaces` | `FinanzasApiClientTest` | Cambiar workspace desde header | Implementado cliente | Selector persistido por usuario, crea workspace y sincroniza snapshot |
+| Invitaciones Swing completas | Alta | UC-008 | `FinanzasHogarPanel`, `DataManager`, `FinanzasApiClient`, `WorkspaceCollaborationServiceTest` | N/A | `/invitations/*`, `/members` | Cliente HTTP + backend service tests | Invitar/aceptar/rechazar/cancelar desde UI | Parcial alto | Bandeja interna lista; falta E2E real dos clientes y cambio de rol UI |
 | Sincronizacion incremental continua | Alta | UC-028 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | Snapshot manual/parcial |
 | Email provider/sink | Media | UC-008, UC-003 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | Invitacion interna aun posible por API |
 | Password reset/verificacion/sesiones | Alta | UC-003 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | No implementado |

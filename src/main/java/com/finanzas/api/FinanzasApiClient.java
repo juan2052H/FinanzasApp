@@ -77,6 +77,15 @@ public final class FinanzasApiClient {
         return result;
     }
 
+    public BackendWorkspace createWorkspace(String accessToken, String nombre, String tipo)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("nombre", nombre);
+        body.put("tipo", tipo == null || tipo.trim().isEmpty() ? "PERSONAL" : tipo.trim());
+        return toWorkspace(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/workspaces", SimpleJson.stringify(body), accessToken))));
+    }
+
     public List<BackendCategory> listCategories(String accessToken, String workspaceId) throws IOException, InterruptedException {
         String response = get("/api/workspaces/" + workspaceId + "/categories", accessToken);
         List<BackendCategory> result = new ArrayList<BackendCategory>();
@@ -398,12 +407,50 @@ public final class FinanzasApiClient {
         return result;
     }
 
-    public void inviteMember(String accessToken, String workspaceId, String email, String role)
+    public BackendInvitation inviteMember(String accessToken, String workspaceId, String email, String role)
             throws IOException, InterruptedException {
         Map<String, Object> body = new LinkedHashMap<String, Object>();
         body.put("email", email);
         body.put("role", role);
-        post("/api/workspaces/" + workspaceId + "/invitations", SimpleJson.stringify(body), accessToken);
+        return toInvitation(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/workspaces/" + workspaceId + "/invitations", SimpleJson.stringify(body), accessToken))));
+    }
+
+    public List<BackendInvitation> listWorkspaceInvitations(String accessToken, String workspaceId)
+            throws IOException, InterruptedException {
+        String response = get("/api/workspaces/" + workspaceId + "/invitations", accessToken);
+        List<BackendInvitation> result = new ArrayList<BackendInvitation>();
+        for (Object item : SimpleJson.asArray(SimpleJson.parse(response))) {
+            result.add(toInvitation(SimpleJson.asObject(item)));
+        }
+        return result;
+    }
+
+    public void cancelInvitation(String accessToken, String workspaceId, String invitationId)
+            throws IOException, InterruptedException {
+        delete("/api/workspaces/" + workspaceId + "/invitations/" + invitationId, accessToken);
+    }
+
+    public List<BackendInvitation> listMyInvitations(String accessToken)
+            throws IOException, InterruptedException {
+        String response = get("/api/invitations/mine", accessToken);
+        List<BackendInvitation> result = new ArrayList<BackendInvitation>();
+        for (Object item : SimpleJson.asArray(SimpleJson.parse(response))) {
+            result.add(toInvitation(SimpleJson.asObject(item)));
+        }
+        return result;
+    }
+
+    public BackendInvitation acceptInvitation(String accessToken, String invitationId)
+            throws IOException, InterruptedException {
+        return toInvitation(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/invitations/" + invitationId + "/accept", "{}", accessToken))));
+    }
+
+    public BackendInvitation rejectInvitation(String accessToken, String invitationId)
+            throws IOException, InterruptedException {
+        return toInvitation(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/invitations/" + invitationId + "/reject", "{}", accessToken))));
     }
 
     public void removeMember(String accessToken, String workspaceId, String memberId)
@@ -696,6 +743,19 @@ public final class FinanzasApiClient {
                 SimpleJson.string(object, "apellido"),
                 SimpleJson.string(object, "email"),
                 SimpleJson.string(object, "role"));
+    }
+
+    private BackendInvitation toInvitation(Map<String, Object> object) {
+        return new BackendInvitation(
+                SimpleJson.string(object, "id"),
+                SimpleJson.string(object, "workspaceId"),
+                SimpleJson.string(object, "workspaceName"),
+                SimpleJson.string(object, "invitedEmail"),
+                SimpleJson.string(object, "invitedByUserId"),
+                SimpleJson.string(object, "role"),
+                SimpleJson.string(object, "status"),
+                SimpleJson.string(object, "expiresAt"),
+                SimpleJson.string(object, "createdAt"));
     }
 
     private BackendSharedExpense toSharedExpense(Map<String, Object> object) throws IOException {

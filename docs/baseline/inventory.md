@@ -1,6 +1,6 @@
 ﻿# Inventario inicial
 
-Generado: 2026-08-31 20:38:45 -05:00
+Generado: 2026-08-31 20:56:30 -05:00
 
 Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 
@@ -122,6 +122,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - src\main\java\com\finanzas\api\BackendCategory.java: com.finanzas.api - class BackendCategory
 - src\main\java\com\finanzas\api\BackendConfig.java: com.finanzas.api - class BackendConfig
 - src\main\java\com\finanzas\api\BackendExpenseSplit.java: com.finanzas.api - class BackendExpenseSplit
+- src\main\java\com\finanzas\api\BackendInvitation.java: com.finanzas.api - class BackendInvitation
 - src\main\java\com\finanzas\api\BackendMember.java: com.finanzas.api - class BackendMember
 - src\main\java\com\finanzas\api\BackendNotification.java: com.finanzas.api - class BackendNotification
 - src\main\java\com\finanzas\api\BackendRecurringTransaction.java: com.finanzas.api - class BackendRecurringTransaction
@@ -323,6 +324,8 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SavingsServiceTest.java: SavingsServiceTest (6 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SharedExpenseSplitCalculatorTest.java: SharedExpenseSplitCalculatorTest (4 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceAccessServiceTest.java: WorkspaceAccessServiceTest (2 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceCollaborationServiceTest.java: WorkspaceCollaborationServiceTest (3 tests anotados)
+- src\test\java\com\finanzas\api\FinanzasApiClientTest.java: FinanzasApiClientTest (1 tests anotados)
 - src\test\java\com\finanzas\api\SimpleJsonTest.java: SimpleJsonTest (2 tests anotados)
 - src\test\java\com\finanzas\data\DataManagerRegressionTest.java: DataManagerRegressionTest (12 tests anotados)
 - src\test\java\com\finanzas\domain\FinancialHealthAndSimulationTest.java: FinancialHealthAndSimulationTest (2 tests anotados)

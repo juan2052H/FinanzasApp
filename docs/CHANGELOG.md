@@ -15,5 +15,8 @@
 - Categorias agregan busqueda normalizada, filtros, color visual, restauracion sin cambiar UUID y validacion de color.
 - Avatar backend ahora valida contenido real, normaliza PNG cuadrado, usa clave portable, ETag/Last-Modified y permite borrado.
 - Cliente API sube/descarga avatar remoto y cachea por usuario/ETag.
+- Cliente API agrega creacion de workspaces y flujo de invitaciones internas.
+- Header Swing agrega selector persistente de workspace activo y creacion de workspace.
+- Panel de hogar agrega bandeja de invitaciones recibidas/enviadas con aceptar, rechazar, cancelar y refrescar.
 - Persistencia local agrega `ObjectInputFilter` y limites de restauracion ZIP.
 - OpenAPI se actualizo y se sincronizo entre backend y cliente.
