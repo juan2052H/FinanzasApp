@@ -19,6 +19,9 @@
 - Header Swing agrega selector persistente de workspace activo y creacion de workspace.
 - Panel de hogar agrega bandeja de invitaciones recibidas/enviadas con aceptar, rechazar, cancelar y refrescar.
 - Panel de hogar permite cambiar roles de miembros segun permisos OWNER/ADMIN.
+- Panel de hogar usa `MemberOption` con UUID/email/rol para combos backend, evitando colisiones por nombres duplicados.
+- Backend agrega transferencia de OWNER y salida segura de workspace; OWNER compartido debe transferir antes de abandonar.
+- Liquidaciones backend tienen regresion que confirma que los miembros siguen disponibles para nuevos gastos.
 - Backend agrega tokens de verificacion de correo y recuperacion de contrasena con hash, TTL, mail sink local y revocacion de refresh tokens tras reset.
 - Login Swing permite solicitar recuperacion/verificacion y confirmar tokens del backend.
 - Perfil backend ahora incluye ciudad y pais; las preferencias de usuario usan `user_settings` con tema, locale, zona horaria, formato monetario y notificaciones.

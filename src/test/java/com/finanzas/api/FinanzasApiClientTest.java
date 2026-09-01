@@ -44,6 +44,8 @@ class FinanzasApiClientTest {
         List<BackendInvitation> workspaceInvitations = client.listWorkspaceInvitations("token", "ws-1");
         List<BackendInvitation> mine = client.listMyInvitations("token");
         BackendMember changedMember = client.changeMemberRole("token", "ws-1", "u-2", "VIEWER");
+        BackendWorkspace transferred = client.transferWorkspaceOwner("token", "ws-1", "u-2");
+        client.leaveWorkspace("token", "ws-1");
         BackendInvitation accepted = client.acceptInvitation("token", "inv-1");
         BackendInvitation rejected = client.rejectInvitation("token", "inv-1");
         client.cancelInvitation("token", "ws-1", "inv-1");
@@ -70,6 +72,7 @@ class FinanzasApiClientTest {
         assertEquals(1, workspaceInvitations.size());
         assertEquals("Casa", mine.get(0).getWorkspaceName());
         assertEquals("VIEWER", changedMember.getRole());
+        assertEquals("u-2", transferred.getOwnerId());
         assertEquals("ACCEPTED", accepted.getStatus());
         assertEquals("REJECTED", rejected.getStatus());
         assertTrue(verified.isEmailVerified());
@@ -81,6 +84,8 @@ class FinanzasApiClientTest {
         assertEquals("DARK", updatedSettings.getTheme());
         assertEquals(3L, updatedSettings.getVersion());
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/invitations/inv-1"));
+        assertTrue(requests.contains("POST /api/workspaces/ws-1/owner"));
+        assertTrue(requests.contains("DELETE /api/workspaces/ws-1/membership"));
         assertTrue(requests.contains("POST /api/auth/password/reset/confirm"));
         assertTrue(requests.contains("PATCH /api/auth/password"));
         assertTrue(requests.contains("DELETE /api/auth/sessions/session-1"));
@@ -118,6 +123,14 @@ class FinanzasApiClientTest {
         }
         if ("PATCH".equals(method) && "/api/workspaces/ws-1/members/u-2".equals(path)) {
             respond(exchange, 200, "{\"userId\":\"u-2\",\"nombre\":\"Ana\",\"apellido\":\"Lopez\",\"email\":\"ana@example.com\",\"role\":\"VIEWER\"}");
+            return;
+        }
+        if ("POST".equals(method) && "/api/workspaces/ws-1/owner".equals(path)) {
+            respond(exchange, 200, "{\"id\":\"ws-1\",\"nombre\":\"Casa\",\"tipo\":\"HOUSEHOLD\",\"ownerId\":\"u-2\",\"role\":\"ADMIN\"}");
+            return;
+        }
+        if ("DELETE".equals(method) && "/api/workspaces/ws-1/membership".equals(path)) {
+            respond(exchange, 204, "");
             return;
         }
         if ("GET".equals(method) && "/api/invitations/mine".equals(path)) {

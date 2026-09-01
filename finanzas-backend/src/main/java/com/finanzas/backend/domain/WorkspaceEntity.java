@@ -68,6 +68,13 @@ public class WorkspaceEntity {
         this.nombre = require(nombre, "nombre");
     }
 
+    public void transferOwnership(UUID newOwnerId) {
+        if (newOwnerId == null) {
+            throw new IllegalArgumentException("newOwnerId es obligatorio.");
+        }
+        this.ownerId = newOwnerId;
+    }
+
     private static String require(String value, String field) {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(field + " es obligatorio.");

@@ -76,6 +76,7 @@ public class DataManager {
         public transient List<NotificationItem> backendNotifications = new ArrayList<NotificationItem>();
         public transient Map<String, String> backendMemberIdsByName = new LinkedHashMap<String, String>();
         public transient Map<String, String> backendMemberRolesByName = new LinkedHashMap<String, String>();
+        public transient List<MemberOption> backendMembers = new ArrayList<MemberOption>();
         public transient List<BackendInvitation> backendReceivedInvitations = new ArrayList<BackendInvitation>();
         public transient List<BackendInvitation> backendWorkspaceInvitations = new ArrayList<BackendInvitation>();
         public transient BackendSavingsSummary backendSavingsSummary;
@@ -1012,13 +1013,29 @@ public class DataManager {
             throws IOException, InterruptedException {
         profile.backendMemberIdsByName.clear();
         profile.backendMemberRolesByName.clear();
+        profile.backendMembers.clear();
         profile.miembrosHogar.clear();
-        for (BackendMember member : callBackend(token -> apiClient.listMembers(token, workspaceId))) {
-            String name = member.getDisplayName();
-            if (name != null && !name.trim().isEmpty()) {
-                profile.miembrosHogar.add(name);
-                profile.backendMemberIdsByName.put(name, member.getUserId());
-                profile.backendMemberRolesByName.put(name, member.getRole());
+        List<BackendMember> remoteMembers = callBackend(token -> apiClient.listMembers(token, workspaceId));
+        Map<String, Integer> displayNameCounts = new HashMap<String, Integer>();
+        for (BackendMember member : remoteMembers) {
+            String key = normalizeSearch(member.getDisplayName());
+            displayNameCounts.put(key, displayNameCounts.getOrDefault(key, 0) + 1);
+        }
+        for (BackendMember member : remoteMembers) {
+            MemberOption option = new MemberOption(member.getUserId(), member.getDisplayName(), member.getEmail(), member.getRole());
+            String label = option.getLabel();
+            if (label != null && !label.trim().isEmpty()) {
+                profile.backendMembers.add(option);
+                profile.miembrosHogar.add(label);
+                profile.backendMemberIdsByName.put(label, member.getUserId());
+                profile.backendMemberRolesByName.put(label, member.getRole());
+                String displayName = member.getDisplayName();
+                if (displayName != null
+                        && !displayName.trim().isEmpty()
+                        && displayNameCounts.getOrDefault(normalizeSearch(displayName), 0) == 1) {
+                    profile.backendMemberIdsByName.put(displayName, member.getUserId());
+                    profile.backendMemberRolesByName.put(displayName, member.getRole());
+                }
             }
         }
 
@@ -1082,6 +1099,13 @@ public class DataManager {
     }
 
     private String memberNameById(UserProfile profile, String userId) {
+        if (profile.backendMembers != null) {
+            for (MemberOption option : profile.backendMembers) {
+                if (option.getUserId().equals(userId)) {
+                    return option.getLabel();
+                }
+            }
+        }
         for (Map.Entry<String, String> entry : profile.backendMemberIdsByName.entrySet()) {
             if (entry.getValue().equals(userId)) {
                 return entry.getKey();
@@ -1103,11 +1127,25 @@ public class DataManager {
         if (profile == null || profile.backendMemberIdsByName == null) {
             throw new IOException("No hay miembros backend cargados.");
         }
+        if (profile.backendMembers != null) {
+            for (MemberOption option : profile.backendMembers) {
+                if (option.getLabel().equals(name) || option.getDisplayName().equals(name)) {
+                    return option.getUserId();
+                }
+            }
+        }
         String userId = profile.backendMemberIdsByName.get(name);
         if (userId == null || userId.trim().isEmpty()) {
             throw new IOException("El miembro no pertenece al workspace backend: " + name);
         }
         return userId;
+    }
+
+    private String backendMemberIdOrLookup(String explicitUserId, String name) throws IOException {
+        if (explicitUserId != null && !explicitUserId.trim().isEmpty()) {
+            return explicitUserId.trim();
+        }
+        return backendMemberIdForName(name);
     }
 
     private String backendSplitMethod(GastoHogar gastoHogar) {
@@ -1343,6 +1381,14 @@ public class DataManager {
 
     public List<String> getMiembrosHogar() {
         return p() != null ? p().miembrosHogar : new ArrayList<String>();
+    }
+
+    public List<MemberOption> getBackendMemberOptions() {
+        UserProfile profile = p();
+        if (profile == null || profile.backendMembers == null) {
+            return new ArrayList<MemberOption>();
+        }
+        return new ArrayList<MemberOption>(profile.backendMembers);
     }
 
     public List<FinancialCategory> getCategories(FinancialCategory.Kind kind, boolean includeArchived) {
@@ -1953,7 +1999,7 @@ public class DataManager {
         if (p() != null && gastoHogar != null) {
             if (hasBackendFinancialSession()) {
                 try {
-                    String paidByUserId = backendMemberIdForName(gastoHogar.getPagadoPor());
+                    String paidByUserId = backendMemberIdOrLookup(gastoHogar.getBackendPaidByUserId(), gastoHogar.getPagadoPor());
                     String categoryId = ensureBackendCategoryId(Tipo.GASTO, gastoHogar.getCategoria());
                     callBackend(token -> apiClient.createSharedExpense(
                             token,
@@ -1985,11 +2031,13 @@ public class DataManager {
         if (p() != null && settlement != null) {
             if (hasBackendFinancialSession()) {
                 try {
+                    String fromUserId = backendMemberIdOrLookup(settlement.getBackendFromUserId(), settlement.getFromMember());
+                    String toUserId = backendMemberIdOrLookup(settlement.getBackendToUserId(), settlement.getToMember());
                     callBackend(token -> apiClient.createSettlement(
                             token,
                             activeBackendWorkspaceId(),
-                            backendMemberIdForName(settlement.getFromMember()),
-                            backendMemberIdForName(settlement.getToMember()),
+                            fromUserId,
+                            toUserId,
                             settlement.getAmountDecimal(),
                             settlement.getDate(),
                             settlement.getNote()));
@@ -2226,7 +2274,33 @@ public class DataManager {
         return role == null ? "" : role;
     }
 
+    public String getBackendMemberRoleById(String userId) {
+        UserProfile profile = p();
+        if (profile == null || profile.backendMembers == null) {
+            return "";
+        }
+        for (MemberOption option : profile.backendMembers) {
+            if (option.getUserId().equals(userId)) {
+                return option.getRole();
+            }
+        }
+        return "";
+    }
+
+    public String getCurrentBackendUserId() {
+        return backendSession == null || backendSession.getUser() == null ? "" : backendSession.getUser().getId();
+    }
+
     public boolean changeBackendMemberRole(String nombre, String role) {
+        try {
+            return changeBackendMemberRoleById(backendMemberIdForName(nombre), role);
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible cambiar el rol del miembro.", ex);
+            return false;
+        }
+    }
+
+    public boolean changeBackendMemberRoleById(String memberUserId, String role) {
         if (!hasBackendFinancialSession()) {
             lastErrorMessage = "No hay una sesion backend activa.";
             return false;
@@ -2240,11 +2314,15 @@ public class DataManager {
             lastErrorMessage = "El rol OWNER no se asigna desde este flujo.";
             return false;
         }
+        if (memberUserId == null || memberUserId.trim().isEmpty()) {
+            lastErrorMessage = "Selecciona un miembro valido.";
+            return false;
+        }
         try {
             runBackend(token -> apiClient.changeMemberRole(
                     token,
                     activeBackendWorkspaceId(),
-                    backendMemberIdForName(nombre),
+                    memberUserId.trim(),
                     safeRole));
             syncBackendSnapshot();
             notifyListeners();
@@ -2256,25 +2334,98 @@ public class DataManager {
         }
     }
 
+    public boolean transferBackendOwnership(String newOwnerUserId) {
+        BackendWorkspace workspace = getActiveBackendWorkspace();
+        if (workspace == null || !"OWNER".equalsIgnoreCase(workspace.getRole())) {
+            lastErrorMessage = "Solo el OWNER puede transferir la propiedad.";
+            return false;
+        }
+        if (newOwnerUserId == null || newOwnerUserId.trim().isEmpty()) {
+            lastErrorMessage = "Selecciona el nuevo OWNER.";
+            return false;
+        }
+        try {
+            callBackend(token -> apiClient.transferWorkspaceOwner(
+                    token,
+                    activeBackendWorkspaceId(),
+                    newOwnerUserId.trim()));
+            reloadBackendWorkspaces();
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible transferir la propiedad.", ex);
+            return false;
+        }
+    }
+
+    public boolean leaveBackendWorkspace() {
+        if (!hasBackendFinancialSession()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        String workspaceId = activeBackendWorkspaceId();
+        try {
+            runBackend(token -> apiClient.leaveWorkspace(token, workspaceId));
+            reloadBackendWorkspaces();
+            UserProfile profile = p();
+            if (profile != null) {
+                profile.selectedBackendWorkspaceId = selectedBackendWorkspaceId(profile.selectedBackendWorkspaceId, backendSession.getWorkspaces());
+            }
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible abandonar el workspace.", ex);
+            return false;
+        }
+    }
+
+    public boolean removeBackendMemberById(String memberUserId) {
+        if (!hasBackendFinancialSession()) {
+            lastErrorMessage = "No hay una sesion backend activa.";
+            return false;
+        }
+        if (memberUserId == null || memberUserId.trim().isEmpty()) {
+            lastErrorMessage = "Selecciona un miembro valido.";
+            return false;
+        }
+        try {
+            runBackend(token -> apiClient.removeMember(
+                    token,
+                    activeBackendWorkspaceId(),
+                    memberUserId.trim()));
+            syncBackendSnapshot();
+            notifyListeners();
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible eliminar el miembro del workspace.", ex);
+            return false;
+        }
+    }
+
     public void removeMiembro(String nombre) {
         if (p() != null) {
             if (hasBackendFinancialSession()) {
-                try {
-                    runBackend(token -> apiClient.removeMember(
-                            token,
-                            activeBackendWorkspaceId(),
-                            backendMemberIdForName(nombre)));
-                    syncBackendSnapshot();
-                    notifyListeners();
-                    lastErrorMessage = "";
-                } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible eliminar el miembro del workspace.", ex);
-                    throw new IllegalStateException(lastErrorMessage, ex);
+                if (!removeBackendMemberById(safeLookupBackendMemberId(nombre))) {
+                    throw new IllegalStateException(lastErrorMessage);
                 }
                 return;
             }
             p().miembrosHogar.remove(nombre);
             notifyListeners();
+        }
+    }
+
+    private String safeLookupBackendMemberId(String nombre) {
+        try {
+            return backendMemberIdForName(nombre);
+        } catch (Exception ex) {
+            lastErrorMessage = ex.getMessage() == null ? "Miembro backend invalido." : ex.getMessage();
+            return "";
         }
     }
 
@@ -2856,6 +3007,9 @@ public class DataManager {
         if (profile.backendMemberRolesByName == null) {
             profile.backendMemberRolesByName = new LinkedHashMap<String, String>();
         }
+        if (profile.backendMembers == null) {
+            profile.backendMembers = new ArrayList<MemberOption>();
+        }
         if (profile.backendReceivedInvitations == null) {
             profile.backendReceivedInvitations = new ArrayList<BackendInvitation>();
         }
@@ -2865,7 +3019,9 @@ public class DataManager {
         if (!BackendConfig.isEnabled()) {
             profile.backendSavingsSummary = null;
             profile.backendMonthlySavingsSummary = null;
+            profile.backendMemberIdsByName.clear();
             profile.backendMemberRolesByName.clear();
+            profile.backendMembers.clear();
             profile.backendReceivedInvitations.clear();
             profile.backendWorkspaceInvitations.clear();
         }

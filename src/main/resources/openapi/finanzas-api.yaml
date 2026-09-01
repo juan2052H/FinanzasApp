@@ -452,6 +452,34 @@ paths:
       responses:
         '204':
           description: Miembro eliminado
+  /api/workspaces/{workspaceId}/owner:
+    post:
+      summary: Transferir propiedad del workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferOwnerRequest'
+      responses:
+        '200':
+          description: Propiedad transferida
+        '403':
+          description: Solo OWNER puede transferir propiedad
+        '404':
+          description: Nuevo OWNER no pertenece al workspace
+  /api/workspaces/{workspaceId}/membership:
+    delete:
+      summary: Abandonar workspace autenticado
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '204':
+          description: Membresia eliminada o workspace unipersonal eliminado
+        '409':
+          description: OWNER debe transferir propiedad antes de salir
   /api/workspaces/{workspaceId}/shared-expenses:
     get:
       summary: Listar gastos compartidos
@@ -1412,6 +1440,13 @@ components:
         role:
           type: string
           enum: [ADMIN, MEMBER, VIEWER]
+    TransferOwnerRequest:
+      type: object
+      required: [newOwnerUserId]
+      properties:
+        newOwnerUserId:
+          type: string
+          format: uuid
     SplitParticipantRequest:
       type: object
       required: [userId]

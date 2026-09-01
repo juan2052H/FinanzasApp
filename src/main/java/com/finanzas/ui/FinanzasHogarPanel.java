@@ -3,6 +3,7 @@ package com.finanzas.ui;
 import com.finanzas.api.BackendInvitation;
 import com.finanzas.api.BackendWorkspace;
 import com.finanzas.data.DataManager;
+import com.finanzas.data.MemberOption;
 import com.finanzas.model.FinancialCategory;
 import com.finanzas.model.GastoHogar;
 import com.finanzas.model.Money;
@@ -150,6 +151,22 @@ public class FinanzasHogarPanel extends JPanel {
             refreshButton.setEnabled(!backendActionRunning);
             refreshButton.addActionListener(e -> runBackendHouseholdAction("", () -> data.refreshBackendInvitations()));
             buttonRow.add(refreshButton);
+
+            BackendWorkspace active = data.getActiveBackendWorkspace();
+            boolean isOwner = active != null && "OWNER".equalsIgnoreCase(active.getRole());
+            RoundedButton transferOwner = new RoundedButton("Transferir", AppColors.TEXT_MUTED);
+            transferOwner.setPreferredSize(new Dimension(105, 28));
+            transferOwner.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            transferOwner.setEnabled(!backendActionRunning && isOwner && data.getBackendMemberOptions().size() > 1);
+            transferOwner.addActionListener(e -> showTransferOwnerDialog());
+            buttonRow.add(transferOwner);
+
+            RoundedButton leaveWorkspace = new RoundedButton("Abandonar", AppColors.ACCENT_RED);
+            leaveWorkspace.setPreferredSize(new Dimension(115, 28));
+            leaveWorkspace.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            leaveWorkspace.setEnabled(!backendActionRunning);
+            leaveWorkspace.addActionListener(e -> leaveActiveWorkspace());
+            buttonRow.add(leaveWorkspace);
         }
 
         card.add(title, BorderLayout.NORTH);
@@ -176,6 +193,54 @@ public class FinanzasHogarPanel extends JPanel {
                 () -> data.inviteBackendMember(emailField.getText().trim(), (String) roleBox.getSelectedItem()));
     }
 
+    private void showTransferOwnerDialog() {
+        String currentUserId = data.getCurrentBackendUserId();
+        List<MemberOption> candidates = new ArrayList<MemberOption>();
+        for (MemberOption option : data.getBackendMemberOptions()) {
+            if (!option.getUserId().equals(currentUserId)) {
+                candidates.add(option);
+            }
+        }
+        if (candidates.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay otro miembro para recibir la propiedad.", "Transferir", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        JComboBox<MemberOption> memberBox = new JComboBox<MemberOption>(candidates.toArray(new MemberOption[0]));
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                memberBox,
+                "Transferir propiedad",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        MemberOption selected = (MemberOption) memberBox.getSelectedItem();
+        if (selected == null) {
+            return;
+        }
+        runBackendHouseholdAction(
+                "Propiedad transferida.",
+                () -> data.transferBackendOwnership(selected.getUserId()));
+    }
+
+    private void leaveActiveWorkspace() {
+        BackendWorkspace active = data.getActiveBackendWorkspace();
+        String workspaceName = active == null ? "este workspace" : active.getNombre();
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Deseas abandonar " + workspaceName + "?",
+                "Abandonar workspace",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        runBackendHouseholdAction(
+                "Workspace abandonado.",
+                () -> data.leaveBackendWorkspace());
+    }
+
     private void refreshMembersList(JPanel panel) {
         panel.removeAll();
         List<Map.Entry<String, Double>> balances = new ArrayList<>(data.calcularDeudas().entrySet());
@@ -195,27 +260,31 @@ public class FinanzasHogarPanel extends JPanel {
             balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
             balanceLabel.setForeground(balance >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
+            MemberOption memberOption = memberOptionByLabel(entry.getKey());
+            String memberUserId = memberOption == null ? "" : memberOption.getUserId();
+            String role = memberOption == null ? data.getBackendMemberRole(entry.getKey()) : memberOption.getRole();
+            boolean self = data.isBackendSessionActive() && memberUserId.equals(data.getCurrentBackendUserId());
+            boolean owner = "OWNER".equalsIgnoreCase(role);
+
             JButton delete = new JButton("X");
             delete.setFont(new Font("Segoe UI", Font.BOLD, 9));
             delete.setBorderPainted(false);
             delete.setContentAreaFilled(false);
             delete.setForeground(AppColors.TEXT_MUTED);
-            delete.setEnabled(!backendActionRunning && (!data.isBackendSessionActive() || data.canManageActiveBackendWorkspace()));
+            delete.setEnabled(!backendActionRunning
+                    && (!data.isBackendSessionActive() || (data.canManageActiveBackendWorkspace() && !self && !owner)));
             if (data.isBackendSessionActive() && !data.canManageActiveBackendWorkspace()) {
                 delete.setToolTipText("Solo OWNER o ADMIN pueden eliminar miembros.");
+            } else if (self) {
+                delete.setToolTipText("Usa Abandonar para salir del workspace.");
+            } else if (owner) {
+                delete.setToolTipText("Transfiere la propiedad antes de eliminar al OWNER.");
             }
             delete.addActionListener(e -> {
                 if (data.isBackendSessionActive()) {
                     int confirm = JOptionPane.showConfirmDialog(this, "Eliminar a " + entry.getKey() + " del workspace?", "Confirmar", JOptionPane.YES_NO_OPTION);
                     if (confirm == JOptionPane.YES_OPTION) {
-                        runBackendHouseholdAction("", () -> {
-                            try {
-                                data.removeMiembro(entry.getKey());
-                                return true;
-                            } catch (Exception ex) {
-                                return false;
-                            }
-                        });
+                        runBackendHouseholdAction("", () -> data.removeBackendMemberById(memberUserId));
                     }
                     return;
                 }
@@ -228,7 +297,7 @@ public class FinanzasHogarPanel extends JPanel {
             JPanel memberActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
             memberActions.setOpaque(false);
             if (data.isBackendSessionActive()) {
-                memberActions.add(roleComponent(entry.getKey()));
+                memberActions.add(roleComponent(memberOption, entry.getKey()));
             }
             memberActions.add(delete);
 
@@ -242,11 +311,13 @@ public class FinanzasHogarPanel extends JPanel {
         panel.repaint();
     }
 
-    private JComponent roleComponent(String memberName) {
-        String role = normalizedRole(data.getBackendMemberRole(memberName));
+    private JComponent roleComponent(MemberOption option, String memberName) {
+        String memberUserId = option == null ? "" : option.getUserId();
+        String role = normalizedRole(option == null ? data.getBackendMemberRole(memberName) : option.getRole());
         BackendWorkspace workspace = data.getActiveBackendWorkspace();
         boolean actorIsOwner = workspace != null && "OWNER".equalsIgnoreCase(workspace.getRole());
         boolean canChange = data.canManageActiveBackendWorkspace()
+                && !memberUserId.equals(data.getCurrentBackendUserId())
                 && !"OWNER".equals(role)
                 && (actorIsOwner || !"ADMIN".equals(role));
         if (!canChange) {
@@ -263,10 +334,41 @@ public class FinanzasHogarPanel extends JPanel {
         roleBox.addActionListener(e -> {
             String selected = (String) roleBox.getSelectedItem();
             if (selected != null && !selected.equals(role)) {
-                runBackendHouseholdAction("", () -> data.changeBackendMemberRole(memberName, selected));
+                runBackendHouseholdAction("", () -> memberUserId.isEmpty()
+                        ? data.changeBackendMemberRole(memberName, selected)
+                        : data.changeBackendMemberRoleById(memberUserId, selected));
             }
         });
         return roleBox;
+    }
+
+    private MemberOption memberOptionByLabel(String label) {
+        for (MemberOption option : data.getBackendMemberOptions()) {
+            if (option.getLabel().equals(label) || option.getDisplayName().equals(label)) {
+                return option;
+            }
+        }
+        return null;
+    }
+
+    private List<String> labelsFromMemberOptions(List<MemberOption> options) {
+        List<String> labels = new ArrayList<String>();
+        for (MemberOption option : options) {
+            labels.add(option.getLabel());
+        }
+        return labels;
+    }
+
+    private void selectMemberOption(JComboBox<MemberOption> comboBox, String userId, String label) {
+        for (int i = 0; i < comboBox.getItemCount(); i++) {
+            MemberOption option = comboBox.getItemAt(i);
+            if ((!option.getUserId().isEmpty() && option.getUserId().equals(userId))
+                    || option.getLabel().equals(label)
+                    || option.getDisplayName().equals(label)) {
+                comboBox.setSelectedIndex(i);
+                return;
+            }
+        }
     }
 
     private JLabel roleLabel(String role) {
@@ -656,14 +758,26 @@ public class FinanzasHogarPanel extends JPanel {
             categoryBox.setSelectedItem(existing.getCategoria());
         }
         JTextField amountField = new JTextField(isEdit ? String.valueOf((long) existing.getMonto()) : "");
-        List<String> members = data.getMiembrosHogar();
+        boolean backendSession = data.isBackendSessionActive();
+        List<MemberOption> memberOptions = data.getBackendMemberOptions();
+        List<String> members = backendSession ? labelsFromMemberOptions(memberOptions) : data.getMiembrosHogar();
         if (members.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Agrega al menos un miembro del hogar antes de registrar gastos compartidos.", "Hogar sin miembros", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        JComboBox<String> paidByBox = new JComboBox<>(members.toArray(new String[0]));
-        if (isEdit) {
-            paidByBox.setSelectedItem(existing.getPagadoPor());
+        JComboBox<?> paidByBox;
+        if (backendSession) {
+            JComboBox<MemberOption> backendPaidByBox = new JComboBox<MemberOption>(memberOptions.toArray(new MemberOption[0]));
+            if (isEdit) {
+                selectMemberOption(backendPaidByBox, existing.getBackendPaidByUserId(), existing.getPagadoPor());
+            }
+            paidByBox = backendPaidByBox;
+        } else {
+            JComboBox<String> localPaidByBox = new JComboBox<String>(members.toArray(new String[0]));
+            if (isEdit) {
+                localPaidByBox.setSelectedItem(existing.getPagadoPor());
+            }
+            paidByBox = localPaidByBox;
         }
         JTextField dateField = new JTextField(isEdit ? existing.getFecha().format(dtf) : LocalDate.now().format(dtf));
         JCheckBox split = new JCheckBox("Dividir entre todos");
@@ -721,13 +835,22 @@ public class FinanzasHogarPanel extends JPanel {
                 if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                     throw new IllegalArgumentException();
                 }
+                Object payer = paidByBox.getSelectedItem();
+                String paidByName = String.valueOf(payer);
+                String paidByUserId = "";
+                if (payer instanceof MemberOption) {
+                    MemberOption option = (MemberOption) payer;
+                    paidByName = option.getLabel();
+                    paidByUserId = option.getUserId();
+                }
                 GastoHogar nuevo = new GastoHogar(
                         desc,
                         (String) categoryBox.getSelectedItem(),
                         amount,
-                        (String) paidByBox.getSelectedItem(),
+                        paidByName,
                         LocalDate.parse(dateField.getText().trim(), dtf),
                         split.isSelected());
+                nuevo.setBackendPaidByUserId(paidByUserId);
                 applySplit(nuevo, members, splitValues.getText(), (GastoHogar.SplitMethod) splitMethodBox.getSelectedItem());
                 if (isEdit) {
                     data.removeGastoHogar(existing);
@@ -745,7 +868,9 @@ public class FinanzasHogarPanel extends JPanel {
     }
 
     private void showSettlementDialog() {
-        List<String> members = data.getMiembrosHogar();
+        boolean backendSession = data.isBackendSessionActive();
+        List<MemberOption> memberOptions = data.getBackendMemberOptions();
+        List<String> members = backendSession ? labelsFromMemberOptions(memberOptions) : data.getMiembrosHogar();
         if (members.size() < 2) {
             JOptionPane.showMessageDialog(this, "Agrega al menos dos miembros para registrar liquidaciones.", "Hogar incompleto", JOptionPane.WARNING_MESSAGE);
             return;
@@ -765,8 +890,15 @@ public class FinanzasHogarPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(7, 4, 7, 4);
 
-        JComboBox<String> fromBox = new JComboBox<String>(members.toArray(new String[0]));
-        JComboBox<String> toBox = new JComboBox<String>(members.toArray(new String[0]));
+        JComboBox<?> fromBox;
+        JComboBox<?> toBox;
+        if (backendSession) {
+            fromBox = new JComboBox<MemberOption>(memberOptions.toArray(new MemberOption[0]));
+            toBox = new JComboBox<MemberOption>(memberOptions.toArray(new MemberOption[0]));
+        } else {
+            fromBox = new JComboBox<String>(members.toArray(new String[0]));
+            toBox = new JComboBox<String>(members.toArray(new String[0]));
+        }
         JTextField amountField = new JTextField();
         JTextField dateField = new JTextField(LocalDate.now().format(dtf));
         JTextField noteField = new JTextField();
@@ -785,12 +917,30 @@ public class FinanzasHogarPanel extends JPanel {
 
         save.addActionListener(e -> {
             try {
+                Object from = fromBox.getSelectedItem();
+                Object to = toBox.getSelectedItem();
+                String fromName = String.valueOf(from);
+                String toName = String.valueOf(to);
+                String fromUserId = "";
+                String toUserId = "";
+                if (from instanceof MemberOption) {
+                    MemberOption option = (MemberOption) from;
+                    fromName = option.getLabel();
+                    fromUserId = option.getUserId();
+                }
+                if (to instanceof MemberOption) {
+                    MemberOption option = (MemberOption) to;
+                    toName = option.getLabel();
+                    toUserId = option.getUserId();
+                }
                 Settlement settlement = new Settlement(
-                        (String) fromBox.getSelectedItem(),
-                        (String) toBox.getSelectedItem(),
+                        fromName,
+                        toName,
                         Money.parseFlexible(amountField.getText()),
                         LocalDate.parse(dateField.getText().trim(), dtf),
                         noteField.getText());
+                settlement.setBackendFromUserId(fromUserId);
+                settlement.setBackendToUserId(toUserId);
                 data.addSettlement(settlement);
                 dialog.dispose();
             } catch (Exception ex) {

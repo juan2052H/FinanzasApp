@@ -4,7 +4,7 @@
 
 - `.\mvnw.cmd -version`: Maven Wrapper operativo con Apache Maven 3.9.16.
 - `.\mvnw.cmd -f pom.xml test`: cliente Swing/API, 20 pruebas, 0 fallos.
-- `.\mvnw.cmd -f finanzas-backend\pom.xml test`: backend, 42 pruebas, 0 fallos, 1 omitida por falta de Docker local.
+- `.\mvnw.cmd -f finanzas-backend\pom.xml test`: backend, 46 pruebas, 0 fallos, 1 omitida por falta de Docker local.
 - `.\mvnw.cmd -f pom.xml -DskipTests package`: empaquetado cliente, `BUILD SUCCESS`.
 - `.\mvnw.cmd -f finanzas-backend\pom.xml -DskipTests package`: empaquetado backend, `BUILD SUCCESS`.
 - `.\scripts\generate-inventory.ps1`: inventario de modulos/endpoints/tablas/pruebas.
@@ -16,6 +16,8 @@
 - Avatar: `AvatarStorageServiceTest` cubre PNG, JPEG, GIF renombrado, corrupto, tamano excedido, dimensiones extremas, reemplazo, borrado e aislamiento.
 - Flyway/PostgreSQL: `FlywayPostgresMigrationTest` prueba V3 -> V7 con Testcontainers cuando Docker esta disponible.
 - Colaboracion: `WorkspaceCollaborationServiceTest` cubre invitar, aceptar, rechazo por correo ajeno y cambio de rol.
+- Ownership y salida: `WorkspaceCollaborationServiceTest` cubre transferencia de OWNER, bloqueo de salida de OWNER compartido y salida de miembro no OWNER.
+- Liquidaciones: `SharedExpenseServiceTest` cubre que una liquidacion no elimina miembros y permite crear otro gasto con los mismos usuarios, aun con nombres duplicados.
 - Auth lifecycle: `AccountTokenServiceTest` y `AuthApplicationServiceTest` cubren tokens hasheados, expiracion, verificacion de correo y reset con revocacion de refresh tokens.
 - Seguridad de cuenta: `RefreshTokenServiceTest`, `AuthApplicationServiceTest`, `UserAccountServiceTest` y `FinanzasApiClientTest` cubren cambio de contrasena, sesiones activas, revocacion, exportacion y eliminacion anonimizada.
 - Settings: `UserSettingsServiceTest`, `DataManagerRegressionTest` y `FinanzasApiClientTest` cubren persistencia local/backend, tema, locale, zona horaria, formato monetario y notificaciones.

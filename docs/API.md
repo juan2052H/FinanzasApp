@@ -33,6 +33,8 @@ La CI verifica que ambas copias sean iguales con `cmp`.
 - `PATCH /api/users/me/settings`: persiste preferencias del usuario con validacion de locale/zona/formato.
 - `GET /api/workspaces/{workspaceId}/categories?type=&includeArchived=&q=`: busqueda/filtros.
 - `POST /api/workspaces/{workspaceId}/categories/{categoryId}/restore`: restaura sin cambiar UUID.
+- `POST /api/workspaces/{workspaceId}/owner`: transfiere OWNER a otro miembro del workspace.
+- `DELETE /api/workspaces/{workspaceId}/membership`: abandona el workspace autenticado; OWNER compartido debe transferir antes.
 - `GET/PUT /api/workspaces/{workspaceId}/savings/config`.
 - `GET /api/workspaces/{workspaceId}/savings/summary`.
 - `GET /api/workspaces/{workspaceId}/savings/movements`.

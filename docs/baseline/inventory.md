@@ -1,6 +1,6 @@
 ﻿# Inventario inicial
 
-Generado: 2026-08-31 21:51:17 -05:00
+Generado: 2026-08-31 22:03:43 -05:00
 
 Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 
@@ -25,7 +25,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\AuthDtos.java: com.finanzas.backend.api.dto - class AuthDtos, record RegisterRequest, record LoginRequest, record RefreshRequest, record LogoutRequest, record EmailRequest, record TokenRequest, record PasswordResetConfirmRequest, record PasswordChangeRequest, record GoogleRequest, record AuthResponse, record UserResponse, record UserPatchRequest, record SessionResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\BudgetDtos.java: com.finanzas.backend.api.dto - class BudgetDtos, record BudgetRequest, record BudgetResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\CategoryDtos.java: com.finanzas.backend.api.dto - class CategoryDtos, record CategoryRequest, record CategoryResponse
-- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\HouseholdDtos.java: com.finanzas.backend.api.dto - class HouseholdDtos, record InvitationRequest, record InvitationResponse, record MemberResponse, record MemberRoleRequest, record SplitParticipantRequest, record SharedExpenseRequest, record ExpenseSplitResponse, record SharedExpenseResponse, record SettlementRequest, record SettlementResponse, record MemberBalanceResponse
+- finanzas-backend\src\main\java\com\finanzas\backend\api\dto\HouseholdDtos.java: com.finanzas.backend.api.dto - class HouseholdDtos, record InvitationRequest, record InvitationResponse, record MemberResponse, record MemberRoleRequest, record TransferOwnerRequest, record SplitParticipantRequest, record SharedExpenseRequest, record ExpenseSplitResponse, record SharedExpenseResponse, record SettlementRequest, record SettlementResponse, record MemberBalanceResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\NotificationDtos.java: com.finanzas.backend.api.dto - class NotificationDtos, record NotificationResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\RecurringDtos.java: com.finanzas.backend.api.dto - class RecurringDtos, record RecurringTransactionRequest, record RecurringTransactionResponse
 - finanzas-backend\src\main\java\com\finanzas\backend\api\dto\ReportDtos.java: com.finanzas.backend.api.dto - class ReportDtos, record ReportResponse, record ReportTransaction, record BudgetUsage, record GoalProgress, record RecurringUpcoming
@@ -163,6 +163,7 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - src\main\java\com\finanzas\data\HouseholdInsights.java: com.finanzas.data - class HouseholdInsights
 - src\main\java\com\finanzas\data\InsightProvider.java: com.finanzas.data - interface InsightProvider
 - src\main\java\com\finanzas\data\LegacyStateMigrationService.java: com.finanzas.data - class LegacyStateMigrationService
+- src\main\java\com\finanzas\data\MemberOption.java: com.finanzas.data - class MemberOption
 - src\main\java\com\finanzas\data\NotificationItem.java: com.finanzas.data - class NotificationItem, enum Severity
 - src\main\java\com\finanzas\data\PersistenceService.java: com.finanzas.data - class PersistenceService
 - src\main\java\com\finanzas\data\RecurringExpenseInsight.java: com.finanzas.data - class RecurringExpenseInsight
@@ -318,6 +319,8 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
   - GET /api/workspaces/{workspaceId}/members
   - PATCH /api/workspaces/{workspaceId}/members/{memberId}
   - DELETE /api/workspaces/{workspaceId}/members/{memberId}
+  - POST /api/workspaces/{workspaceId}/owner
+  - DELETE /api/workspaces/{workspaceId}/membership
   - GET /api/workspaces/{workspaceId}/invitations
   - POST /api/workspaces/{workspaceId}/invitations
   - DELETE /api/workspaces/{workspaceId}/invitations/{invitationId}
@@ -362,11 +365,12 @@ Raiz: C:\Users\filid\Downloads\FinanzasApp (2)\FinanzasApp
 - finanzas-backend\src\test\java\com\finanzas\backend\service\AvatarStorageServiceTest.java: AvatarStorageServiceTest (8 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\RefreshTokenServiceTest.java: RefreshTokenServiceTest (2 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SavingsServiceTest.java: SavingsServiceTest (6 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\SharedExpenseServiceTest.java: SharedExpenseServiceTest (1 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\SharedExpenseSplitCalculatorTest.java: SharedExpenseSplitCalculatorTest (4 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\UserAccountServiceTest.java: UserAccountServiceTest (3 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\UserSettingsServiceTest.java: UserSettingsServiceTest (3 tests anotados)
 - finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceAccessServiceTest.java: WorkspaceAccessServiceTest (2 tests anotados)
-- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceCollaborationServiceTest.java: WorkspaceCollaborationServiceTest (4 tests anotados)
+- finanzas-backend\src\test\java\com\finanzas\backend\service\WorkspaceCollaborationServiceTest.java: WorkspaceCollaborationServiceTest (7 tests anotados)
 - src\test\java\com\finanzas\api\FinanzasApiClientTest.java: FinanzasApiClientTest (1 tests anotados)
 - src\test\java\com\finanzas\api\SimpleJsonTest.java: SimpleJsonTest (2 tests anotados)
 - src\test\java\com\finanzas\data\DataManagerRegressionTest.java: DataManagerRegressionTest (13 tests anotados)

@@ -1,6 +1,7 @@
 package com.finanzas.backend.service;
 
 import com.finanzas.backend.api.dto.HouseholdDtos;
+import com.finanzas.backend.api.dto.WorkspaceDtos;
 import com.finanzas.backend.domain.InvitationStatus;
 import com.finanzas.backend.domain.UserEntity;
 import com.finanzas.backend.domain.WorkspaceEntity;
@@ -174,6 +175,50 @@ public class WorkspaceCollaborationService {
                 "removedRole", target.getRole().name()));
     }
 
+    @Transactional
+    public WorkspaceDtos.WorkspaceResponse transferOwner(UUID actorUserId, UUID workspaceId, HouseholdDtos.TransferOwnerRequest request) {
+        access.requireRole(actorUserId, workspaceId, WorkspaceRole.OWNER);
+        WorkspaceEntity workspace = requireWorkspace(workspaceId);
+        UUID newOwnerId = request.newOwnerUserId();
+        if (actorUserId.equals(newOwnerId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario indicado ya es OWNER.");
+        }
+        WorkspaceMemberEntity currentOwner = requireMember(workspaceId, actorUserId);
+        WorkspaceMemberEntity newOwner = requireMember(workspaceId, newOwnerId);
+        WorkspaceRole previousRole = newOwner.getRole();
+        workspace.transferOwnership(newOwnerId);
+        currentOwner.changeRole(WorkspaceRole.ADMIN);
+        newOwner.changeRole(WorkspaceRole.OWNER);
+        auditLogs.record(workspaceId, actorUserId, "WORKSPACE_OWNER_TRANSFERRED", "Workspace", workspaceId, Map.of(
+                "newOwnerUserId", newOwnerId.toString(),
+                "previousRole", previousRole.name()));
+        return new WorkspaceDtos.WorkspaceResponse(
+                workspace.getId(),
+                workspace.getNombre(),
+                workspace.getTipo(),
+                workspace.getOwnerId(),
+                currentOwner.getRole());
+    }
+
+    @Transactional
+    public void leaveWorkspace(UUID actorUserId, UUID workspaceId) {
+        WorkspaceMemberEntity actor = access.requireMember(actorUserId, workspaceId);
+        WorkspaceEntity workspace = requireWorkspace(workspaceId);
+        boolean isOwner = actor.getRole() == WorkspaceRole.OWNER || actorUserId.equals(workspace.getOwnerId());
+        if (isOwner) {
+            int memberCount = members.findByIdWorkspaceId(workspaceId).size();
+            if (memberCount > 1) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Transfiere la propiedad antes de abandonar este workspace.");
+            }
+            auditLogs.record(workspaceId, actorUserId, "WORKSPACE_DELETED_BY_OWNER_LEAVE", "Workspace", workspaceId, Map.of(
+                    "memberCount", memberCount));
+            workspaces.delete(workspace);
+            return;
+        }
+        members.delete(actor);
+        auditLogs.record(workspaceId, actorUserId, "WORKSPACE_MEMBER_LEFT", "WorkspaceMember", actorUserId, Map.of());
+    }
+
     private WorkspaceRole normalizeInviteRole(WorkspaceRole role, WorkspaceRole actorRole) {
         WorkspaceRole selected = role == null ? WorkspaceRole.MEMBER : role;
         if (selected == WorkspaceRole.OWNER) {
@@ -211,6 +256,11 @@ public class WorkspaceCollaborationService {
     private WorkspaceMemberEntity requireMember(UUID workspaceId, UUID userId) {
         return members.findById(new WorkspaceMemberId(workspaceId, userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Miembro no encontrado."));
+    }
+
+    private WorkspaceEntity requireWorkspace(UUID workspaceId) {
+        return workspaces.findById(workspaceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workspace no encontrado."));
     }
 
     private WorkspaceInvitationEntity requireInvitationForUser(UUID invitationId, UserEntity user) {

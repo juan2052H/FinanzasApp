@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -148,6 +150,62 @@ class WorkspaceCollaborationServiceTest {
 
         assertEquals(WorkspaceRole.VIEWER, response.role());
         assertEquals(WorkspaceRole.VIEWER, targetMember.getRole());
+    }
+
+    @Test
+    void ownerCanTransferOwnershipToAnotherMember() {
+        UUID ownerId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        UUID workspaceId = UUID.randomUUID();
+        WorkspaceEntity workspace = workspace(workspaceId, ownerId);
+        WorkspaceMemberEntity ownerMember = new WorkspaceMemberEntity(workspaceId, ownerId, WorkspaceRole.OWNER);
+        WorkspaceMemberEntity targetMember = new WorkspaceMemberEntity(workspaceId, memberId, WorkspaceRole.MEMBER);
+
+        when(workspaces.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(members.findById(new WorkspaceMemberId(workspaceId, ownerId))).thenReturn(Optional.of(ownerMember));
+        when(members.findById(new WorkspaceMemberId(workspaceId, memberId))).thenReturn(Optional.of(targetMember));
+
+        service.transferOwner(ownerId, workspaceId, new HouseholdDtos.TransferOwnerRequest(memberId));
+
+        assertEquals(memberId, workspace.getOwnerId());
+        assertEquals(WorkspaceRole.ADMIN, ownerMember.getRole());
+        assertEquals(WorkspaceRole.OWNER, targetMember.getRole());
+    }
+
+    @Test
+    void ownerCannotLeaveSharedWorkspaceBeforeTransfer() {
+        UUID ownerId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        UUID workspaceId = UUID.randomUUID();
+        WorkspaceEntity workspace = workspace(workspaceId, ownerId);
+        WorkspaceMemberEntity ownerMember = new WorkspaceMemberEntity(workspaceId, ownerId, WorkspaceRole.OWNER);
+        WorkspaceMemberEntity targetMember = new WorkspaceMemberEntity(workspaceId, memberId, WorkspaceRole.MEMBER);
+
+        when(access.requireMember(ownerId, workspaceId)).thenReturn(ownerMember);
+        when(workspaces.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(members.findByIdWorkspaceId(workspaceId)).thenReturn(List.of(ownerMember, targetMember));
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.leaveWorkspace(ownerId, workspaceId));
+
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        verify(workspaces, never()).delete(workspace);
+    }
+
+    @Test
+    void nonOwnerCanLeaveWorkspace() {
+        UUID ownerId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        UUID workspaceId = UUID.randomUUID();
+        WorkspaceEntity workspace = workspace(workspaceId, ownerId);
+        WorkspaceMemberEntity member = new WorkspaceMemberEntity(workspaceId, memberId, WorkspaceRole.MEMBER);
+
+        when(access.requireMember(memberId, workspaceId)).thenReturn(member);
+        when(workspaces.findById(workspaceId)).thenReturn(Optional.of(workspace));
+
+        service.leaveWorkspace(memberId, workspaceId);
+
+        verify(members).delete(member);
     }
 
     private WorkspaceEntity workspace(UUID workspaceId, UUID ownerId) {

@@ -39,6 +39,7 @@ Contrato canonico: `src/main/resources/openapi/finanzas-api.yaml`.
 - Auth: `/api/auth/register`, `/login`, `/refresh`, `/logout`, `/google`, verificacion de correo, reset, cambio de contrasena y sesiones.
 - Perfil: `/api/users/me`, `/api/users/me/settings`, `/api/users/me/avatar`, exportacion y eliminacion de cuenta.
 - Workspaces/miembros/invitaciones.
+- Transferencia de OWNER y abandono seguro de workspace.
 - Categorias con filtros/restauracion.
 - Transacciones, presupuestos, metas y recurrencias.
 - Libro mayor de ahorro en `/api/workspaces/{workspaceId}/savings/*`.

@@ -569,6 +569,18 @@ public final class FinanzasApiClient {
                 patch("/api/workspaces/" + workspaceId + "/members/" + memberId, SimpleJson.stringify(body), accessToken))));
     }
 
+    public BackendWorkspace transferWorkspaceOwner(String accessToken, String workspaceId, String newOwnerUserId)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("newOwnerUserId", newOwnerUserId);
+        return toWorkspace(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/workspaces/" + workspaceId + "/owner", SimpleJson.stringify(body), accessToken))));
+    }
+
+    public void leaveWorkspace(String accessToken, String workspaceId) throws IOException, InterruptedException {
+        delete("/api/workspaces/" + workspaceId + "/membership", accessToken);
+    }
+
     public List<BackendSharedExpense> listSharedExpenses(String accessToken, String workspaceId)
             throws IOException, InterruptedException {
         String response = get("/api/workspaces/" + workspaceId + "/shared-expenses", accessToken);

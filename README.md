@@ -65,7 +65,7 @@ $env:FINANZAS_API_BASE_URL="http://localhost:8080"
 - Registro/login local y backend.
 - Refresh token backend con renovacion automatica del cliente tras 401.
 - Cambio de contrasena backend, listado/revocacion de sesiones, exportacion JSON de cuenta y eliminacion anonimizada.
-- Workspaces, miembros, invitaciones backend, categorias, transacciones, presupuestos, metas, recurrencias, hogar compartido, notificaciones y reportes.
+- Workspaces, miembros por UUID, invitaciones backend, transferencia OWNER, abandono seguro, categorias, transacciones, presupuestos, metas, recurrencias, hogar compartido, notificaciones y reportes.
 - Perfil y preferencias en modo API: ciudad, pais, moneda, locale, zona horaria, formato monetario, tema y notificaciones.
 - Libro mayor de ahorro backend con porcentaje configurable, asignacion automatica por ingreso, retiros, depositos manuales y asignacion/liberacion de metas.
 - Dashboard en modo API lee ahorro desde el libro mayor.

@@ -1,6 +1,7 @@
 package com.finanzas.backend.api;
 
 import com.finanzas.backend.api.dto.HouseholdDtos;
+import com.finanzas.backend.api.dto.WorkspaceDtos;
 import com.finanzas.backend.service.WorkspaceCollaborationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,19 @@ public class WorkspaceMemberController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeMember(Authentication authentication, @PathVariable UUID workspaceId, @PathVariable UUID memberId) {
         collaboration.removeMember(CurrentUser.id(authentication), workspaceId, memberId);
+    }
+
+    @PostMapping("/owner")
+    public WorkspaceDtos.WorkspaceResponse transferOwner(Authentication authentication,
+                                                        @PathVariable UUID workspaceId,
+                                                        @Valid @RequestBody HouseholdDtos.TransferOwnerRequest request) {
+        return collaboration.transferOwner(CurrentUser.id(authentication), workspaceId, request);
+    }
+
+    @DeleteMapping("/membership")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveWorkspace(Authentication authentication, @PathVariable UUID workspaceId) {
+        collaboration.leaveWorkspace(CurrentUser.id(authentication), workspaceId);
     }
 
     @GetMapping("/invitations")

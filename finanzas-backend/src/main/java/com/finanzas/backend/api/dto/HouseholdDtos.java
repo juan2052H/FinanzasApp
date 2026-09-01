@@ -50,6 +50,9 @@ public final class HouseholdDtos {
     public record MemberRoleRequest(@NotNull WorkspaceRole role) {
     }
 
+    public record TransferOwnerRequest(@NotNull UUID newOwnerUserId) {
+    }
+
     public record SplitParticipantRequest(
             @NotNull UUID userId,
             @PositiveOrZero BigDecimal amount,
