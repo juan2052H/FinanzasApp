@@ -3,7 +3,6 @@ package com.finanzas.ui.components;
 import javax.swing.*;
 import java.awt.*;
 import java.text.NumberFormat;
-import java.util.Locale;
 
 public class BarChartPanel extends JPanel {
 
@@ -88,7 +87,7 @@ public class BarChartPanel extends JPanel {
         int groupW = Math.max(1, width / count);
         int barW = Math.max(8, (int) (groupW * 0.28));
         int gap = Math.max(2, (int) (groupW * 0.06));
-        NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+        NumberFormat nf = NumberFormat.getInstance(com.finanzas.data.DataManager.getInstance().getDisplayLocale());
 
         for (int i = 0; i < count; i++) {
             int gx = padL + i * groupW;

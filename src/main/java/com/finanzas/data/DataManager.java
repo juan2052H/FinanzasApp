@@ -7,6 +7,7 @@ import com.finanzas.api.BackendBudget;
 import com.finanzas.api.BackendCategory;
 import com.finanzas.api.BackendExpenseSplit;
 import com.finanzas.api.BackendInvitation;
+import com.finanzas.api.BackendInvoice;
 import com.finanzas.api.BackendMember;
 import com.finanzas.api.BackendNotification;
 import com.finanzas.api.BackendRecurringTransaction;
@@ -16,6 +17,7 @@ import com.finanzas.api.BackendSavingsSummary;
 import com.finanzas.api.BackendSessionInfo;
 import com.finanzas.api.BackendSharedExpense;
 import com.finanzas.api.BackendSession;
+import com.finanzas.api.BackendSyncState;
 import com.finanzas.api.BackendTransaction;
 import com.finanzas.api.BackendUser;
 import com.finanzas.api.BackendUserSettings;
@@ -49,14 +51,20 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 
 public class DataManager {
     private static final Logger LOGGER = Logger.getLogger(DataManager.class.getName());
     private static final String DEMO_EMAIL = "samuel@finanzasapp.com";
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final long LOGIN_LOCK_SECONDS = 300L;
+    private static final long BACKEND_SYNC_POLL_SECONDS = backendSyncPollSeconds();
 
     private static DataManager instance;
 
@@ -73,6 +81,9 @@ public class DataManager {
         public List<RecurringTransaction> recurringTransactions = new ArrayList<RecurringTransaction>();
         public List<Settlement> settlements = new ArrayList<Settlement>();
         public List<FinancialCategory> categories = new ArrayList<FinancialCategory>();
+        public List<SavingsMovement> savingsMovements = new ArrayList<SavingsMovement>();
+        public List<BackendInvoice> facturasLocal = new ArrayList<BackendInvoice>();
+        public Map<Integer, com.finanzas.api.BackendTaxConfig> taxConfigsLocal = new LinkedHashMap<Integer, com.finanzas.api.BackendTaxConfig>();
         public transient List<NotificationItem> backendNotifications = new ArrayList<NotificationItem>();
         public transient Map<String, String> backendMemberIdsByName = new LinkedHashMap<String, String>();
         public transient Map<String, String> backendMemberRolesByName = new LinkedHashMap<String, String>();
@@ -109,11 +120,18 @@ public class DataManager {
     private final Map<String, LoginAttempt> loginAttempts = new HashMap<String, LoginAttempt>();
     private final InsightProvider insightProvider = new RuleBasedInsightProvider();
     private final FinanzasApiClient apiClient = new FinanzasApiClient(BackendConfig.baseUrl());
+    private final ScheduledExecutorService backendSyncExecutor = Executors.newSingleThreadScheduledExecutor(task -> {
+        Thread thread = new Thread(task, "finanzas-backend-sync");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private String currentUser;
     private String lastErrorMessage = "";
     private BackendSession backendSession;
     private final Object backendRefreshLock = new Object();
+    private ScheduledFuture<?> backendSyncTask;
+    private volatile Instant backendSyncRevision;
 
     private static final class LoginAttempt {
         private int failures;
@@ -143,7 +161,22 @@ public class DataManager {
     }
 
     static void resetForTests() {
+        if (instance != null) {
+            instance.stopBackendSyncPolling();
+        }
         instance = null;
+    }
+
+    private static long backendSyncPollSeconds() {
+        String raw = System.getenv("FINANZAS_SYNC_POLL_SECONDS");
+        if (raw == null || raw.trim().isEmpty()) {
+            return 20L;
+        }
+        try {
+            return Math.max(5L, Long.parseLong(raw.trim()));
+        } catch (NumberFormatException ex) {
+            return 20L;
+        }
     }
 
     public void addListener(Runnable listener) {
@@ -155,7 +188,11 @@ public class DataManager {
     public void notifyListeners() {
         saveState();
         for (Runnable listener : new ArrayList<Runnable>(listeners)) {
-            listener.run();
+            if (SwingUtilities.isEventDispatchThread()) {
+                listener.run();
+            } else {
+                SwingUtilities.invokeLater(listener);
+            }
         }
     }
 
@@ -491,6 +528,42 @@ public class DataManager {
         }
     }
 
+    public File exportBackendReportPdf(File destination, ReportSnapshot snapshot) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            throw new IOException("No hay una sesion backend activa.");
+        }
+        File target = ensureExtension(destination, ".pdf");
+        try {
+            LocalDate from = snapshot == null || snapshot.getPeriod() == null ? null : snapshot.getPeriod().getStartDate();
+            LocalDate to = snapshot == null || snapshot.getPeriod() == null ? null : snapshot.getPeriod().getEndDate();
+            byte[] pdf = callBackend(token -> apiClient.exportReportPdf(token, activeBackendWorkspaceId(), from, to));
+            Files.write(target.toPath(), pdf);
+            lastErrorMessage = "";
+            return target;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Exportacion interrumpida.", ex);
+        }
+    }
+
+    public File exportBackendReportXlsx(File destination, ReportSnapshot snapshot) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            throw new IOException("No hay una sesion backend activa.");
+        }
+        File target = ensureExtension(destination, ".xlsx");
+        try {
+            LocalDate from = snapshot == null || snapshot.getPeriod() == null ? null : snapshot.getPeriod().getStartDate();
+            LocalDate to = snapshot == null || snapshot.getPeriod() == null ? null : snapshot.getPeriod().getEndDate();
+            byte[] xlsx = callBackend(token -> apiClient.exportReportXlsx(token, activeBackendWorkspaceId(), from, to));
+            Files.write(target.toPath(), xlsx);
+            lastErrorMessage = "";
+            return target;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Exportacion interrumpida.", ex);
+        }
+    }
+
     public File exportBackendAccount(File destination) throws IOException {
         if (backendSession == null) {
             throw new IOException("No hay una sesion backend activa.");
@@ -514,6 +587,7 @@ public class DataManager {
         }
         try {
             runBackend(token -> apiClient.deleteAccount(token, confirmEmail, password));
+            stopBackendSyncPolling();
             backendSession = null;
             currentUser = null;
             lastErrorMessage = "";
@@ -535,6 +609,7 @@ public class DataManager {
     }
 
     public void logout() {
+        stopBackendSyncPolling();
         revokeBackendSession();
         backendSession = null;
         currentUser = null;
@@ -722,6 +797,7 @@ public class DataManager {
         ensureProfileInitialized(normalizedEmail, profile);
         currentUser = normalizedEmail;
         backendSession = session;
+        startBackendSyncPolling();
     }
 
     private void applyBackendUser(UserProfile profile, BackendUser user) {
@@ -758,7 +834,58 @@ public class DataManager {
         profile.usuario.setNotifConsejos(settings.isNotifConsejos());
     }
 
+    private synchronized void startBackendSyncPolling() {
+        stopBackendSyncPolling();
+        if (!BackendConfig.isEnabled() || backendSession == null) {
+            return;
+        }
+        backendSyncTask = backendSyncExecutor.scheduleWithFixedDelay(
+                this::pollBackendChangesSafely,
+                BACKEND_SYNC_POLL_SECONDS,
+                BACKEND_SYNC_POLL_SECONDS,
+                TimeUnit.SECONDS);
+    }
+
+    public synchronized void stopBackendSyncPolling() {
+        if (backendSyncTask != null) {
+            backendSyncTask.cancel(true);
+            backendSyncTask = null;
+        }
+        backendSyncRevision = null;
+    }
+
+    private void pollBackendChangesSafely() {
+        try {
+            pollBackendChanges();
+        } catch (Exception ex) {
+            LOGGER.log(Level.FINE, "Fallo en polling incremental de cambios del backend.", ex);
+        }
+    }
+
+    public synchronized void pollBackendChanges() throws IOException, InterruptedException {
+        UserProfile profile = p();
+        String workspaceId = activeBackendWorkspaceId();
+        if (profile == null || backendSession == null || workspaceId.isEmpty()) {
+            return;
+        }
+        BackendSyncState syncState = callBackend(token -> apiClient.getSyncChanges(token, workspaceId, backendSyncRevision));
+        if (syncState == null) {
+            return;
+        }
+        Instant serverRevision = syncState.getRevision();
+        boolean hasChanged = backendSyncRevision == null
+                || (serverRevision != null && serverRevision.isAfter(backendSyncRevision))
+                || (syncState.getChangedResources() != null && !syncState.getChangedResources().isEmpty());
+        if (hasChanged) {
+            backendSyncRevision = serverRevision;
+            syncBackendUserSettings();
+            syncBackendSnapshot();
+            notifyListeners();
+        }
+    }
+
     private void revokeBackendSession() {
+        stopBackendSyncPolling();
         if (backendSession == null || backendSession.getRefreshToken() == null || backendSession.getRefreshToken().trim().isEmpty()) {
             return;
         }
@@ -1196,7 +1323,7 @@ public class DataManager {
         return resolved;
     }
 
-    private boolean hasBackendFinancialSession() {
+    public boolean hasBackendFinancialSession() {
         return backendSession != null && !activeBackendWorkspaceId().isEmpty();
     }
 
@@ -1506,6 +1633,21 @@ public class DataManager {
 
     public Usuario getUsuario() {
         return p() != null ? p().usuario : new Usuario();
+    }
+
+    /**
+     * Locale to use for number/date formatting, derived from the user's
+     * "Idioma" setting (e.g. "es-CO", "en-US", "es-MX").
+     */
+    public java.util.Locale getDisplayLocale() {
+        String stored = getUsuario().getLocale();
+        if (stored != null) {
+            String[] parts = stored.trim().split("-");
+            if (parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
+                return new java.util.Locale(parts[0], parts[1]);
+            }
+        }
+        return new java.util.Locale("es", "CO");
     }
 
     public boolean updateSettings(String moneda, String locale, String timeZone, String moneyFormat, String theme,
@@ -1901,13 +2043,63 @@ public class DataManager {
                 return false;
             }
         }
-        BigDecimal nuevoMonto = meta.getMontoActualDecimal().add(Money.of(monto));
+        BigDecimal aporte = Money.of(monto);
+        BigDecimal nuevoMonto = meta.getMontoActualDecimal().add(aporte);
         if (nuevoMonto.compareTo(meta.getMontoMetaDecimal()) > 0) {
             nuevoMonto = meta.getMontoMetaDecimal();
         }
+        aporte = nuevoMonto.subtract(meta.getMontoActualDecimal());
         meta.setMontoActualDecimal(nuevoMonto);
+        recordSavingsMovement(aporte);
         notifyListeners();
         return true;
+    }
+
+    public boolean retirarMeta(MetaAhorro meta, double monto) {
+        if (meta == null) {
+            return false;
+        }
+        BigDecimal retiro = Money.of(monto);
+        if (retiro.compareTo(BigDecimal.ZERO) <= 0) {
+            lastErrorMessage = "El monto a retirar debe ser mayor a cero.";
+            return false;
+        }
+        if (retiro.compareTo(meta.getMontoActualDecimal()) > 0) {
+            lastErrorMessage = "El retiro supera el monto ahorrado en esta meta.";
+            return false;
+        }
+        BigDecimal nuevoMonto = meta.getMontoActualDecimal().subtract(retiro);
+        if (hasBackendFinancialSession() && !meta.getBackendId().isEmpty()) {
+            try {
+                callBackend(token -> apiClient.updateSavingsGoal(
+                        token,
+                        activeBackendWorkspaceId(),
+                        meta.getBackendId(),
+                        meta.getNombre(),
+                        nuevoMonto,
+                        meta.getMontoMetaDecimal(),
+                        meta.getColor(),
+                        meta.getIcono(),
+                        meta.getFechaLimite()));
+                syncBackendSnapshot();
+                notifyListeners();
+                return true;
+            } catch (Exception ex) {
+                handleBackendMutationError("No fue posible registrar el retiro en el backend.", ex);
+                return false;
+            }
+        }
+        meta.setMontoActualDecimal(nuevoMonto);
+        recordSavingsMovement(retiro.negate());
+        notifyListeners();
+        return true;
+    }
+
+    private void recordSavingsMovement(BigDecimal monto) {
+        if (p() == null || monto == null || monto.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+        p().savingsMovements.add(new SavingsMovement(LocalDate.now(), monto));
     }
 
     public void addPresupuesto(Presupuesto presupuesto) {
@@ -2420,6 +2612,373 @@ public class DataManager {
         }
     }
 
+    // ============================================================
+    // Facturas / Invoices
+    // ============================================================
+
+    public List<com.finanzas.api.BackendInvoice> listInvoices(LocalDate from, LocalDate to) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            if (p() == null) {
+                return java.util.Collections.emptyList();
+            }
+            List<com.finanzas.api.BackendInvoice> result = new ArrayList<com.finanzas.api.BackendInvoice>();
+            for (com.finanzas.api.BackendInvoice invoice : p().facturasLocal) {
+                LocalDate issueDate = invoice.getIssueDate();
+                if (from != null && (issueDate == null || issueDate.isBefore(from))) {
+                    continue;
+                }
+                if (to != null && (issueDate == null || issueDate.isAfter(to))) {
+                    continue;
+                }
+                result.add(invoice);
+            }
+            return result;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            return callBackend(token -> apiClient.listInvoices(token, wsId, from, to));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Carga de facturas interrumpida.", ex);
+        }
+    }
+
+    public com.finanzas.api.BackendInvoice createInvoice(String transactionId, String invoiceNumber,
+            String merchantName, String taxId, LocalDate issueDate,
+            java.math.BigDecimal subtotal, java.math.BigDecimal taxAmount,
+            java.math.BigDecimal totalAmount, String notes) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            if (p() == null) {
+                throw new IOException("No hay una sesion activa.");
+            }
+            com.finanzas.api.BackendInvoice invoice = new com.finanzas.api.BackendInvoice(
+                    java.util.UUID.randomUUID().toString(),
+                    "",
+                    transactionId == null ? "" : transactionId,
+                    invoiceNumber == null ? "" : invoiceNumber,
+                    merchantName == null ? "" : merchantName,
+                    taxId == null ? "" : taxId,
+                    issueDate,
+                    subtotal,
+                    taxAmount,
+                    totalAmount,
+                    "",
+                    notes == null ? "" : notes,
+                    currentUser == null ? "" : currentUser,
+                    Instant.now().toString(),
+                    Instant.now().toString());
+            p().facturasLocal.add(0, invoice);
+            lastErrorMessage = "";
+            notifyListeners();
+            return invoice;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            com.finanzas.api.BackendInvoice inv = callBackend(token ->
+                    apiClient.createInvoice(token, wsId, transactionId, invoiceNumber,
+                            merchantName, taxId, issueDate, subtotal, taxAmount, totalAmount, notes));
+            lastErrorMessage = "";
+            return inv;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Creacion de factura interrumpida.", ex);
+        }
+    }
+
+    public com.finanzas.api.BackendInvoice updateInvoice(String invoiceId, String transactionId,
+            String invoiceNumber, String merchantName, String taxId, LocalDate issueDate,
+            java.math.BigDecimal subtotal, java.math.BigDecimal taxAmount,
+            java.math.BigDecimal totalAmount, String notes) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            com.finanzas.api.BackendInvoice existing = findLocalInvoice(invoiceId);
+            if (existing == null) {
+                throw new IOException("La factura ya no existe.");
+            }
+            com.finanzas.api.BackendInvoice updated = new com.finanzas.api.BackendInvoice(
+                    existing.getId(),
+                    existing.getWorkspaceId(),
+                    transactionId == null ? "" : transactionId,
+                    invoiceNumber == null ? "" : invoiceNumber,
+                    merchantName == null ? "" : merchantName,
+                    taxId == null ? "" : taxId,
+                    issueDate,
+                    subtotal,
+                    taxAmount,
+                    totalAmount,
+                    existing.getAttachmentRef(),
+                    notes == null ? "" : notes,
+                    existing.getCreatedByUserId(),
+                    existing.getCreatedAt(),
+                    Instant.now().toString());
+            replaceLocalInvoice(updated);
+            lastErrorMessage = "";
+            notifyListeners();
+            return updated;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            com.finanzas.api.BackendInvoice inv = callBackend(token ->
+                    apiClient.updateInvoice(token, wsId, invoiceId, transactionId, invoiceNumber,
+                            merchantName, taxId, issueDate, subtotal, taxAmount, totalAmount, notes));
+            lastErrorMessage = "";
+            return inv;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Actualizacion de factura interrumpida.", ex);
+        }
+    }
+
+    public boolean deleteInvoice(String invoiceId) {
+        if (!hasBackendFinancialSession()) {
+            com.finanzas.api.BackendInvoice existing = findLocalInvoice(invoiceId);
+            if (existing == null) {
+                lastErrorMessage = "La factura ya no existe.";
+                return false;
+            }
+            PersistenceService.deleteInvoiceAttachment(existing.getAttachmentRef());
+            p().facturasLocal.remove(existing);
+            lastErrorMessage = "";
+            notifyListeners();
+            return true;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            runBackend(token -> apiClient.deleteInvoice(token, wsId, invoiceId));
+            lastErrorMessage = "";
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible eliminar la factura.", ex);
+            return false;
+        }
+    }
+
+    public com.finanzas.api.BackendInvoice uploadInvoiceAttachment(String invoiceId, java.io.File file) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            com.finanzas.api.BackendInvoice existing = findLocalInvoice(invoiceId);
+            if (existing == null) {
+                throw new IOException("La factura ya no existe.");
+            }
+            if (existing.hasAttachment()) {
+                // Delete the previous attachment first: if the replacement has a
+                // different extension, storeInvoiceAttachment would otherwise
+                // write a new file alongside the old one instead of replacing it.
+                PersistenceService.deleteInvoiceAttachment(existing.getAttachmentRef());
+            }
+            String storedPath = PersistenceService.storeInvoiceAttachment(currentUser, existing.getId(), file);
+            com.finanzas.api.BackendInvoice updated = new com.finanzas.api.BackendInvoice(
+                    existing.getId(), existing.getWorkspaceId(), existing.getTransactionId(),
+                    existing.getInvoiceNumber(), existing.getMerchantName(), existing.getTaxId(),
+                    existing.getIssueDate(), existing.getSubtotal(), existing.getTaxAmount(),
+                    existing.getTotalAmount(), storedPath, existing.getNotes(),
+                    existing.getCreatedByUserId(), existing.getCreatedAt(), Instant.now().toString());
+            replaceLocalInvoice(updated);
+            notifyListeners();
+            return updated;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            return callBackend(token -> apiClient.uploadInvoiceAttachment(token, wsId, invoiceId, file));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Carga de adjunto interrumpida.", ex);
+        }
+    }
+
+    public byte[] downloadInvoiceAttachment(String invoiceId) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            com.finanzas.api.BackendInvoice existing = findLocalInvoice(invoiceId);
+            if (existing == null) {
+                throw new IOException("La factura ya no existe.");
+            }
+            return PersistenceService.readInvoiceAttachment(existing.getAttachmentRef());
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            return callBackend(token -> apiClient.downloadInvoiceAttachment(token, wsId, invoiceId));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Descarga de adjunto interrumpida.", ex);
+        }
+    }
+
+    private com.finanzas.api.BackendInvoice findLocalInvoice(String invoiceId) {
+        if (p() == null || invoiceId == null) {
+            return null;
+        }
+        for (com.finanzas.api.BackendInvoice invoice : p().facturasLocal) {
+            if (invoiceId.equals(invoice.getId())) {
+                return invoice;
+            }
+        }
+        return null;
+    }
+
+    private void replaceLocalInvoice(com.finanzas.api.BackendInvoice updated) {
+        if (p() == null) {
+            return;
+        }
+        List<com.finanzas.api.BackendInvoice> list = p().facturasLocal;
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getId().equals(updated.getId())) {
+                list.set(i, updated);
+                return;
+            }
+        }
+    }
+
+    // ============================================================
+    // Preparacion Tributaria DIAN
+    // ============================================================
+
+    private static final String TAX_DISCLAIMER =
+            "Herramienta informativa de preparacion tributaria basada en parametros DIAN de personas naturales (E.T. Colombia). "
+                    + "No constituye declaracion oficial, liquidacion definitiva ni certificacion tributaria. "
+                    + "Consulta siempre con un Contador Publico o profesional tributario certificado.";
+
+    public static BigDecimal defaultUvtForYear(int year) {
+        if (year <= 2023) {
+            return new BigDecimal("42412.00");
+        }
+        if (year == 2024) {
+            return new BigDecimal("47065.00");
+        }
+        if (year == 2025) {
+            return new BigDecimal("49799.00");
+        }
+        return new BigDecimal("52384.00");
+    }
+
+    public com.finanzas.api.BackendTaxSummary getTaxSummary(int year) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            if (p() == null) {
+                throw new IOException("No hay una sesion activa.");
+            }
+            com.finanzas.api.BackendTaxConfig config = p().taxConfigsLocal.get(year);
+            BigDecimal uvtValue = config != null ? config.getUvtValue() : defaultUvtForYear(year);
+            int grossIncomeUvt = config != null ? config.getGrossIncomeUvt() : 1400;
+            int grossPurchasesUvt = config != null ? config.getGrossPurchasesUvt() : 1400;
+            int bankDepositsUvt = config != null ? config.getBankDepositsUvt() : 1400;
+            int grossWealthUvt = config != null ? config.getGrossWealthUvt() : 4500;
+            BigDecimal estimatedGrossWealth = config != null ? config.getEstimatedGrossWealth() : BigDecimal.ZERO;
+
+            LocalDate from = LocalDate.of(year, 1, 1);
+            LocalDate to = LocalDate.of(year, 12, 31);
+            BigDecimal totalIncome = BigDecimal.ZERO;
+            BigDecimal totalExpenses = BigDecimal.ZERO;
+            for (Transaccion transaccion : p().transacciones) {
+                LocalDate fecha = transaccion.getFecha();
+                if (fecha == null || fecha.isBefore(from) || fecha.isAfter(to)) {
+                    continue;
+                }
+                if (transaccion.getTipo() == Tipo.INGRESO) {
+                    totalIncome = totalIncome.add(transaccion.getMontoDecimal());
+                } else {
+                    totalExpenses = totalExpenses.add(transaccion.getMontoDecimal());
+                }
+            }
+            totalIncome = totalIncome.setScale(2, RoundingMode.HALF_UP);
+            totalExpenses = totalExpenses.setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal totalDeposits = BigDecimal.ZERO;
+            for (SavingsMovement movement : p().savingsMovements) {
+                LocalDate fecha = movement.getFecha();
+                if (fecha == null || fecha.isBefore(from) || fecha.isAfter(to)) {
+                    continue;
+                }
+                totalDeposits = totalDeposits.add(movement.getMonto());
+            }
+            totalDeposits = totalDeposits.setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal incomeThreshold = uvtValue.multiply(BigDecimal.valueOf(grossIncomeUvt)).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal purchasesThreshold = uvtValue.multiply(BigDecimal.valueOf(grossPurchasesUvt)).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal depositsThreshold = uvtValue.multiply(BigDecimal.valueOf(bankDepositsUvt)).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal wealthThreshold = uvtValue.multiply(BigDecimal.valueOf(grossWealthUvt)).setScale(2, RoundingMode.HALF_UP);
+
+            boolean exceedsIncome = totalIncome.compareTo(incomeThreshold) >= 0;
+            boolean exceedsPurchases = totalExpenses.compareTo(purchasesThreshold) >= 0;
+            boolean exceedsDeposits = totalDeposits.compareTo(depositsThreshold) >= 0;
+            boolean exceedsWealth = estimatedGrossWealth.compareTo(wealthThreshold) >= 0;
+
+            List<String> reasons = new ArrayList<String>();
+            if (exceedsIncome) {
+                reasons.add("Ingresos brutos ($" + totalIncome + ") superan el tope de " + grossIncomeUvt + " UVT ($" + incomeThreshold + ").");
+            }
+            if (exceedsPurchases) {
+                reasons.add("Consumos y compras ($" + totalExpenses + ") superan el tope de " + grossPurchasesUvt + " UVT ($" + purchasesThreshold + ").");
+            }
+            if (exceedsDeposits) {
+                reasons.add("Consignaciones y depositos ($" + totalDeposits + ") superan el tope de " + bankDepositsUvt + " UVT ($" + depositsThreshold + ").");
+            }
+            if (exceedsWealth) {
+                reasons.add("Patrimonio bruto estimado ($" + estimatedGrossWealth + ") supera el tope de " + grossWealthUvt + " UVT ($" + wealthThreshold + ").");
+            }
+
+            return new com.finanzas.api.BackendTaxSummary(
+                    "",
+                    year,
+                    uvtValue,
+                    totalIncome,
+                    incomeThreshold,
+                    exceedsIncome,
+                    totalExpenses,
+                    purchasesThreshold,
+                    exceedsPurchases,
+                    totalDeposits,
+                    depositsThreshold,
+                    exceedsDeposits,
+                    estimatedGrossWealth,
+                    wealthThreshold,
+                    exceedsWealth,
+                    !reasons.isEmpty(),
+                    reasons,
+                    TAX_DISCLAIMER);
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            return callBackend(token -> apiClient.getTaxSummary(token, wsId, year));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Consulta de resumen tributario interrumpida.", ex);
+        }
+    }
+
+    public com.finanzas.api.BackendTaxConfig updateTaxConfig(int year,
+            java.math.BigDecimal uvtValue, Integer grossIncomeUvt, Integer grossPurchasesUvt,
+            Integer bankDepositsUvt, Integer grossWealthUvt, java.math.BigDecimal estimatedGrossWealth) throws IOException {
+        if (!hasBackendFinancialSession()) {
+            if (p() == null) {
+                throw new IOException("No hay una sesion activa.");
+            }
+            BigDecimal uvt = (uvtValue != null && uvtValue.compareTo(BigDecimal.ZERO) > 0) ? uvtValue : defaultUvtForYear(year);
+            com.finanzas.api.BackendTaxConfig config = new com.finanzas.api.BackendTaxConfig(
+                    java.util.UUID.randomUUID().toString(),
+                    "",
+                    year,
+                    uvt,
+                    grossIncomeUvt != null ? grossIncomeUvt : 1400,
+                    grossPurchasesUvt != null ? grossPurchasesUvt : 1400,
+                    bankDepositsUvt != null ? bankDepositsUvt : 1400,
+                    grossWealthUvt != null ? grossWealthUvt : 4500,
+                    estimatedGrossWealth != null ? estimatedGrossWealth : BigDecimal.ZERO,
+                    Instant.now().toString());
+            p().taxConfigsLocal.put(year, config);
+            lastErrorMessage = "";
+            notifyListeners();
+            return config;
+        }
+        try {
+            String wsId = activeBackendWorkspaceId();
+            com.finanzas.api.BackendTaxConfig cfg = callBackend(token ->
+                    apiClient.updateTaxConfig(token, wsId, year, uvtValue, grossIncomeUvt,
+                            grossPurchasesUvt, bankDepositsUvt, grossWealthUvt, estimatedGrossWealth));
+            lastErrorMessage = "";
+            return cfg;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Actualizacion de configuracion tributaria interrumpida.", ex);
+        }
+    }
+
     private String safeLookupBackendMemberId(String nombre) {
         try {
             return backendMemberIdForName(nombre);
@@ -2476,10 +3035,20 @@ public class DataManager {
     }
 
     public double getAhorroMesActual() {
-        if (p() != null && hasBackendFinancialSession() && p().backendMonthlySavingsSummary != null) {
+        if (p() == null) {
+            return 0;
+        }
+        if (hasBackendFinancialSession() && p().backendMonthlySavingsSummary != null) {
             return p().backendMonthlySavingsSummary.getAhorroTotal().doubleValue();
         }
-        return Math.max(0, getSaldoMesActual());
+        YearMonth currentMonth = YearMonth.now();
+        BigDecimal total = Money.ZERO;
+        for (SavingsMovement movement : p().savingsMovements) {
+            if (YearMonth.from(movement.getFecha()).equals(currentMonth)) {
+                total = total.add(movement.getMonto());
+            }
+        }
+        return Math.max(0, Money.toDouble(total));
     }
 
     public double getTasaAhorroMesActual() {
@@ -2997,6 +3566,15 @@ public class DataManager {
         }
         if (profile.categories == null) {
             profile.categories = new ArrayList<FinancialCategory>();
+        }
+        if (profile.savingsMovements == null) {
+            profile.savingsMovements = new ArrayList<SavingsMovement>();
+        }
+        if (profile.facturasLocal == null) {
+            profile.facturasLocal = new ArrayList<BackendInvoice>();
+        }
+        if (profile.taxConfigsLocal == null) {
+            profile.taxConfigsLocal = new LinkedHashMap<Integer, com.finanzas.api.BackendTaxConfig>();
         }
         if (profile.backendNotifications == null) {
             profile.backendNotifications = new ArrayList<NotificationItem>();

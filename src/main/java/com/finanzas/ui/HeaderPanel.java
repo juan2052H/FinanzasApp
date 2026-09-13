@@ -125,6 +125,7 @@ public class HeaderPanel extends JPanel {
     private void showCreateWorkspaceDialog() {
         JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
         JTextField nameField = new JTextField();
+        nameField.setColumns(18);
         JComboBox<String> typeBox = new JComboBox<String>(new String[]{"PERSONAL", "HOUSEHOLD", "BUSINESS"});
         form.add(new JLabel("Nombre:"));
         form.add(nameField);

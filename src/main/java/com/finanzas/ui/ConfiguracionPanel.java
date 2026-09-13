@@ -392,6 +392,7 @@ public class ConfiguracionPanel extends JPanel {
         filters.setOpaque(false);
         filters.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
         JTextField searchField = new JTextField();
+        searchField.setColumns(14);
         JComboBox<String> kindFilter = new JComboBox<String>(new String[]{"Todas", "Ingreso", "Gasto", "Hogar"});
         JComboBox<String> stateFilter = new JComboBox<String>(new String[]{"Activas", "Archivadas", "Todas"});
         RoundedButton clear = new RoundedButton("Limpiar", AppColors.TEXT_MUTED);
@@ -441,8 +442,11 @@ public class ConfiguracionPanel extends JPanel {
 
         JComboBox<String> kindBox = new JComboBox<String>(new String[]{"Ingreso", "Gasto", "Hogar"});
         JTextField nameField = new JTextField();
+        nameField.setColumns(12);
         JTextField iconField = new JTextField();
+        iconField.setColumns(6);
         JTextField colorField = new JTextField("#1a73e8");
+        colorField.setColumns(8);
         JButton colorButton = colorButton(colorField);
         RoundedButton addButton = new RoundedButton("Crear", AppColors.ACCENT_BLUE);
 
@@ -866,17 +870,20 @@ public class ConfiguracionPanel extends JPanel {
                     return;
                 }
                 AppColors.applyTheme(data.getUsuario().getTheme());
-                refreshWindows();
                 JOptionPane.showMessageDialog(ConfiguracionPanel.this, successMessage, "Exito", JOptionPane.INFORMATION_MESSAGE);
-                buildUI();
+                refreshWindows();
             }
         }.execute();
     }
 
     private void refreshWindows() {
         for (Window window : Window.getWindows()) {
-            SwingUtilities.updateComponentTreeUI(window);
-            window.repaint();
+            if (window instanceof MainFrame) {
+                ((MainFrame) window).rebuildForThemeChange();
+            } else {
+                SwingUtilities.updateComponentTreeUI(window);
+                window.repaint();
+            }
         }
     }
 

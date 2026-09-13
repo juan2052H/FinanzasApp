@@ -65,6 +65,7 @@ class FinanzasApiClientTest {
         BackendUserSettings settings = client.getUserSettings("token");
         BackendUserSettings updatedSettings = client.updateUserSettings("token", "DARK", "en-US", "UTC",
                 "CODE_SUFFIX", false, true, false);
+        BackendSyncState syncState = client.getSyncChanges("token", "ws-1", java.time.Instant.parse("2026-09-01T00:00:00Z"));
 
         assertEquals("ws-1", workspaces.get(0).getId());
         assertEquals("Casa", created.getNombre());
@@ -83,6 +84,10 @@ class FinanzasApiClientTest {
         assertEquals("LIGHT", settings.getTheme());
         assertEquals("DARK", updatedSettings.getTheme());
         assertEquals(3L, updatedSettings.getVersion());
+        assertEquals("ws-1", syncState.getWorkspaceId());
+        assertEquals(1, syncState.getPendingReceivedInvitations());
+        assertEquals(1, syncState.getChangedResources().size());
+        assertEquals("transactions", syncState.getChangedResources().get(0));
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/invitations/inv-1"));
         assertTrue(requests.contains("POST /api/workspaces/ws-1/owner"));
         assertTrue(requests.contains("DELETE /api/workspaces/ws-1/membership"));
@@ -93,6 +98,7 @@ class FinanzasApiClientTest {
         assertTrue(requests.contains("GET /api/users/me/export"));
         assertTrue(requests.contains("DELETE /api/users/me"));
         assertTrue(requests.contains("PATCH /api/users/me/settings"));
+        assertTrue(requests.contains("GET /api/workspaces/ws-1/sync/changes"));
     }
 
     private void handle(HttpExchange exchange) throws IOException {
@@ -199,6 +205,12 @@ class FinanzasApiClientTest {
         }
         if ("PATCH".equals(method) && "/api/users/me/settings".equals(path)) {
             respond(exchange, 200, settings("DARK", "en-US", "UTC", "CODE_SUFFIX", false, true, false, 3));
+            return;
+        }
+        if ("GET".equals(method) && "/api/workspaces/ws-1/sync/changes".equals(path)) {
+            respond(exchange, 200, "{\"workspaceId\":\"ws-1\",\"revision\":\"2026-09-01T01:00:00Z\","
+                    + "\"serverTime\":\"2026-09-01T01:00:00Z\",\"changedResources\":[\"transactions\"],"
+                    + "\"pendingReceivedInvitations\":1,\"pendingWorkspaceInvitations\":0,\"unreadNotifications\":0}");
             return;
         }
         respond(exchange, 404, "{\"detail\":\"not found\"}");

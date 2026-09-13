@@ -44,7 +44,7 @@ import java.util.Locale;
 
 public class DashboardPanel extends JPanel {
     private final DataManager data = DataManager.getInstance();
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final NumberFormat nf = NumberFormat.getInstance(data.getDisplayLocale());
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public DashboardPanel() {

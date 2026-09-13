@@ -1,4 +1,4 @@
-﻿# Inventario inicial
+# Inventario inicial
 
 Generado: 2026-08-31 22:03:43 -05:00
 

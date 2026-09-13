@@ -45,7 +45,7 @@ public final class ReportPeriod {
         if (LAST_12_MONTHS.equals(label)) {
             return new ReportPeriod(LAST_12_MONTHS, today.minusMonths(11).withDayOfMonth(1), today);
         }
-        return new ReportPeriod(ALL_HISTORY, null, today);
+        return new ReportPeriod(ALL_HISTORY, null, null);
     }
 
     public static ReportPeriod custom(LocalDate startDate, LocalDate endDate) {

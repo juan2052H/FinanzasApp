@@ -1,8 +1,6 @@
 package com.finanzas.data;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -41,9 +39,7 @@ public final class LegacyStateMigrationService {
     }
 
     private PersistenceService.AppState readState(Path stateFile) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(stateFile.toFile()))) {
-            return (PersistenceService.AppState) input.readObject();
-        }
+        return PersistenceService.readState(stateFile);
     }
 
     public static final class MigrationResult {

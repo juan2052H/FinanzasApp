@@ -16,7 +16,7 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class MainFrame extends JFrame {
-    private static final String[] CARDS = {"inicio", "ingresos", "gastos", "presupuesto", "metas", "hogar", "reportes", "config"};
+    private static final String[] CARDS = {"inicio", "ingresos", "gastos", "presupuesto", "metas", "hogar", "facturas", "reportes", "config"};
 
     private JPanel contentArea;
     private CardLayout cardLayout;
@@ -26,6 +26,7 @@ public class MainFrame extends JFrame {
     private PresupuestoPanel presupuestoPanel;
     private MetasPanel metasPanel;
     private FinanzasHogarPanel hogarPanel;
+    private String currentSection = "inicio";
 
     public MainFrame() {
         setTitle("Gestion de Finanzas Personales y del Hogar");
@@ -68,6 +69,7 @@ public class MainFrame extends JFrame {
         contentArea.add(presupuestoPanel, "presupuesto");
         contentArea.add(metasPanel, "metas");
         contentArea.add(hogarPanel, "hogar");
+        contentArea.add(new FacturasPanel(), "facturas");
         contentArea.add(new ReportesPanel(), "reportes");
         contentArea.add(new ConfiguracionPanel(), "config");
 
@@ -76,18 +78,34 @@ public class MainFrame extends JFrame {
 
     private void onMenuSelect(int index) {
         if (index >= 0 && index < CARDS.length) {
-            cardLayout.show(contentArea, CARDS[index]);
+            currentSection = CARDS[index];
+            cardLayout.show(contentArea, currentSection);
         }
     }
 
     public void showSection(String section) {
         for (int i = 0; i < CARDS.length; i++) {
             if (CARDS[i].equals(section)) {
+                currentSection = CARDS[i];
                 cardLayout.show(contentArea, CARDS[i]);
                 sidebar.setActiveIndex(i);
                 return;
             }
         }
+    }
+
+    /**
+     * Rebuilds the entire window content so every panel picks up the
+     * freshly applied {@link AppColors} values. Simply repainting is not
+     * enough because components read AppColors fields once at construction
+     * time; only recreating them reflects a theme switch everywhere.
+     */
+    public void rebuildForThemeChange() {
+        getContentPane().removeAll();
+        buildUI();
+        showSection(currentSection);
+        revalidate();
+        repaint();
     }
 
     public void showNewTransaction(Transaccion.Tipo tipo) {
@@ -139,6 +157,8 @@ public class MainFrame extends JFrame {
         addPaletteAction(panel, dialog, "Nuevo presupuesto", this::showNewBudget);
         addPaletteAction(panel, dialog, "Gasto compartido", this::showNewHouseholdExpense);
         addPaletteAction(panel, dialog, "Transaccion recurrente", this::showNewRecurringTransaction);
+        addPaletteAction(panel, dialog, "Facturas", () -> showSection("facturas"));
+        addPaletteAction(panel, dialog, "Preparacion DIAN", this::showDianTaxDialog);
         addPaletteAction(panel, dialog, "Busqueda global", this::showGlobalSearch);
         addPaletteAction(panel, dialog, "Simulador financiero", this::showSimulationDialog);
         addPaletteAction(panel, dialog, "Generar reporte", () -> showSection("reportes"));
@@ -175,6 +195,10 @@ public class MainFrame extends JFrame {
 
     private void showSimulationDialog() {
         SimulationDialog.show(this);
+    }
+
+    private void showDianTaxDialog() {
+        com.finanzas.ui.dialogs.DianTaxDialog.show(this);
     }
 
     private void showGlobalSearch() {

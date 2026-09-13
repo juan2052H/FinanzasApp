@@ -27,17 +27,20 @@ public class RecurringTransactionService {
     private final CategoryRepository categories;
     private final WorkspaceAccessService access;
     private final AuditLogService auditLogs;
+    private final SavingsService savings;
 
     public RecurringTransactionService(RecurringTransactionRepository recurringTransactions,
                                        TransactionRepository transactions,
                                        CategoryRepository categories,
                                        WorkspaceAccessService access,
-                                       AuditLogService auditLogs) {
+                                       AuditLogService auditLogs,
+                                       SavingsService savings) {
         this.recurringTransactions = recurringTransactions;
         this.transactions = transactions;
         this.categories = categories;
         this.access = access;
         this.auditLogs = auditLogs;
+        this.savings = savings;
     }
 
     @Transactional(readOnly = true)
@@ -97,6 +100,9 @@ public class RecurringTransactionService {
                 recurring.getDescription(),
                 recurring.getAmount(),
                 recurring.getNextRunDate()));
+        if (transaction.getType() == TransactionType.INCOME) {
+            savings.recordAutomaticAllocationForCreatedIncome(userId, workspaceId, transaction);
+        }
         recurring.advanceNextRunDate();
         auditLogs.record(workspaceId, userId, "RECURRING_TRANSACTION_RUN", "RecurringTransaction", recurringTransactionId, Map.of(
                 "transactionId", transaction.getId().toString(),
@@ -110,6 +116,36 @@ public class RecurringTransactionService {
                 transaction.getDescripcion(),
                 transaction.getMonto(),
                 transaction.getTransactionDate());
+    }
+
+    @Transactional
+    public int runAllDue(java.time.LocalDate asOfDate) {
+        java.time.LocalDate date = asOfDate == null ? java.time.LocalDate.now() : asOfDate;
+        List<RecurringTransactionEntity> due = recurringTransactions.findByActiveTrueAndNextRunDateLessThanEqual(date);
+        int executedCount = 0;
+        for (RecurringTransactionEntity recurring : due) {
+            if (!recurring.isActive()) {
+                continue;
+            }
+            TransactionEntity transaction = transactions.save(new TransactionEntity(
+                    recurring.getWorkspaceId(),
+                    recurring.getCategoryId(),
+                    null,
+                    recurring.getType(),
+                    recurring.getDescription(),
+                    recurring.getAmount(),
+                    recurring.getNextRunDate()));
+            if (transaction.getType() == TransactionType.INCOME) {
+                try {
+                    savings.recordAutomaticAllocationForCreatedIncome(null, recurring.getWorkspaceId(), transaction);
+                } catch (Exception ex) {
+                    // Log without blocking transaction execution
+                }
+            }
+            recurring.advanceNextRunDate();
+            executedCount++;
+        }
+        return executedCount;
     }
 
     RecurringDtos.RecurringTransactionResponse toResponse(RecurringTransactionEntity recurring) {

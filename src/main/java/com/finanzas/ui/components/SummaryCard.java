@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 import java.text.NumberFormat;
-import java.util.Locale;
 
 public class SummaryCard extends JPanel {
 
@@ -62,7 +61,7 @@ public class SummaryCard extends JPanel {
         g2.setColor(new Color(255, 255, 255, 200));
         g2.drawString(titulo, 14, 24);
 
-        NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+        NumberFormat nf = NumberFormat.getInstance(com.finanzas.data.DataManager.getInstance().getDisplayLocale());
         String amount = "$" + nf.format((long) monto);
         g2.setFont(new Font("Segoe UI", Font.BOLD, 22));
         g2.setColor(Color.WHITE);

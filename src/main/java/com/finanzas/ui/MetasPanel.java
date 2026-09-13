@@ -17,7 +17,6 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 public class MetasPanel extends JPanel {
     private static final IconOption[] ICON_OPTIONS = {
@@ -34,7 +33,7 @@ public class MetasPanel extends JPanel {
     };
 
     private final DataManager data = DataManager.getInstance();
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final NumberFormat nf = NumberFormat.getInstance(data.getDisplayLocale());
     private final DateTimeFormatter displayDateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private JPanel cardsPanel;
 
@@ -227,6 +226,14 @@ public class MetasPanel extends JPanel {
             actions.add(depositButton);
         }
 
+        if (meta.getMontoActual() > 0) {
+            RoundedButton withdrawButton = new RoundedButton("- Retirar ahorro", AppColors.ACCENT_RED);
+            withdrawButton.setPreferredSize(new Dimension(130, 30));
+            withdrawButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            withdrawButton.addActionListener(e -> showWithdrawDialog(meta));
+            actions.add(withdrawButton);
+        }
+
         RoundedButton editButton = new RoundedButton("Editar", new Color(0x607D8B));
         editButton.setPreferredSize(new Dimension(90, 30));
         editButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
@@ -273,6 +280,31 @@ public class MetasPanel extends JPanel {
             }
             if (data.depositarMeta(meta, amount.doubleValue())) {
                 JOptionPane.showMessageDialog(this, "Aporte registrado.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, data.getLastErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Monto invalido.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void showWithdrawDialog(MetaAhorro meta) {
+        String input = JOptionPane.showInputDialog(
+                this,
+                "Cuanto deseas retirar de '" + meta.getNombre() + "'?\nAhorrado actualmente: $" + nf.format((long) meta.getMontoActual()),
+                "Retirar ahorro",
+                JOptionPane.QUESTION_MESSAGE);
+        if (input == null) {
+            return;
+        }
+
+        try {
+            BigDecimal amount = Money.parseFlexible(input);
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new NumberFormatException();
+            }
+            if (data.retirarMeta(meta, amount.doubleValue())) {
+                JOptionPane.showMessageDialog(this, "Retiro registrado.", "Exito", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, data.getLastErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }

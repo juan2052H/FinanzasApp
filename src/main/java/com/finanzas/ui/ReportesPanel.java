@@ -47,7 +47,7 @@ import java.util.Map;
 public class ReportesPanel extends JPanel {
     private final DataManager data = DataManager.getInstance();
     private final ExportService exportService = ExportService.getInstance();
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final NumberFormat nf = NumberFormat.getInstance(data.getDisplayLocale());
     private final DateTimeFormatter displayDateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private JPanel statsPanel;
@@ -114,6 +114,12 @@ public class ReportesPanel extends JPanel {
         RoundedButton exportButton = new RoundedButton("Exportar reporte", AppColors.ACCENT_BLUE);
         exportButton.addActionListener(e -> mostrarOpcionesExportacion());
 
+        RoundedButton dianButton = new RoundedButton("Preparacion DIAN", new java.awt.Color(0x27AE60));
+        dianButton.setForeground(java.awt.Color.WHITE);
+        dianButton.addActionListener(e -> {
+            com.finanzas.ui.dialogs.DianTaxDialog.show(SwingUtilities.getWindowAncestor(this));
+        });
+
         right.add(new JLabel("Periodo:"));
         right.add(periodoBox);
         right.add(new JLabel("Desde:"));
@@ -122,6 +128,7 @@ public class ReportesPanel extends JPanel {
         right.add(toField);
         right.add(applyButton);
         right.add(exportButton);
+        right.add(dianButton);
 
         header.add(right, BorderLayout.EAST);
         return header;
@@ -220,7 +227,12 @@ public class ReportesPanel extends JPanel {
         chooser.setFileFilter(new FileNameExtensionFilter("Archivo PDF (*.pdf)", "pdf"));
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                File exported = exportService.exportPdf(chooser.getSelectedFile(), data, snapshot);
+                File exported;
+                if (data.isBackendSessionActive()) {
+                    exported = data.exportBackendReportPdf(chooser.getSelectedFile(), snapshot);
+                } else {
+                    exported = exportService.exportPdf(chooser.getSelectedFile(), data, snapshot);
+                }
                 JOptionPane.showMessageDialog(this, "Reporte PDF exportado en:\n" + exported.getAbsolutePath(), "Exito", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error al exportar PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -231,11 +243,16 @@ public class ReportesPanel extends JPanel {
     private void exportarExcel(ReportSnapshot snapshot) {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Guardar reporte Excel");
-        chooser.setSelectedFile(new File("reporte_" + sanitizeFileName(snapshot.getPeriod().getLabel()) + ".xls"));
-        chooser.setFileFilter(new FileNameExtensionFilter("Archivo Excel (*.xls)", "xls"));
+        chooser.setSelectedFile(new File("reporte_" + sanitizeFileName(snapshot.getPeriod().getLabel()) + ".xlsx"));
+        chooser.setFileFilter(new FileNameExtensionFilter("Archivo Excel (*.xlsx)", "xlsx"));
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                File exported = exportService.exportExcel(chooser.getSelectedFile(), data, snapshot);
+                File exported;
+                if (data.isBackendSessionActive()) {
+                    exported = data.exportBackendReportXlsx(chooser.getSelectedFile(), snapshot);
+                } else {
+                    exported = exportService.exportExcel(chooser.getSelectedFile(), data, snapshot);
+                }
                 JOptionPane.showMessageDialog(this, "Reporte Excel exportado en:\n" + exported.getAbsolutePath(), "Exito", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error al exportar Excel: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

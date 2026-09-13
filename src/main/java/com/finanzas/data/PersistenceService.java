@@ -82,7 +82,7 @@ final class PersistenceService {
         }
     }
 
-    private static AppState readState(Path stateFile) throws IOException, ClassNotFoundException {
+    static AppState readState(Path stateFile) throws IOException, ClassNotFoundException {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(stateFile.toFile()))) {
             input.setObjectInputFilter(PersistenceService::allowSerializedClass);
             return (AppState) input.readObject();
@@ -110,6 +110,53 @@ final class PersistenceService {
 
     private static Path profileImagesDir() {
         return dataDir().resolve("profile-images");
+    }
+
+    private static Path invoiceAttachmentsDir() {
+        return dataDir().resolve("invoice-attachments");
+    }
+
+    static String storeInvoiceAttachment(String userKey, String invoiceId, File sourceFile) throws IOException {
+        if (sourceFile == null || !sourceFile.isFile()) {
+            throw new IOException("El archivo seleccionado no existe.");
+        }
+        if (sourceFile.length() > MAX_BACKUP_ENTRY_BYTES) {
+            throw new IOException("El adjunto supera el limite permitido.");
+        }
+        Path userDir = invoiceAttachmentsDir().resolve(sanitizeFileName(userKey));
+        Files.createDirectories(userDir);
+        String extension = fileExtension(sourceFile.getName());
+        Path target = userDir.resolve(sanitizeFileName(invoiceId) + extension).toAbsolutePath().normalize();
+        if (!target.startsWith(invoiceAttachmentsDir())) {
+            throw new IOException("No fue posible resolver una ruta segura para el adjunto.");
+        }
+        Files.copy(sourceFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+        return target.toString();
+    }
+
+    static byte[] readInvoiceAttachment(String attachmentPath) throws IOException {
+        if (attachmentPath == null || attachmentPath.trim().isEmpty()) {
+            throw new IOException("Esta factura no tiene adjunto.");
+        }
+        Path path = Paths.get(attachmentPath).toAbsolutePath().normalize();
+        if (!path.startsWith(invoiceAttachmentsDir()) || !Files.isRegularFile(path)) {
+            throw new IOException("El adjunto ya no esta disponible.");
+        }
+        return Files.readAllBytes(path);
+    }
+
+    static void deleteInvoiceAttachment(String attachmentPath) {
+        if (attachmentPath == null || attachmentPath.trim().isEmpty()) {
+            return;
+        }
+        try {
+            Path path = Paths.get(attachmentPath).toAbsolutePath().normalize();
+            if (path.startsWith(invoiceAttachmentsDir())) {
+                Files.deleteIfExists(path);
+            }
+        } catch (IOException ex) {
+            LOGGER.log(Level.WARNING, "No fue posible eliminar el adjunto de factura: " + attachmentPath, ex);
+        }
     }
 
     static File createBackup(File destination, AppState state) throws IOException {
@@ -355,10 +402,15 @@ final class PersistenceService {
             return ObjectInputFilter.Status.ALLOWED;
         }
         String name = type.getName();
+        String packageName = type.getPackageName();
+        // Package-name equality on purpose (not startsWith): a prefix match on
+        // "java.lang."/"java.util." would also let through subpackages like
+        // java.lang.invoke (home of the SerializedLambda deserialization gadget)
+        // and java.util.concurrent, which this filter must never allow.
         if (name.startsWith("com.finanzas.")
-                || name.startsWith("java.lang.")
-                || name.startsWith("java.util.")
-                || name.startsWith("java.time.")
+                || "java.lang".equals(packageName)
+                || "java.util".equals(packageName)
+                || "java.time".equals(packageName)
                 || "java.math.BigDecimal".equals(name)
                 || "java.math.BigInteger".equals(name)) {
             return ObjectInputFilter.Status.ALLOWED;

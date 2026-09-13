@@ -592,6 +592,24 @@ paths:
       responses:
         '200':
           description: Notificacion actualizada
+  /api/workspaces/{workspaceId}/sync/changes:
+    get:
+      summary: Consultar cambios incrementales y revisiones de recursos del workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Cambios de sincronizacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChangesResponse'
   /api/workspaces/{workspaceId}/reports/summary:
     get:
       summary: Reporte financiero por rango
@@ -1807,6 +1825,36 @@ components:
         availableAfterSavings:
           type: number
           format: decimal
+    SyncChangesResponse:
+      type: object
+      required:
+        - workspaceId
+        - revision
+        - serverTime
+        - changedResources
+        - pendingReceivedInvitations
+        - pendingWorkspaceInvitations
+        - unreadNotifications
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        revision:
+          type: string
+          format: date-time
+        serverTime:
+          type: string
+          format: date-time
+        changedResources:
+          type: array
+          items:
+            type: string
+        pendingReceivedInvitations:
+          type: integer
+        pendingWorkspaceInvitations:
+          type: integer
+        unreadNotifications:
+          type: integer
     ProblemDetail:
       type: object
       properties:

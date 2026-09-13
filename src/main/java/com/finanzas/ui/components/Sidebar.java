@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class Sidebar extends JPanel {
 
-    private final String[] menuItems = {"Inicio", "Ingresos", "Gastos", "Presupuesto", "Ahorro y Metas", "Finanzas del Hogar", "Reportes", "Configuracion"};
+    private final String[] menuItems = {"Inicio", "Ingresos", "Gastos", "Presupuesto", "Ahorro y Metas", "Finanzas del Hogar", "Facturas", "Reportes", "Configuracion"};
     private final String[] menuIcons = {
             AppIcons.HOME,
             AppIcons.INCOME,
@@ -22,6 +22,7 @@ public class Sidebar extends JPanel {
             AppIcons.BUDGET,
             AppIcons.GOALS,
             AppIcons.HOUSEHOLD,
+            "\uD83D\uDCC4",
             AppIcons.REPORTS,
             AppIcons.SETTINGS
     };

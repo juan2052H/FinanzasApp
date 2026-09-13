@@ -16,11 +16,10 @@ import java.awt.geom.RoundRectangle2D;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 
 public class PresupuestoPanel extends JPanel {
     private final DataManager data = DataManager.getInstance();
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final NumberFormat nf = NumberFormat.getInstance(data.getDisplayLocale());
     private JPanel cardsPanel;
 
     public PresupuestoPanel() {
@@ -275,7 +274,7 @@ public class PresupuestoPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 isEdit ? "Editar presupuesto" : "Nuevo presupuesto",
                 true);
-        dialog.setSize(400, 250);
+        dialog.setSize(400, isEdit ? 290 : 250);
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -303,9 +302,23 @@ public class PresupuestoPanel extends JPanel {
             FormSupport.addFormRow(panel, gbc, i, (String) rows[i][0], (Component) rows[i][1]);
         }
 
+        int nextRow = rows.length;
+        if (isEdit) {
+            JLabel spentLabel = new JLabel("Ya gastado este mes: $" + nf.format((long) existing.getMontoGastado())
+                    + " (disponible: $" + nf.format((long) existing.getSaldo()) + ")");
+            spentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            spentLabel.setForeground(AppColors.TEXT_MUTED);
+            gbc.gridx = 0;
+            gbc.gridy = nextRow;
+            gbc.gridwidth = 2;
+            panel.add(spentLabel, gbc);
+            gbc.gridwidth = 1;
+            nextRow++;
+        }
+
         RoundedButton saveButton = new RoundedButton(isEdit ? "Guardar cambios" : "Crear presupuesto", AppColors.ACCENT_BLUE);
         gbc.gridx = 0;
-        gbc.gridy = rows.length;
+        gbc.gridy = nextRow;
         gbc.gridwidth = 2;
         panel.add(saveButton, gbc);
 

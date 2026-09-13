@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class FinanzasHogarPanel extends JPanel {
     private final DataManager data = DataManager.getInstance();
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
+    private final NumberFormat nf = NumberFormat.getInstance(data.getDisplayLocale());
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private JPanel debtCards;
     private JPanel membersListPanel;
@@ -178,6 +178,7 @@ public class FinanzasHogarPanel extends JPanel {
     private void showInviteMemberDialog() {
         JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
         JTextField emailField = new JTextField();
+        emailField.setColumns(18);
         JComboBox<String> roleBox = new JComboBox<String>(new String[]{"MEMBER", "VIEWER", "ADMIN"});
         form.add(new JLabel("Email:"));
         form.add(emailField);

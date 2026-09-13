@@ -12,5 +12,6 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
     List<RecurringTransactionEntity> findByWorkspaceIdOrderByNextRunDateAsc(UUID workspaceId);
     List<RecurringTransactionEntity> findByWorkspaceIdAndActiveTrueOrderByNextRunDateAsc(UUID workspaceId);
     List<RecurringTransactionEntity> findByWorkspaceIdAndActiveTrueAndNextRunDateLessThanEqualOrderByNextRunDateAsc(UUID workspaceId, LocalDate date);
+    List<RecurringTransactionEntity> findByActiveTrueAndNextRunDateLessThanEqual(LocalDate date);
     Optional<RecurringTransactionEntity> findByIdAndWorkspaceId(UUID id, UUID workspaceId);
 }

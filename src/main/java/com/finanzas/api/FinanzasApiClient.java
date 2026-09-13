@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class FinanzasApiClient {
@@ -178,6 +179,15 @@ public final class FinanzasApiClient {
             result.add(toWorkspace(SimpleJson.asObject(item)));
         }
         return result;
+    }
+
+    public BackendSyncState getSyncChanges(String accessToken, String workspaceId, Instant since)
+            throws IOException, InterruptedException {
+        String path = "/api/workspaces/" + workspaceId + "/sync/changes";
+        if (since != null) {
+            path += "?since=" + java.net.URLEncoder.encode(since.toString(), StandardCharsets.UTF_8);
+        }
+        return toSyncState(SimpleJson.asObject(SimpleJson.parse(get(path, accessToken))));
     }
 
     public BackendWorkspace createWorkspace(String accessToken, String nombre, String tipo)
@@ -439,9 +449,25 @@ public final class FinanzasApiClient {
 
     public byte[] exportReportCsv(String accessToken, String workspaceId, LocalDate from, LocalDate to)
             throws IOException, InterruptedException {
+        return exportReport(accessToken, workspaceId, from, to, "export.csv", "text/csv");
+    }
+
+    public byte[] exportReportPdf(String accessToken, String workspaceId, LocalDate from, LocalDate to)
+            throws IOException, InterruptedException {
+        return exportReport(accessToken, workspaceId, from, to, "export.pdf", "application/pdf");
+    }
+
+    public byte[] exportReportXlsx(String accessToken, String workspaceId, LocalDate from, LocalDate to)
+            throws IOException, InterruptedException {
+        return exportReport(accessToken, workspaceId, from, to, "export.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private byte[] exportReport(String accessToken, String workspaceId, LocalDate from, LocalDate to, String endpoint, String contentType)
+            throws IOException, InterruptedException {
         StringBuilder path = new StringBuilder("/api/workspaces/")
                 .append(workspaceId)
-                .append("/reports/export.csv");
+                .append("/reports/")
+                .append(endpoint);
         String separator = "?";
         if (from != null) {
             path.append(separator).append("from=").append(from);
@@ -452,7 +478,7 @@ public final class FinanzasApiClient {
         }
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri(path.toString()))
                 .timeout(Duration.ofSeconds(20))
-                .header("Accept", "text/csv")
+                .header("Accept", contentType)
                 .GET();
         if (accessToken != null && !accessToken.trim().isEmpty()) {
             builder.header("Authorization", "Bearer " + accessToken);
@@ -636,6 +662,120 @@ public final class FinanzasApiClient {
                 post("/api/workspaces/" + workspaceId + "/shared-expenses/settlements", SimpleJson.stringify(body), accessToken))));
     }
 
+    public List<BackendInvoice> listInvoices(String accessToken, String workspaceId, LocalDate from, LocalDate to)
+            throws IOException, InterruptedException {
+        String path = "/api/workspaces/" + workspaceId + "/invoices";
+        if (from != null && to != null) {
+            path += "?from=" + from + "&to=" + to;
+        }
+        String response = get(path, accessToken);
+        List<BackendInvoice> result = new ArrayList<BackendInvoice>();
+        for (Object item : SimpleJson.asArray(SimpleJson.parse(response))) {
+            result.add(toInvoice(SimpleJson.asObject(item)));
+        }
+        return result;
+    }
+
+    public BackendInvoice getInvoice(String accessToken, String workspaceId, String invoiceId)
+            throws IOException, InterruptedException {
+        String response = get("/api/workspaces/" + workspaceId + "/invoices/" + invoiceId, accessToken);
+        return toInvoice(SimpleJson.asObject(SimpleJson.parse(response)));
+    }
+
+    public BackendInvoice createInvoice(String accessToken, String workspaceId, String transactionId,
+                                        String invoiceNumber, String merchantName, String taxId,
+                                        LocalDate issueDate, BigDecimal subtotal, BigDecimal taxAmount,
+                                        BigDecimal totalAmount, String notes)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("transactionId", transactionId);
+        body.put("invoiceNumber", invoiceNumber);
+        body.put("merchantName", merchantName);
+        body.put("taxId", taxId);
+        body.put("issueDate", issueDate == null ? null : issueDate.toString());
+        body.put("subtotal", subtotal);
+        body.put("taxAmount", taxAmount);
+        body.put("totalAmount", totalAmount);
+        body.put("notes", notes);
+        return toInvoice(SimpleJson.asObject(SimpleJson.parse(
+                post("/api/workspaces/" + workspaceId + "/invoices", SimpleJson.stringify(body), accessToken))));
+    }
+
+    public BackendInvoice updateInvoice(String accessToken, String workspaceId, String invoiceId,
+                                        String transactionId, String invoiceNumber, String merchantName,
+                                        String taxId, LocalDate issueDate, BigDecimal subtotal,
+                                        BigDecimal taxAmount, BigDecimal totalAmount, String notes)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("transactionId", transactionId);
+        body.put("invoiceNumber", invoiceNumber);
+        body.put("merchantName", merchantName);
+        body.put("taxId", taxId);
+        body.put("issueDate", issueDate == null ? null : issueDate.toString());
+        body.put("subtotal", subtotal);
+        body.put("taxAmount", taxAmount);
+        body.put("totalAmount", totalAmount);
+        body.put("notes", notes);
+        return toInvoice(SimpleJson.asObject(SimpleJson.parse(
+                put("/api/workspaces/" + workspaceId + "/invoices/" + invoiceId, SimpleJson.stringify(body), accessToken))));
+    }
+
+    public void deleteInvoice(String accessToken, String workspaceId, String invoiceId)
+            throws IOException, InterruptedException {
+        delete("/api/workspaces/" + workspaceId + "/invoices/" + invoiceId, accessToken);
+    }
+
+    public BackendInvoice uploadInvoiceAttachment(String accessToken, String workspaceId, String invoiceId, File file)
+            throws IOException, InterruptedException {
+        if (file == null || !file.isFile()) {
+            throw new IOException("El archivo de soporte no existe.");
+        }
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        String boundary = "----FinanzasBoundary" + System.currentTimeMillis();
+        String contentType = file.getName().toLowerCase(Locale.ROOT).endsWith(".pdf") ? "application/pdf" : "image/jpeg";
+        byte[] body = multipartBody(boundary, file.getName(), contentType, bytes);
+
+        HttpRequest request = HttpRequest.newBuilder(uri("/api/workspaces/" + workspaceId + "/invoices/" + invoiceId + "/attachment"))
+                .timeout(Duration.ofSeconds(20))
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                .build();
+        return toInvoice(SimpleJson.asObject(SimpleJson.parse(send(request))));
+    }
+
+    public byte[] downloadInvoiceAttachment(String accessToken, String workspaceId, String invoiceId)
+            throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(uri("/api/workspaces/" + workspaceId + "/invoices/" + invoiceId + "/attachment"))
+                .timeout(Duration.ofSeconds(20))
+                .header("Authorization", "Bearer " + accessToken)
+                .GET()
+                .build();
+        return sendBytes(request);
+    }
+
+    public BackendTaxSummary getTaxSummary(String accessToken, String workspaceId, int year)
+            throws IOException, InterruptedException {
+        String response = get("/api/workspaces/" + workspaceId + "/tax-preparation/summary?year=" + year, accessToken);
+        return toTaxSummary(SimpleJson.asObject(SimpleJson.parse(response)));
+    }
+
+    public BackendTaxConfig updateTaxConfig(String accessToken, String workspaceId, int year,
+                                            BigDecimal uvtValue, Integer grossIncomeUvt, Integer grossPurchasesUvt,
+                                            Integer bankDepositsUvt, Integer grossWealthUvt, BigDecimal estimatedGrossWealth)
+            throws IOException, InterruptedException {
+        Map<String, Object> body = new LinkedHashMap<String, Object>();
+        body.put("uvtValue", uvtValue);
+        body.put("grossIncomeUvt", grossIncomeUvt);
+        body.put("grossPurchasesUvt", grossPurchasesUvt);
+        body.put("bankDepositsUvt", bankDepositsUvt);
+        body.put("grossWealthUvt", grossWealthUvt);
+        body.put("estimatedGrossWealth", estimatedGrossWealth);
+        return toTaxConfig(SimpleJson.asObject(SimpleJson.parse(
+                put("/api/workspaces/" + workspaceId + "/tax-preparation/config/" + year, SimpleJson.stringify(body), accessToken))));
+    }
+
     public void logout(String refreshToken) throws IOException, InterruptedException {
         if (refreshToken == null || refreshToken.trim().isEmpty()) {
             return;
@@ -774,6 +914,24 @@ public final class FinanzasApiClient {
                 instant(object, "createdAt"),
                 instant(object, "lastUsedAt"),
                 instant(object, "expiresAt"));
+    }
+
+    private BackendSyncState toSyncState(Map<String, Object> object) throws IOException {
+        List<String> changedResources = new ArrayList<String>();
+        Object resources = object.get("changedResources");
+        if (resources != null) {
+            for (Object item : SimpleJson.asArray(resources)) {
+                changedResources.add(String.valueOf(item));
+            }
+        }
+        return new BackendSyncState(
+                SimpleJson.string(object, "workspaceId"),
+                instant(object, "revision"),
+                instant(object, "serverTime"),
+                changedResources,
+                (int) SimpleJson.longValue(object, "pendingReceivedInvitations"),
+                (int) SimpleJson.longValue(object, "pendingWorkspaceInvitations"),
+                (int) SimpleJson.longValue(object, "unreadNotifications"));
     }
 
     private Instant instant(Map<String, Object> object, String key) {
@@ -965,6 +1123,69 @@ public final class FinanzasApiClient {
                 SimpleJson.decimal(object, "amount"),
                 date.isEmpty() ? LocalDate.now() : LocalDate.parse(date),
                 SimpleJson.string(object, "note"));
+    }
+
+    private BackendInvoice toInvoice(Map<String, Object> object) throws IOException {
+        String issueDate = SimpleJson.string(object, "issueDate");
+        return new BackendInvoice(
+                SimpleJson.string(object, "id"),
+                SimpleJson.string(object, "workspaceId"),
+                SimpleJson.string(object, "transactionId"),
+                SimpleJson.string(object, "invoiceNumber"),
+                SimpleJson.string(object, "merchantName"),
+                SimpleJson.string(object, "taxId"),
+                issueDate.isEmpty() ? LocalDate.now() : LocalDate.parse(issueDate),
+                SimpleJson.decimal(object, "subtotal"),
+                SimpleJson.decimal(object, "taxAmount"),
+                SimpleJson.decimal(object, "totalAmount"),
+                SimpleJson.string(object, "attachmentRef"),
+                SimpleJson.string(object, "notes"),
+                SimpleJson.string(object, "createdByUserId"),
+                SimpleJson.string(object, "createdAt"),
+                SimpleJson.string(object, "updatedAt"));
+    }
+
+    private BackendTaxConfig toTaxConfig(Map<String, Object> object) throws IOException {
+        return new BackendTaxConfig(
+                SimpleJson.string(object, "id"),
+                SimpleJson.string(object, "workspaceId"),
+                intValue(object, "taxYear", LocalDate.now().getYear()),
+                SimpleJson.decimal(object, "uvtValue"),
+                intValue(object, "grossIncomeUvt", 1400),
+                intValue(object, "grossPurchasesUvt", 1400),
+                intValue(object, "bankDepositsUvt", 1400),
+                intValue(object, "grossWealthUvt", 4500),
+                SimpleJson.decimal(object, "estimatedGrossWealth"),
+                SimpleJson.string(object, "updatedAt"));
+    }
+
+    private BackendTaxSummary toTaxSummary(Map<String, Object> object) throws IOException {
+        List<String> reasons = new ArrayList<String>();
+        Object rawReasons = object.get("obligationReasons");
+        if (rawReasons != null) {
+            for (Object item : SimpleJson.asArray(rawReasons)) {
+                reasons.add(String.valueOf(item));
+            }
+        }
+        return new BackendTaxSummary(
+                SimpleJson.string(object, "workspaceId"),
+                intValue(object, "taxYear", LocalDate.now().getYear()),
+                SimpleJson.decimal(object, "uvtValue"),
+                SimpleJson.decimal(object, "totalIncome"),
+                SimpleJson.decimal(object, "incomeThresholdAmount"),
+                SimpleJson.bool(object, "exceedsIncomeThreshold"),
+                SimpleJson.decimal(object, "totalExpenses"),
+                SimpleJson.decimal(object, "purchasesThresholdAmount"),
+                SimpleJson.bool(object, "exceedsPurchasesThreshold"),
+                SimpleJson.decimal(object, "totalBankDepositsOrSavings"),
+                SimpleJson.decimal(object, "depositsThresholdAmount"),
+                SimpleJson.bool(object, "exceedsDepositsThreshold"),
+                SimpleJson.decimal(object, "estimatedGrossWealth"),
+                SimpleJson.decimal(object, "wealthThresholdAmount"),
+                SimpleJson.bool(object, "exceedsWealthThreshold"),
+                SimpleJson.bool(object, "obligationToDeclare"),
+                reasons,
+                SimpleJson.string(object, "legalDisclaimer"));
     }
 
     private Map<String, Object> transactionBody(String categoryId, String type, String description, BigDecimal amount, LocalDate date) {
