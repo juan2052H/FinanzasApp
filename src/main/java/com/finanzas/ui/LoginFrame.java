@@ -141,7 +141,10 @@ public class LoginFrame extends JFrame {
                         }
                         showError(data.getLastErrorMessage());
                     } catch (Exception ex) {
-                        showError(ex.getMessage() == null ? "No fue posible iniciar sesion con Google." : ex.getMessage());
+                        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                        showError(cause.getMessage() == null || cause.getMessage().trim().isEmpty()
+                                ? "No fue posible iniciar sesion con Google."
+                                : cause.getMessage());
                     } finally {
                         socialButton.setText("Continuar con Google");
                         socialButton.setEnabled(true);
@@ -338,6 +341,7 @@ public class LoginFrame extends JFrame {
             return;
         }
         JTextField emailField = new JTextField();
+        emailField.setColumns(18);
         JPanel form = new JPanel(new GridLayout(1, 2, 8, 8));
         form.add(new JLabel("Correo:"));
         form.add(emailField);
@@ -358,8 +362,11 @@ public class LoginFrame extends JFrame {
 
     private void showPasswordResetConfirmDialog() {
         JPasswordField passwordField = new JPasswordField();
+        passwordField.setColumns(18);
         JPasswordField confirmField = new JPasswordField();
+        confirmField.setColumns(18);
         JTextField tokenField = new JTextField();
+        tokenField.setColumns(18);
         JPanel form = new JPanel(new GridLayout(3, 2, 8, 8));
         form.add(new JLabel("Token:"));
         form.add(tokenField);
@@ -398,7 +405,9 @@ public class LoginFrame extends JFrame {
             return;
         }
         JTextField emailField = new JTextField();
+        emailField.setColumns(18);
         JTextField tokenField = new JTextField();
+        tokenField.setColumns(18);
         JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
         form.add(new JLabel("Correo:"));
         form.add(emailField);

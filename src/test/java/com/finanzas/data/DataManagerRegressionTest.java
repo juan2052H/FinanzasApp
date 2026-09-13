@@ -1,7 +1,11 @@
 package com.finanzas.data;
 
+import com.finanzas.api.BackendInvoice;
+import com.finanzas.api.BackendTaxConfig;
+import com.finanzas.api.BackendTaxSummary;
 import com.finanzas.model.GastoHogar;
 import com.finanzas.model.FinancialCategory;
+import com.finanzas.model.MetaAhorro;
 import com.finanzas.model.Presupuesto;
 import com.finanzas.model.Settlement;
 import com.finanzas.model.Transaccion;
@@ -18,6 +22,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -259,6 +264,120 @@ class DataManagerRegressionTest {
 
         assertFalse(data.login("rate@example.com", "secreto1"));
         assertTrue(data.getLastErrorMessage().contains("Demasiados intentos"));
+    }
+
+    @Test
+    void retirarMetaValidatesBoundsAndDepositRejectsNonPositiveAmounts() {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Meta User", "meta@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("meta@example.com", "secreto1"));
+
+        MetaAhorro meta = new MetaAhorro("Vacaciones", "VAC", 100.00, 500.00, "#1a73e8", LocalDate.now().plusMonths(3));
+        data.addMeta(meta);
+
+        assertFalse(data.depositarMeta(meta, 0));
+        assertFalse(data.depositarMeta(meta, -50));
+        assertEquals(100.00, meta.getMontoActual(), 0.001);
+
+        assertFalse(data.retirarMeta(meta, 0));
+        assertFalse(data.retirarMeta(meta, -10));
+        assertFalse(data.retirarMeta(meta, 100.01));
+        assertEquals(100.00, meta.getMontoActual(), 0.001);
+
+        assertTrue(data.retirarMeta(meta, 100.00));
+        assertEquals(0.00, meta.getMontoActual(), 0.001);
+    }
+
+    @Test
+    void ahorroMesActualClampsAtZeroWhenWithdrawalsExceedThisMonthsDeposits() {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Ahorro User", "ahorro@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("ahorro@example.com", "secreto1"));
+
+        // Pre-existing balance from creation (not this month's contribution),
+        // then a withdrawal this month with no matching deposit this month:
+        // the net ledger movement is negative and must clamp at 0, not go negative.
+        MetaAhorro meta = new MetaAhorro("Emergencia", "SEG", 1000.00, 2000.00, "#1a73e8", LocalDate.now().plusMonths(6));
+        data.addMeta(meta);
+        assertTrue(data.retirarMeta(meta, 600.00));
+
+        assertEquals(0.00, data.getAhorroMesActual(), 0.001);
+    }
+
+    @Test
+    void ahorroMesActualCountsNetDepositsAndWithdrawalsThisMonth() {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Ahorro Neto", "ahorroneto@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("ahorroneto@example.com", "secreto1"));
+
+        MetaAhorro meta = new MetaAhorro("Viaje", "VIA", 0.00, 2000.00, "#1a73e8", LocalDate.now().plusMonths(6));
+        data.addMeta(meta);
+        assertTrue(data.depositarMeta(meta, 500.00));
+        assertTrue(data.retirarMeta(meta, 200.00));
+
+        assertEquals(300.00, data.getAhorroMesActual(), 0.001);
+    }
+
+    @Test
+    void localInvoicesAreStoredMostRecentFirstAndReplacingAttachmentDeletesThePrevious() throws Exception {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Factura User", "factura@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("factura@example.com", "secreto1"));
+
+        BackendInvoice first = data.createInvoice(null, "F-001", "Proveedor A", "900123456",
+                LocalDate.now(), new BigDecimal("100.00"), new BigDecimal("19.00"), new BigDecimal("119.00"), "");
+        BackendInvoice second = data.createInvoice(null, "F-002", "Proveedor B", "900654321",
+                LocalDate.now(), new BigDecimal("50.00"), new BigDecimal("9.50"), new BigDecimal("59.50"), "");
+
+        List<BackendInvoice> invoices = data.listInvoices(null, null);
+        assertEquals(2, invoices.size());
+        assertEquals(second.getId(), invoices.get(0).getId());
+        assertEquals(first.getId(), invoices.get(1).getId());
+
+        File png = tempDir.resolve("receipt.png").toFile();
+        Files.writeString(png.toPath(), "fake-png-bytes");
+        BackendInvoice withPng = data.uploadInvoiceAttachment(first.getId(), png);
+        assertTrue(withPng.hasAttachment());
+        String pngAttachmentPath = withPng.getAttachmentRef();
+        assertTrue(Files.exists(Path.of(pngAttachmentPath)));
+
+        File jpg = tempDir.resolve("receipt.jpg").toFile();
+        Files.writeString(jpg.toPath(), "fake-jpg-bytes");
+        BackendInvoice withJpg = data.uploadInvoiceAttachment(first.getId(), jpg);
+        assertNotEquals(pngAttachmentPath, withJpg.getAttachmentRef());
+        assertFalse(Files.exists(Path.of(pngAttachmentPath)), "replacing the attachment must delete the old file");
+        assertTrue(Files.exists(Path.of(withJpg.getAttachmentRef())));
+    }
+
+    @Test
+    void taxSummaryUsesDefaultsAndFlagsExactThresholdAsExceeded() throws Exception {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Dian User", "dian@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("dian@example.com", "secreto1"));
+
+        int year = LocalDate.now().getYear();
+
+        // No config stored yet: falls back to defaultUvtForYear(...) and 1400 UVT for income.
+        BackendTaxSummary baseline = data.getTaxSummary(year);
+        assertFalse(baseline.isExceedsIncomeThreshold());
+        assertFalse(baseline.isObligationToDeclare());
+
+        BigDecimal uvt = DataManager.defaultUvtForYear(year);
+        BigDecimal incomeThreshold = uvt.multiply(BigDecimal.valueOf(1400));
+
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.INGRESO, "Salario", "Ingreso limite",
+                incomeThreshold, LocalDate.of(year, 6, 1)));
+        // A transaction dated the first day of next year must not count toward this year's total.
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.INGRESO, "Salario", "Fuera de rango",
+                new BigDecimal("999999999.00"), LocalDate.of(year + 1, 1, 1)));
+
+        BackendTaxSummary summary = data.getTaxSummary(year);
+        assertEquals(0, incomeThreshold.compareTo(summary.getTotalIncome()));
+        assertTrue(summary.isExceedsIncomeThreshold(), "income exactly at the threshold must count as exceeding it");
+        assertTrue(summary.isObligationToDeclare());
+
+        BackendTaxConfig updated = data.updateTaxConfig(year, uvt, 1400, 1400, 1400, 4500, BigDecimal.ZERO);
+        assertEquals(0, uvt.compareTo(updated.getUvtValue()));
     }
 
     private DataManager freshDataManager() {

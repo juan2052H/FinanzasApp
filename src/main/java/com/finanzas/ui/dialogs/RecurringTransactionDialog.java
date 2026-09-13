@@ -60,6 +60,9 @@ public final class RecurringTransactionDialog {
         JTextField amountField = new JTextField();
         JComboBox<RecurringTransaction.Frequency> frequencyBox = new JComboBox<RecurringTransaction.Frequency>(RecurringTransaction.Frequency.values());
         JTextField customDaysField = new JTextField("30");
+        customDaysField.setEnabled(frequencyBox.getSelectedItem() == RecurringTransaction.Frequency.CUSTOM);
+        frequencyBox.addActionListener(e ->
+                customDaysField.setEnabled(frequencyBox.getSelectedItem() == RecurringTransaction.Frequency.CUSTOM));
         JTextField nextDateField = new JTextField(LocalDate.now().format(DISPLAY_DATE_FORMAT));
 
         addFormRow(panel, gbc, 0, "Tipo:", typeBox);
@@ -83,14 +86,22 @@ public final class RecurringTransactionDialog {
                     throw new IllegalArgumentException("Ingresa una descripcion.");
                 }
                 BigDecimal amount = TransactionDialog.parseMoneyDecimal(amountField.getText());
-                int customDays = Integer.parseInt(customDaysField.getText().trim());
+                RecurringTransaction.Frequency frequency = (RecurringTransaction.Frequency) frequencyBox.getSelectedItem();
+                int customDays;
+                if (frequency == RecurringTransaction.Frequency.CUSTOM) {
+                    customDays = Integer.parseInt(customDaysField.getText().trim());
+                } else {
+                    // Irrelevant for any frequency other than CUSTOM - don't force the
+                    // user to fix this field just to save a Monthly/Weekly recurrence.
+                    customDays = 30;
+                }
                 LocalDate nextDate = LocalDate.parse(nextDateField.getText().trim(), DISPLAY_DATE_FORMAT);
                 RecurringTransaction recurring = new RecurringTransaction(
                         (Transaccion.Tipo) typeBox.getSelectedItem(),
                         (String) categoryBox.getSelectedItem(),
                         description,
                         amount,
-                        (RecurringTransaction.Frequency) frequencyBox.getSelectedItem(),
+                        frequency,
                         customDays,
                         nextDate);
                 onSave.accept(recurring);

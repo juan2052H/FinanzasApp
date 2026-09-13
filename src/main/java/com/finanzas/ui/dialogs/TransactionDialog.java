@@ -55,7 +55,7 @@ public final class TransactionDialog {
 
         JComboBox<String> categoryBox = new JComboBox<String>(categories);
         JTextField descField = new JTextField(isEdit ? existing.getDescripcion() : "");
-        JTextField amountField = new JTextField(isEdit ? String.valueOf((long) existing.getMonto()) : "");
+        JTextField amountField = new JTextField(isEdit ? existing.getMontoDecimal().toPlainString() : "");
         JTextField dateField = new JTextField(isEdit ? existing.getFecha().format(DISPLAY_DATE_FORMAT) : LocalDate.now().format(DISPLAY_DATE_FORMAT));
 
         if (isEdit) {

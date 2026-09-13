@@ -504,9 +504,11 @@ public final class ExportService {
         List<List<String>> rows = new ArrayList<List<String>>();
         rows.add(row("Categoria", "Gasto", "Participacion"));
         for (java.util.Map.Entry<String, BigDecimal> entry : snapshot.getExpenseByCategory().entrySet()) {
+            // Rounded to a whole percent to match the on-screen donut-chart legend
+            // in ReportesPanel, which uses the same "%.0f%%" precision.
             BigDecimal percentage = snapshot.getExpenses().compareTo(BigDecimal.ZERO) <= 0
-                    ? Money.ZERO
-                    : entry.getValue().multiply(BigDecimal.valueOf(100)).divide(snapshot.getExpenses(), 2, Money.ROUNDING);
+                    ? BigDecimal.ZERO
+                    : entry.getValue().multiply(BigDecimal.valueOf(100)).divide(snapshot.getExpenses(), 0, Money.ROUNDING);
             rows.add(row(safe(entry.getKey()), formatMoney(entry.getValue()), percentage + "%"));
         }
         return rows;
@@ -722,7 +724,11 @@ public final class ExportService {
     }
 
     private String formatMoney(BigDecimal value) {
-        return "$" + MONEY_FORMAT.format(Money.normalize(value));
+        // Rounded to whole currency units on purpose: every on-screen panel
+        // (Presupuesto, Metas, Reportes, etc.) displays amounts the same way,
+        // so an export must match what the user actually saw for the period
+        // instead of surfacing cents nobody sees anywhere else in the app.
+        return formatMoney(Money.toDouble(value));
     }
 
     private List<String> row(String... values) {

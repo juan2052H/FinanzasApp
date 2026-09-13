@@ -73,7 +73,7 @@ public class BudgetEntity {
     }
 
     public void setAmount(BigDecimal amount) {
-        BigDecimal normalized = amount == null ? BigDecimal.ZERO : amount.setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal normalized = (amount == null ? BigDecimal.ZERO : amount).setScale(2, java.math.RoundingMode.HALF_UP);
         if (normalized.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El presupuesto no puede ser negativo.");
         }

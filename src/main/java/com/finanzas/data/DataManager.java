@@ -2028,6 +2028,10 @@ public class DataManager {
         if (meta == null) {
             return false;
         }
+        if (Money.of(monto).compareTo(BigDecimal.ZERO) <= 0) {
+            lastErrorMessage = "El aporte debe ser mayor a cero.";
+            return false;
+        }
         if (hasBackendFinancialSession() && !meta.getBackendId().isEmpty()) {
             try {
                 callBackend(token -> apiClient.contributeSavingsGoal(

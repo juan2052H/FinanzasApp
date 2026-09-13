@@ -96,6 +96,9 @@ public final class SimulationDialog {
                 BigDecimal currentSaved = TransactionDialog.parseMoneyDecimal(currentSavedField.getText());
                 BigDecimal goalAmount = TransactionDialog.parseMoneyDecimal(goalAmountField.getText());
                 int months = Integer.parseInt(monthsField.getText().trim());
+                if (months < 1) {
+                    throw new NumberFormatException("Los meses a proyectar deben ser al menos 1.");
+                }
 
                 SimulationResult result;
                 if (scenarioBox.getSelectedIndex() == 0) {
