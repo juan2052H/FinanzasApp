@@ -97,8 +97,19 @@ SHA-256 FinanzasApp-Setup.exe: $hash
 
     New-Item -ItemType Directory -Path (Split-Path -Parent $OutputPath) -Force | Out-Null
     if (Test-Path -LiteralPath $OutputPath) { Remove-Item -LiteralPath $OutputPath -Force }
-    # Compress-Archive de PowerShell 5.1 guarda rutas con '\' que se extraen mal fuera de Windows.
-    [IO.Compression.ZipFile]::CreateFromDirectory($carpeta, $OutputPath, [IO.Compression.CompressionLevel]::Optimal, $true)
+    # En Windows PowerShell 5.1, Compress-Archive y ZipFile.CreateFromDirectory guardan rutas con '\',
+    # que se extraen mal fuera de Windows: se escribe cada entrada con '/'.
+    Add-Type -AssemblyName System.IO.Compression
+    $zip = [IO.Compression.ZipFile]::Open($OutputPath, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        $base = Split-Path -Parent $carpeta
+        foreach ($archivo in Get-ChildItem -LiteralPath $carpeta -Recurse -File) {
+            $nombre = $archivo.FullName.Substring($base.Length + 1).Replace("\", "/")
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $archivo.FullName, $nombre, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    } finally {
+        $zip.Dispose()
+    }
     Write-Output ("Entrega creada: {0} ({1:N1} MB, commit {2})" -f $OutputPath, ((Get-Item $OutputPath).Length / 1MB), $commit)
 }
 finally {
