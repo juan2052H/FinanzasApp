@@ -3,7 +3,7 @@
 #  Uso: .\build-windows-installer.ps1
 
 param(
-    [string]$JdkHome = "C:\Program Files\Eclipse Adoptium\jdk-21.0.4+7",
+    [string]$JdkHome = $env:JAVA_HOME,
     [string]$SourceJar = "target\FinanzasApp-1.0-SNAPSHOT-shaded.jar",
     [string]$OutputDir = "dist",
     [string]$AppVersion = "1.0.0",
@@ -19,15 +19,22 @@ Write-Host ""
 #  Verificar si jpackage está disponible
 $jpackagePath = Join-Path $JdkHome "bin\jpackage.exe"
 if (-not (Test-Path $jpackagePath)) {
-    Write-Error "jpackage no encontrado en: $jpackagePath"
+    Write-Error "jpackage no encontrado en: $jpackagePath. Define JAVA_HOME o especifica -JdkHome con una JDK 25."
     Write-Host ""
     Write-Host "Asegúrate de que:"
-    Write-Host "1. JDK 16+ está instalado (se requiere jpackage)"
+    Write-Host "1. JDK 25 está instalado y JAVA_HOME apunta a ella (se requiere jpackage)"
     Write-Host "2. La ruta del JDK es correcta"
     Write-Host "3. Puedes especificar la ruta con -JdkHome"
     Write-Host ""
     Write-Host "Ejemplo:"
-    Write-Host "  .\build-windows-installer.ps1 -JdkHome 'C:\Program Files\Java\jdk-21'"
+    Write-Host "  .\build-windows-installer.ps1 -JdkHome 'C:\Program Files\Java\jdk-25'"
+    exit 1
+}
+
+$javaPath = Join-Path $JdkHome "bin\java.exe"
+$javaVersion = & $javaPath -version 2>&1 | Select-Object -First 1
+if ($javaVersion -notmatch 'version .25') {
+    Write-Error "Se requiere JDK 25 en $JdkHome. Versión detectada: $javaVersion"
     exit 1
 }
 

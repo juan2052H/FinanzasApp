@@ -9,10 +9,10 @@ FinanzasApp mantiene dos modos explicitos:
 
 ```mermaid
 flowchart LR
-    Swing[Cliente Swing Java 11] --> DM[DataManager fachada]
+    Swing[Cliente Swing Java 25] --> DM[DataManager fachada]
     DM --> Local[Persistencia local segura]
     DM --> Api[FinanzasApiClient]
-    Api --> Backend[Spring Boot Java 21]
+    Api --> Backend[Spring Boot Java 25]
     Backend --> Pg[(PostgreSQL + Flyway)]
     Backend --> Storage[(Storage persistente)]
 ```
@@ -21,7 +21,7 @@ flowchart LR
 
 - `src/main/java/com/finanzas/ui`: pantallas Swing.
 - `src/main/java/com/finanzas/data`: fachada local, persistencia, exportacion y reglas de dominio heredadas.
-- `src/main/java/com/finanzas/api`: cliente HTTP Java 11 para el backend.
+- `src/main/java/com/finanzas/api`: cliente HTTP Java 25 para el backend.
 - `finanzas-backend/src/main/java/com/finanzas/backend/api`: controladores REST.
 - `finanzas-backend/src/main/java/com/finanzas/backend/service`: servicios de aplicacion.
 - `finanzas-backend/src/main/java/com/finanzas/backend/domain`: entidades JPA y reglas de dominio backend.

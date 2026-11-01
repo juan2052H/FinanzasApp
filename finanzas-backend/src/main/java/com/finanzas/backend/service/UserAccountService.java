@@ -119,8 +119,9 @@ public class UserAccountService {
 
     private void removeNonOwnedMemberships(UUID userId) {
         for (WorkspaceMemberEntity membership : members.findByIdUserId(userId)) {
+            // Si el workspace ya no existe, se borro arriba y la FK elimino la membresia en cascada.
             WorkspaceEntity workspace = workspaces.findById(membership.getWorkspaceId()).orElse(null);
-            if (workspace == null || !userId.equals(workspace.getOwnerId())) {
+            if (workspace != null && !userId.equals(workspace.getOwnerId())) {
                 members.delete(membership);
             }
         }

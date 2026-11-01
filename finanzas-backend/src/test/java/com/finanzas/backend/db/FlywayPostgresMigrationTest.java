@@ -3,7 +3,7 @@ package com.finanzas.backend.db;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers(disabledWithoutDocker = true)
 class FlywayPostgresMigrationTest {
     @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine")
             .withDatabaseName("finanzas_migration_test")
             .withUsername("finanzas")
             .withPassword("finanzas_test_password");
@@ -34,7 +34,7 @@ class FlywayPostgresMigrationTest {
         Flyway latest = flyway().load();
         latest.migrate();
 
-        assertEquals("8", currentVersion());
+        assertEquals("9", currentVersion());
         assertTrue(tableExists("savings_config"));
         assertTrue(tableExists("savings_movements"));
         assertTrue(tableExists("account_tokens"));

@@ -380,6 +380,75 @@ class DataManagerRegressionTest {
         assertEquals(0, uvt.compareTo(updated.getUvtValue()));
     }
 
+    @Test
+    void backupRestoresPreviousStateAndDiscardsLaterChanges() {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Respaldo", "backup@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("backup@example.com", "secreto1"));
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.INGRESO, "Salario", "Antes del respaldo", 1000000, LocalDate.now()));
+        File backup = tempDir.resolve("respaldo.zip").toFile();
+        assertTrue(data.createBackup(backup));
+
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.GASTO, "Otros", "Despues del respaldo", 50000, LocalDate.now()));
+        assertEquals(2, data.getTransacciones().size());
+
+        assertTrue(data.restoreBackup(backup));
+        assertTrue(data.login("backup@example.com", "secreto1"));
+        assertEquals(1, data.getTransacciones().size());
+        assertEquals("Antes del respaldo", data.getTransacciones().get(0).getDescripcion());
+    }
+
+    @Test
+    void restoreRejectsZipWithoutStateAndKeepsCurrentData() throws Exception {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Respaldo", "backup@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("backup@example.com", "secreto1"));
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.INGRESO, "Salario", "Dato actual", 1000000, LocalDate.now()));
+        File invalid = zip("invalido.zip", "notas.txt", "no es un respaldo".getBytes());
+
+        assertFalse(data.restoreBackup(invalid));
+        assertEquals(1, data.getTransacciones().size());
+    }
+
+    @Test
+    void restoreDoesNotWriteOutsideDataDirectoryWithPathTraversal() throws Exception {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Respaldo", "backup@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("backup@example.com", "secreto1"));
+        File malicious = zip("malicioso.zip", "profile-images/../../../escapado.txt", "x".getBytes());
+
+        data.restoreBackup(malicious);
+
+        assertFalse(Files.exists(tempDir.getParent().resolve("escapado.txt")));
+        assertFalse(Files.exists(tempDir.resolve("escapado.txt")));
+        try (var files = Files.walk(tempDir)) {
+            assertTrue(files.filter(path -> path.getFileName().toString().equals("escapado.txt"))
+                    .allMatch(path -> path.startsWith(tempDir.resolve("profile-images"))));
+        }
+    }
+
+    @Test
+    void restoreRejectsOversizedImageEntryAndKeepsCurrentData() throws Exception {
+        DataManager data = freshDataManager();
+        assertTrue(data.register("Respaldo", "backup@example.com", "secreto1", "COP", "Personal"));
+        assertTrue(data.login("backup@example.com", "secreto1"));
+        data.addTransaccion(new Transaccion(Transaccion.Tipo.INGRESO, "Salario", "Dato actual", 1000000, LocalDate.now()));
+        File bomb = zip("bomba.zip", "profile-images/usuario/avatar.png", new byte[6 * 1024 * 1024]);
+
+        assertFalse(data.restoreBackup(bomb));
+        assertEquals(1, data.getTransacciones().size());
+    }
+
+    private File zip(String name, String entryName, byte[] content) throws Exception {
+        File file = tempDir.resolve(name).toFile();
+        try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(file))) {
+            zip.putNextEntry(new java.util.zip.ZipEntry(entryName));
+            zip.write(content);
+            zip.closeEntry();
+        }
+        return file;
+    }
+
     private DataManager freshDataManager() {
         System.setProperty("finanzas.data.dir", tempDir.toString());
         DataManager.resetForTests();

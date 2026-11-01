@@ -4,7 +4,7 @@ Backend REST Spring Boot para FinanzasApp.
 
 ## Requisitos
 
-- Java 21.
+- Java 25.
 - PostgreSQL 16.
 - Maven Wrapper desde la raiz del repo.
 

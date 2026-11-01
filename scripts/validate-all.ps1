@@ -126,8 +126,8 @@ $docFiles = @{
     "docs/API.md" = Test-Path "$projectRoot\docs\API.md"
     "docs/SECURITY.md" = Test-Path "$projectRoot\docs\SECURITY.md"
     "docs/DEPLOYMENT.md" = Test-Path "$projectRoot\docs\DEPLOYMENT.md"
-    "docs/FINAL_CHECKLIST.md" = Test-Path "$projectRoot\docs\FINAL_CHECKLIST.md"
-    "docs/FEATURE_AUDIT_COMPLETE.md" = Test-Path "$projectRoot\docs\FEATURE_AUDIT_COMPLETE.md"
+    "docs/ARQUITECTURA_Y_AMBIENTE.md" = Test-Path "$projectRoot\docs\ARQUITECTURA_Y_AMBIENTE.md"
+    "database/crear_bd.sql" = Test-Path "$projectRoot\database\crear_bd.sql"
 }
 
 $docCount = ($docFiles.Values | Where-Object { $_ }).Count

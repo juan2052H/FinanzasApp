@@ -506,6 +506,12 @@ paths:
       responses:
         '201':
           description: Gasto compartido creado
+        '400':
+          description: Pagador, categoria o participante que no pertenece al workspace
+        '403':
+          description: El rol no permite registrar gastos (VIEWER)
+        '422':
+          description: Division invalida (las partes no suman el total o los porcentajes no suman 100)
   /api/workspaces/{workspaceId}/shared-expenses/{sharedExpenseId}:
     delete:
       summary: Cancelar gasto compartido

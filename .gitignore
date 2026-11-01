@@ -60,3 +60,6 @@ jacoco.exec
 
 # Maven wrapper runtime cache
 .mvn/wrapper/dists/
+
+# Material obsoleto de sesiones anteriores (no entregar)
+obsoleto_no_entregar/

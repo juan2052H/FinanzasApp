@@ -52,6 +52,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Carga database/datos_prueba.sql cuando el backend ya aplico las migraciones Flyway.
+  # Es idempotente; se omite con: docker compose up -d postgres backend
+  db-seed:
+    image: postgres:16-alpine
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB:-finanzas}
+      PGUSER: ${POSTGRES_USER:-finanzas}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-finanzas_dev_password}
+    command: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/seed/datos_prueba.sql"]
+    volumes:
+      - ./database/datos_prueba.sql:/seed/datos_prueba.sql:ro
+    networks:
+      - finanzas-internal
+    restart: "no"
+
   tls-proxy:
     image: caddy:2-alpine
     profiles: ["tls-proxy"]

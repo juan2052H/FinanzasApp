@@ -32,7 +32,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
           cache: maven
       - name: Prepare wrapper
         run: chmod +x mvnw
@@ -50,3 +50,29 @@ jobs:
         run: test "$(find finanzas-backend/src/main/resources/db/migration -name 'V*.sql' | wc -l)" -ge 4
       - name: Build backend image
         run: docker build -f finanzas-backend/Dockerfile -t finanzas-backend:ci .
+
+  # Verifica lo mismo que hara el equipo evaluador: montar el ambiente desde cero y probarlo.
+  ambiente-docker:
+    needs: build-test-package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Levantar postgres, backend y datos de prueba
+        run: docker compose up -d --build
+      - name: Esperar la carga de datos de prueba
+        run: |
+          for i in $(seq 1 60); do
+            if docker compose ps -a --format '{{.Name}} {{.Status}}' | grep db-seed | grep -q 'Exited (0)'; then exit 0; fi
+            sleep 5
+          done
+          docker compose ps -a
+          exit 1
+      - name: Prueba de humo de la API (25 casos)
+        shell: pwsh
+        run: ./scripts/prueba-humo-api.ps1
+      - name: Logs si algo falla
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Bajar el ambiente
+        if: always()
+        run: docker compose down -v

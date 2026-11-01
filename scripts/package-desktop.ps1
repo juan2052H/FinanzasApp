@@ -18,7 +18,7 @@ if ($Sources.Count -eq 0) {
     throw "No se encontraron fuentes Java."
 }
 
-javac -encoding UTF-8 -d $BuildDir $Sources
+javac --release 25 -encoding UTF-8 -d $BuildDir $Sources
 jar --create --file $JarPath --main-class com.finanzas.Main -C $BuildDir .
 
 $JPackage = Get-Command jpackage -ErrorAction SilentlyContinue

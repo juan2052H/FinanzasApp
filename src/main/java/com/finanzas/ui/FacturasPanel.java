@@ -44,6 +44,12 @@ public class FacturasPanel extends JPanel {
         add(buildCenter(), BorderLayout.CENTER);
         add(buildToolbar(), BorderLayout.SOUTH);
         dm.addListener(() -> SwingUtilities.invokeLater(this::refresh));
+        // Carga al abrir la seccion; sin esto la tabla queda vacia hasta el primer cambio de datos.
+        addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && isShowing()) {
+                refresh();
+            }
+        });
     }
 
     private JPanel buildCenter() {
@@ -121,6 +127,7 @@ public class FacturasPanel extends JPanel {
     private JSpinner yearSpinner(int initial) {
         SpinnerNumberModel model = new SpinnerNumberModel(initial, 2000, 2099, 1);
         JSpinner sp = new JSpinner(model);
+        sp.setEditor(new JSpinner.NumberEditor(sp, "#"));
         sp.setPreferredSize(new Dimension(70, 28));
         return sp;
     }
@@ -290,6 +297,16 @@ public class FacturasPanel extends JPanel {
 
     private static class InvoiceTableModel extends AbstractTableModel {
         private List<BackendInvoice> data = new ArrayList<>();
+        private final java.text.NumberFormat nf = moneyFormat();
+
+        private static java.text.NumberFormat moneyFormat() {
+            java.text.NumberFormat format = java.text.NumberFormat.getInstance(DataManager.getInstance().getDisplayLocale());
+            format.setMinimumFractionDigits(0);
+            format.setMaximumFractionDigits(2);
+            return format;
+        }
+
+        private String money(BigDecimal value) { return value == null ? "" : "$" + nf.format(value); }
 
         void setData(List<BackendInvoice> d) { this.data = d == null ? new ArrayList<>() : d; fireTableDataChanged(); }
         BackendInvoice get(int row) { if (row < 0 || row >= data.size()) return null; return data.get(row); }
@@ -306,9 +323,9 @@ public class FacturasPanel extends JPanel {
                 case 1: return inv.getMerchantName();
                 case 2: return inv.getTaxId();
                 case 3: return inv.getIssueDate() == null ? "" : inv.getIssueDate().format(DATE_FMT);
-                case 4: return inv.getSubtotal() == null ? "" : "$" + inv.getSubtotal().toPlainString();
-                case 5: return inv.getTaxAmount() == null ? "" : "$" + inv.getTaxAmount().toPlainString();
-                case 6: return inv.getTotalAmount() == null ? "" : "$" + inv.getTotalAmount().toPlainString();
+                case 4: return money(inv.getSubtotal());
+                case 5: return money(inv.getTaxAmount());
+                case 6: return money(inv.getTotalAmount());
                 case 7: return inv.getNotes();
                 default: return "";
             }

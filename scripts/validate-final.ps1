@@ -115,8 +115,8 @@ $docFiles = @(
     "docs/API.md",
     "docs/SECURITY.md",
     "docs/DEPLOYMENT.md",
-    "docs/FINAL_CHECKLIST.md",
-    "docs/FEATURE_AUDIT_COMPLETE.md"
+    "docs/ARQUITECTURA_Y_AMBIENTE.md",
+    "database/crear_bd.sql"
 )
 
 $docCount = 0

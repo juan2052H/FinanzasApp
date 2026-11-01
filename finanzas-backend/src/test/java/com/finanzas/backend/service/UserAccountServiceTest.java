@@ -110,6 +110,33 @@ class UserAccountServiceTest {
     }
 
     @Test
+    void deleteDoesNotDeleteMembershipAlreadyCascadedWithOwnedWorkspace() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID workspaceId = UUID.randomUUID();
+        UUID sharedWorkspaceId = UUID.randomUUID();
+        UserEntity user = user(userId, "ana@example.com");
+        WorkspaceEntity workspace = workspace(workspaceId, userId);
+        WorkspaceEntity shared = workspace(sharedWorkspaceId, UUID.randomUUID());
+        WorkspaceMemberEntity ownMembership = new WorkspaceMemberEntity(workspaceId, userId, WorkspaceRole.OWNER);
+        WorkspaceMemberEntity sharedMembership = new WorkspaceMemberEntity(sharedWorkspaceId, userId, WorkspaceRole.MEMBER);
+
+        when(users.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("actual", "hash")).thenReturn(true);
+        when(workspaces.findByOwnerId(userId)).thenReturn(List.of(workspace));
+        when(members.findByIdWorkspaceId(workspaceId)).thenReturn(List.of(ownMembership));
+        when(members.findByIdUserId(userId)).thenReturn(List.of(ownMembership, sharedMembership));
+        when(workspaces.findById(workspaceId)).thenReturn(Optional.empty());
+        when(workspaces.findById(sharedWorkspaceId)).thenReturn(Optional.of(shared));
+
+        service.delete(userId, new AccountDtos.DeleteAccountRequest("ana@example.com", "actual"));
+
+        verify(workspaces).delete(workspace);
+        verify(members, never()).delete(ownMembership);
+        verify(members).delete(sharedMembership);
+        assertTrue(user.isDeleted());
+    }
+
+    @Test
     void deleteBlocksOwnedWorkspaceWithOtherMembers() {
         UUID userId = UUID.randomUUID();
         UUID otherUserId = UUID.randomUUID();

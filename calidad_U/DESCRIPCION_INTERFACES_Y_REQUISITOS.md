@@ -421,8 +421,8 @@ Tambien solicita meses a proyectar, ahorro actual y meta objetivo. El resultado 
 
 ### Compatibilidad y mantenibilidad
 
-- El cliente debe funcionar con Java 11 o superior.
-- El backend requiere Java 21, Spring Boot y PostgreSQL.
+- El cliente requiere Java 25.
+- El backend requiere Java 25, Spring Boot y PostgreSQL.
 - La aplicacion debe poder ejecutarse en Windows mediante el wrapper Maven y el paquete portable.
 - El contrato de la API debe mantenerse sincronizado con OpenAPI.
 - Las reglas de dominio deben ser comprobables mediante pruebas unitarias e integracion.
@@ -585,7 +585,8 @@ Fecha limite: dd/mm/yyyy           Falta: $1.100.000
 - `docs/ARCHITECTURE.md`
 - `docs/USE_CASES.md`
 - `docs/SECURITY.md`
-- `docs/IMPLEMENTATION_PROGRESS.md`
+- `docs/ARQUITECTURA_Y_AMBIENTE.md`
+- `calidad_U/FinanzasApp_Formato_Calidad_Final.xlsx`
 - `AUDIT.md`
 - `src/main/java/com/finanzas/ui/MainFrame.java`
 - `src/main/java/com/finanzas/ui/LoginFrame.java`

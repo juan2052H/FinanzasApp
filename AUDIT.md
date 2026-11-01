@@ -4,7 +4,7 @@ Fecha de auditoria: 2026-08-18
 
 ## Resumen
 
-FinanzasApp conserva un cliente Java 11 Swing con persistencia local serializada y ahora incluye un modulo `finanzas-backend` con Spring Boot, PostgreSQL/Flyway, JPA, JWT, autorizacion por workspace, invitaciones, hogar compartido, recurrencias, notificaciones reales, reportes REST/CSV y auditoria por workspace. La UI Swing puede operar en modo local o, con `FINANZAS_API_ENABLED=true`, iniciar sesion contra el backend, listar workspaces y sincronizar categorias, transacciones, presupuestos del mes actual, metas, recurrencias, notificaciones y hogar compartido del workspace activo sin persistir tokens.
+FinanzasApp conserva un cliente Java 25 Swing con persistencia local serializada y ahora incluye un modulo `finanzas-backend` con Spring Boot, PostgreSQL/Flyway, JPA, JWT, autorizacion por workspace, invitaciones, hogar compartido, recurrencias, notificaciones reales, reportes REST/CSV y auditoria por workspace. La UI Swing puede operar en modo local o, con `FINANZAS_API_ENABLED=true`, iniciar sesion contra el backend, listar workspaces y sincronizar categorias, transacciones, presupuestos del mes actual, metas, recurrencias, notificaciones y hogar compartido del workspace activo sin persistir tokens.
 
 Se creo un respaldo local previo del estado encontrado: `data/app-state.bin.audit-backup-20260818-150324`.
 

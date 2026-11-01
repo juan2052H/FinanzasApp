@@ -120,18 +120,26 @@ public class ReportesPanel extends JPanel {
             com.finanzas.ui.dialogs.DianTaxDialog.show(SwingUtilities.getWindowAncestor(this));
         });
 
-        right.add(new JLabel("Periodo:"));
-        right.add(periodoBox);
-        right.add(new JLabel("Desde:"));
-        right.add(fromField);
-        right.add(new JLabel("Hasta:"));
-        right.add(toField);
-        right.add(applyButton);
         right.add(exportButton);
         right.add(dianButton);
-
         header.add(right, BorderLayout.EAST);
-        return header;
+
+        // Los filtros van en su propia fila: en una sola linea se montan sobre el titulo a 1280 px.
+        JPanel filters = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        filters.setBackground(AppColors.MAIN_BG);
+        filters.add(new JLabel("Periodo:"));
+        filters.add(periodoBox);
+        filters.add(new JLabel("Desde:"));
+        filters.add(fromField);
+        filters.add(new JLabel("Hasta:"));
+        filters.add(toField);
+        filters.add(applyButton);
+
+        JPanel container = new JPanel(new BorderLayout(0, 10));
+        container.setBackground(AppColors.MAIN_BG);
+        container.add(header, BorderLayout.NORTH);
+        container.add(filters, BorderLayout.SOUTH);
+        return container;
     }
 
     private JTextField dateField() {
@@ -276,7 +284,8 @@ public class ReportesPanel extends JPanel {
         statsPanel.add(statCard("Ingresos", money(snapshot.getIncome()), AppColors.ACCENT_GREEN, snapshot.getPeriod().getDisplayLabel()));
         statsPanel.add(statCard("Gastos", money(snapshot.getExpenses()), AppColors.ACCENT_RED, snapshot.getPeriod().getDisplayLabel()));
         statsPanel.add(statCard("Balance", money(snapshot.getBalance()), snapshot.getBalance().compareTo(BigDecimal.ZERO) >= 0 ? AppColors.ACCENT_BLUE : AppColors.ACCENT_RED, snapshot.hasTransactions() ? "Calculado con movimientos reales" : "Sin movimientos en el periodo"));
-        statsPanel.add(statCard("Tasa de ahorro", snapshot.getSavingsRatePercent() + "%", snapshot.getSavingsRatePercent().compareTo(BigDecimal.valueOf(20)) >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_YELLOW, snapshot.getIncome().compareTo(BigDecimal.ZERO) > 0 ? "Ahorro / ingresos" : "Sin ingresos para calcular"));
+        // Es el margen del periodo (balance / ingresos), distinto del porcentaje de ahorro automatico del libro mayor.
+        statsPanel.add(statCard("Margen de ahorro", snapshot.getSavingsRatePercent() + "%", snapshot.getSavingsRatePercent().compareTo(BigDecimal.valueOf(20)) >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_YELLOW, snapshot.getIncome().compareTo(BigDecimal.ZERO) > 0 ? "Balance / ingresos" : "Sin ingresos para calcular"));
         statsPanel.revalidate();
         statsPanel.repaint();
     }

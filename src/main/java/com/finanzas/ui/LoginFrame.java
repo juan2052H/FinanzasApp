@@ -18,6 +18,7 @@ public class LoginFrame extends JFrame {
 
     public LoginFrame() {
         setTitle("FinanzasApp - Acceso");
+        com.finanzas.ui.components.AppIcons.applyWindowIcon(this);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(460, 640);
         setLocationRelativeTo(null);

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:25-jdk AS build
 
 WORKDIR /workspace
 RUN apt-get update \
@@ -14,7 +14,7 @@ RUN ./mvnw -f finanzas-backend/pom.xml -B -DskipTests dependency:go-offline
 COPY finanzas-backend finanzas-backend
 RUN ./mvnw -f finanzas-backend/pom.xml -B -DskipTests package
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 RUN apt-get update \

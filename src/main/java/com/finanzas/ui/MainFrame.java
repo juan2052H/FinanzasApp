@@ -4,6 +4,7 @@ import com.finanzas.data.DataManager;
 import com.finanzas.data.SearchResult;
 import com.finanzas.model.Transaccion;
 import com.finanzas.ui.components.AppColors;
+import com.finanzas.ui.components.AppIcons;
 import com.finanzas.ui.components.Sidebar;
 import com.finanzas.ui.dialogs.OnboardingDialog;
 import com.finanzas.ui.dialogs.RecurringTransactionDialog;
@@ -30,6 +31,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         setTitle("Gestion de Finanzas Personales y del Hogar");
+        AppIcons.applyWindowIcon(this);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1280, 800);
         setMinimumSize(new Dimension(960, 640));

@@ -1172,9 +1172,8 @@ public class DataManager {
             if (categoryName == null || categoryName.trim().isEmpty()) {
                 categoryName = "Otros";
             }
-            String paidBy = remote.getPaidByName() == null || remote.getPaidByName().trim().isEmpty()
-                    ? memberNameById(profile, remote.getPaidByUserId())
-                    : remote.getPaidByName();
+            // Usa la misma etiqueta unica de miembrosHogar para que calcularDeudas cuadre por miembro.
+            String paidBy = memberNameOrFallback(profile, remote.getPaidByUserId(), remote.getPaidByName());
             GastoHogar expense = new GastoHogar(
                     remote.getDescription(),
                     categoryName,
@@ -1185,7 +1184,7 @@ public class DataManager {
             expense.setBackendId(remote.getId());
             expense.setBackendCategoryId(remote.getCategoryId());
             expense.setBackendPaidByUserId(remote.getPaidByUserId());
-            applyBackendSplit(expense, remote.getSplitMethod(), remote.getSplits());
+            applyBackendSplit(profile, expense, remote.getSplitMethod(), remote.getSplits());
             profile.gastosHogar.add(expense);
         }
 
@@ -1204,10 +1203,10 @@ public class DataManager {
         }
     }
 
-    private void applyBackendSplit(GastoHogar expense, String method, List<BackendExpenseSplit> splits) {
+    private void applyBackendSplit(UserProfile profile, GastoHogar expense, String method, List<BackendExpenseSplit> splits) {
         Map<String, BigDecimal> values = new LinkedHashMap<String, BigDecimal>();
         for (BackendExpenseSplit split : splits) {
-            String name = split.getDisplayName();
+            String name = memberNameOrFallback(profile, split.getUserId(), split.getDisplayName());
             if (name != null && !name.trim().isEmpty()) {
                 values.put(name, "PERCENTAGE".equalsIgnoreCase(method) ? split.getPercentage() : split.getAmount());
             }

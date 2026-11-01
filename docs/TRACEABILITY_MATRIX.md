@@ -1,5 +1,7 @@
 # Matriz De Trazabilidad
 
+> Version vigente de requisitos, casos de uso, casos de prueba y defectos: `calidad_U/FinanzasApp_Formato_Calidad_Final.xlsx` (actualizada el 2026-11-01). Evidencia ejecutable: `scripts/prueba-humo-api.ps1`.
+
 | Requisito | Prioridad | Caso de uso | Componentes modificados | Migracion | Endpoint | Prueba automatizada | Prueba manual | Estado | Evidencia |
 |---|---|---|---|---|---|---|---|---|---|
 | Inventario inicial | Alta | N/A | `scripts/generate-inventory.ps1` | N/A | N/A | Script ejecutado | Revisar `docs/baseline/inventory.md` | Implementado | `docs/baseline/inventory.md` |
@@ -7,8 +9,8 @@
 | Git, rama y `.gitignore` | Alta | N/A | `.gitignore` | N/A | N/A | `git status` | Revisar ignorados | Implementado | Rama `codex/finalizacion-integral` |
 | Maven Wrapper verificable | Alta | N/A | `.mvn`, `mvnw`, `mvnw.cmd` | N/A | N/A | `mvnw test` | `mvnw -version` | Implementado | Maven 3.9.16 |
 | POM agregador evaluado | Media | N/A | ADR | N/A | N/A | N/A | Leer ADR | Implementado como decision | `ADR-0001` |
-| Dockerfile backend | Alta | N/A | `finanzas-backend/Dockerfile` | N/A | `/health/readiness` | CI build | Docker local pendiente | Parcial | Docker no disponible localmente |
-| Docker Compose integral | Alta | N/A | `docker-compose.yml`, `deploy/Caddyfile` | N/A | Backend/Postgres | CI build image | Compose pendiente | Parcial | Config listo, no ejecutado local |
+| Dockerfile backend | Alta | N/A | `finanzas-backend/Dockerfile` | N/A | `/health/readiness` | CI build | `docker compose up -d --build` | Implementado | Imagen construida y healthy en Docker 29 (2026-11-01) |
+| Docker Compose integral | Alta | N/A | `docker-compose.yml`, `database/datos_prueba.sql`, `deploy/Caddyfile` | V1-V9 | Backend/Postgres | `scripts/prueba-humo-api.ps1` | Montaje desde volumen limpio | Implementado | postgres y backend healthy; `db-seed` carga usuarios de prueba; 25/25 casos de humo aprobados |
 | Perfiles dev/test/prod | Alta | N/A | `application.yml` | N/A | N/A | Backend tests | Arranque prod pendiente | Parcial | Validador prod agregado |
 | CI | Alta | N/A | `.github/workflows/ci.yml` | N/A | N/A | Workflow | Runner externo | Implementado | Compila/test/package/OpenAPI/Docker |
 | ProblemDetail/correlation ID | Alta | Todos API | `ApiExceptionHandler`, `CorrelationIdFilter` | N/A | Todos | Compilacion | Probar error 422 | Parcial | Falta suite contrato-controlador |
@@ -23,7 +25,7 @@
 | OpenAPI sin deriva | Alta | UC-023 | OpenAPI backend/cliente, `sync-openapi.ps1`, CI | N/A | Todos | `cmp` en CI | Comparar archivos | Implementado | Rutas nuevas documentadas |
 | Reportes PDF/XLSX backend | Media | UC-023 | `ReportController`, `ReportService`, OpenAPI | N/A | `/reports/export.pdf`, `/export.xlsx` | Compilacion | Abrir archivos | Parcial | Generadores minimos |
 | Seguridad local serializacion/ZIP | Alta | UC-026 | `PersistenceService` | N/A | N/A | Cliente tests | Restaurar ZIP malicioso pendiente | Parcial | ObjectInputFilter y limites |
-| Testcontainers PostgreSQL | Alta | QA | `FlywayPostgresMigrationTest` | V1-V7 | N/A | Omitido sin Docker | Ejecutar en Docker/CI | Parcial | Prueba existe; Docker ausente |
+| Testcontainers PostgreSQL | Alta | QA | `FlywayPostgresMigrationTest` (Testcontainers 2) | V1-V9 | N/A | Ejecutada con PostgreSQL 16 real | N/A | Implementado | 65/65 pruebas backend, 0 omitidas (2026-11-01) |
 | Workspaces selector activo | Alta | UC-006 | `DataManager`, `HeaderPanel`, `FinanzasApiClient` | N/A | `/workspaces` | `FinanzasApiClientTest` | Cambiar workspace desde header | Implementado cliente | Selector persistido por usuario, crea workspace y sincroniza snapshot |
 | Invitaciones Swing completas | Alta | UC-008 | `FinanzasHogarPanel`, `DataManager`, `FinanzasApiClient`, `WorkspaceCollaborationServiceTest` | N/A | `/invitations/*`, `/members`, `/owner`, `/membership` | Cliente HTTP + backend service tests | Invitar/aceptar/rechazar/cancelar/cambiar rol/transferir/salir desde UI | Parcial alto | Bandeja interna, roles editables, transferencia OWNER y abandono seguro listos; falta E2E real dos clientes |
 | Sincronizacion incremental continua | Alta | UC-028 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | Snapshot manual/parcial |
@@ -31,9 +33,9 @@
 | Password reset/verificacion/sesiones | Alta | UC-003 | `AccountTokenService`, `AuthApplicationService`, `AuthController`, `LoginFrame`, `ConfiguracionPanel` | V5 | `/auth/email/verification/*`, `/auth/password/reset/*`, `/auth/password`, `/auth/sessions*` | `AccountTokenServiceTest`, `RefreshTokenServiceTest`, `AuthApplicationServiceTest`, `FinanzasApiClientTest` | Solicitar token desde mail sink y administrar sesiones en ajustes | Implementado | Reset/verificacion/cambio de contrasena y listado/revocacion de sesiones |
 | Exportacion/eliminacion de cuenta | Alta | UC-029 | `UserAccountService`, `UserController`, `UserEntity`, `DataManager`, `ConfiguracionPanel` | V7 | `/api/users/me/export`, `DELETE /api/users/me` | `UserAccountServiceTest`, `FinanzasApiClientTest` | Exportar JSON y eliminar cuenta backend desde ajustes | Implementado | Cuenta se anonimiza, revoca sesiones, elimina avatar/preferencias y bloquea owners con workspaces compartidos |
 | Tema claro/oscuro/settings | Media | UC-025 | `UserSettingsService`, `UserSettingsEntity`, `ConfiguracionPanel`, `AppColors`, `DataManager` | V6 | `/api/users/me/settings` | `UserSettingsServiceTest`, `DataManagerRegressionTest`, `FinanzasApiClientTest` | Cambiar tema/moneda/region | Parcial alto | Persistencia local/backend y cambio de tema central; quedan colores fijos heredados |
-| Facturas/compras | Media | UC-017 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | No implementado |
+| Facturas/compras | Media | UC-017 | `InvoiceService`, `InvoiceController`, `FacturasPanel` | V8 | `/api/workspaces/{id}/invoices` | `InvoiceServiceTest` | CP-010 | Implementado | Listado y validacion de total verificados por API |
 | Simulador avanzado/calculadora | Media | UC-021, UC-022 | Simulador existente parcial | N/A | N/A | Tests simulacion | Pendiente | Parcial | Calculadora no completa |
-| Preparacion DIAN | Media | UC-024 | N/A | N/A | Pendiente | N/A | Pendiente | Pendiente | No se consultaron/implementaron fuentes DIAN |
+| Preparacion DIAN | Media | UC-024 | `TaxPreparationService`, `TaxPreparationController`, `DianTaxDialog` | V8 | `/api/workspaces/{id}/tax-preparation/*` | `TaxPreparationServiceTest` | CP-028 | Implementado | Topes UVT verificados por API; no constituye asesoria tributaria |
 | Branding completo | Baja | N/A | N/A | N/A | N/A | N/A | Pendiente | Pendiente | No implementado |
 | Scheduler recurrencias multiinstancia | Media | UC-020 | Recurrencia manual existente | N/A | `/recurring-transactions/*/run` | Tests dominio | Pendiente | Parcial | Scheduler/locking pendiente |
 | Migracion local a backend | Alta | UC-027 | Legacy local existente | N/A | Pendiente | Parcial local | Pendiente | Pendiente | No hay asistente import backend |
