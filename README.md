@@ -7,7 +7,7 @@ Aplicacion de escritorio (Java 25 Swing) para finanzas personales y del hogar, c
 
 Repositorio: https://github.com/juan2052H/FinanzasApp
 
-> **Equipo evaluador:** empiece por [docs/GUIA_EVALUADOR.md](docs/GUIA_EVALUADOR.md) (montaje en minutos, usuarios de prueba y recorrido de verificacion).
+> **Equipo evaluador:** empiece por [docs/REQUISITOS_E_INSTALACION.md](docs/REQUISITOS_E_INSTALACION.md) (requisitos del PC, ejecucion y cuentas de prueba; tambien en [Word](docs/REQUISITOS_E_INSTALACION.docx)) y luego [docs/GUIA_EVALUADOR.md](docs/GUIA_EVALUADOR.md) (recorrido de verificacion).
 
 | Documento | Contenido |
 |---|---|

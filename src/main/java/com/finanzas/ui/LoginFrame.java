@@ -111,6 +111,9 @@ public class LoginFrame extends JFrame {
         resetPasswordLink.setEnabled(BackendConfig.isEnabled());
         verifyEmailLink.setEnabled(BackendConfig.isEnabled());
 
+        // Enter en el correo o la contrasena inicia sesion, como en cualquier formulario de acceso.
+        emailField.addActionListener(e -> loginButton.doClick());
+        passwordField.addActionListener(e -> loginButton.doClick());
         loginButton.addActionListener(e -> {
             String email = emailField.getText().trim();
             String password = new String(passwordField.getPassword());

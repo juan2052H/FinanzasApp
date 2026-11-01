@@ -12,7 +12,7 @@ import openpyxl
 TEMPLATE = sys.argv[1]
 OUTPUT = sys.argv[2]
 HOY = datetime(2026, 11, 1)
-EQUIPO = "Equipo FinanzasApp"
+EQUIPO = "Juan Jose Roman Bedoya"
 
 wb = openpyxl.load_workbook(TEMPLATE)
 
@@ -61,7 +61,7 @@ fill_card(wb["1. Proyecto"], [
     "FinanzasApp - Gestion de finanzas personales y del hogar",
     "PRY-2026-FINANZAS",
     "Equipo FinanzasApp - Ingenieria de Software",
-    "[Completar: nombres de los integrantes]",
+    "Juan Jose Roman Bedoya",
     "Luis Fernando Londono Lopez",
     "Aseguramiento de la Calidad del Software",
     "Ingenieria de Software - UNIMINUTO",
@@ -367,7 +367,7 @@ fill_card(wb["10. Plan de Pruebas"], [
     "Ambiente montado con 'docker compose up -d' y backend en estado healthy; datos de prueba cargados.",
     "100% de casos criticos aprobados y cero defectos de severidad Critica o Mayor abiertos.",
     "El ambiente no arranca o mas del 30% de los casos fallan por el mismo bloqueo.",
-    "[Completar: lider de pruebas y testers del equipo]",
+    "Juan Jose Roman Bedoya: lider de pruebas, tester y desarrollador (proyecto individual).",
     "Diferencias de JDK (se requiere Java 25); Docker no disponible en el equipo del evaluador.",
     "Casos de prueba ejecutados (hoja 11), registro de defectos (hoja 12) y metricas (hoja 13).",
 ])
@@ -487,8 +487,8 @@ fill_table(wb["12. Defectos"], [
 # ---------------------------------------------------------------- 14-16: limpiar filas de ejemplo
 fill_table(wb["14. Control de Cambios"], [
     ("CC-001", HOY, "Equipo de testing cruzado (INT-006)", "Agregar script SQL de creacion con datos de prueba y servicio de carga automatica en Docker Compose.",
-     "Permitir que otro equipo monte el ambiente y pruebe con usuarios conocidos.", "README, docker-compose.yml, database/", "Documentacion y despliegue; sin cambio funcional", 1, "Bajo", "Implementado", "Equipo FinanzasApp", HOY),
-    ("CC-002", HOY, "Docente (INT-005)", "Incluir RF-027 Preparacion tributaria DIAN en el alcance documentado.", "La funcionalidad ya estaba implementada (V8, TaxPreparationService).", "RF-027, HU-020, CU-015", "Nuevo requisito documentado", 0, "Bajo", "Aprobado", "Equipo FinanzasApp", HOY),
+     "Permitir que otro equipo monte el ambiente y pruebe con usuarios conocidos.", "README, docker-compose.yml, database/", "Documentacion y despliegue; sin cambio funcional", 1, "Bajo", "Implementado", EQUIPO, HOY),
+    ("CC-002", HOY, "Docente (INT-005)", "Incluir RF-027 Preparacion tributaria DIAN en el alcance documentado.", "La funcionalidad ya estaba implementada (V8, TaxPreparationService).", "RF-027, HU-020, CU-015", "Nuevo requisito documentado", 0, "Bajo", "Aprobado", EQUIPO, HOY),
 ])
 fill_table(wb["15. Riesgos"], [
     ("RSG-001", "El equipo evaluador no tiene Java 25 instalado", "Tecnico", "Alta", "Alto", None, None, "Backend en Docker (no requiere Java local); instalador Windows con Java 25 incluido.", "Ejecutar las pruebas dentro del contenedor eclipse-temurin:25-jdk.", EQUIPO, "En progreso"),

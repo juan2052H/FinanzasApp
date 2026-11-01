@@ -978,6 +978,14 @@ public class DataManager {
                 }
             }
         }
+        // Sin seleccion previa se abre el hogar compartido: el backend no garantiza el orden de la lista
+        // y abrir un espacio personal vacio ocultaria los datos del hogar.
+        for (BackendWorkspace workspace : workspaces) {
+            if ("HOUSEHOLD".equalsIgnoreCase(workspace.getTipo())
+                    && workspace.getId() != null && !workspace.getId().trim().isEmpty()) {
+                return workspace.getId();
+            }
+        }
         for (BackendWorkspace workspace : workspaces) {
             if (workspace.getId() != null && !workspace.getId().trim().isEmpty()) {
                 return workspace.getId();

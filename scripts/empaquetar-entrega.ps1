@@ -55,6 +55,8 @@ try {
     Copy-Item -LiteralPath $installer -Destination $carpeta
     Copy-Item -LiteralPath $ExcelPath -Destination (Join-Path $carpeta "FinanzasApp_Formato_Calidad_Final.xlsx")
     Copy-Item -LiteralPath (Join-Path $root "docs\GUIA_EVALUADOR.md") -Destination $carpeta
+    Copy-Item -LiteralPath (Join-Path $root "docs\REQUISITOS_E_INSTALACION.md") -Destination $carpeta
+    Copy-Item -LiteralPath (Join-Path $root "docs\REQUISITOS_E_INSTALACION.docx") -Destination $carpeta
     Copy-Item -LiteralPath (Join-Path $root "docs\ARQUITECTURA_Y_AMBIENTE.md") -Destination $carpeta
     Copy-Item -LiteralPath (Join-Path $root "README.md") -Destination $carpeta
     Copy-Item -LiteralPath (Join-Path $root "database\crear_bd.sql") -Destination $carpeta
@@ -67,9 +69,11 @@ FinanzasApp - Entrega final
 
 Repositorio: https://github.com/juan2052H/FinanzasApp  (commit $commit)
 
-Empiece por GUIA_EVALUADOR.md: montar el ambiente, usuarios de prueba y recorrido de verificacion.
+Empiece por REQUISITOS_E_INSTALACION (Word o .md): requisitos del PC, como ejecutarlo y cuentas de prueba.
+Luego GUIA_EVALUADOR.md: recorrido de verificacion ligado a requisitos y casos de prueba.
 
 Contenido
+- REQUISITOS_E_INSTALACION.docx / .md  Requisitos del PC, instalacion, ejecucion y cuentas de prueba.
 - GUIA_EVALUADOR.md                     Pasos de instalacion, usuarios de prueba y que verificar.
 - FinanzasApp-codigo-fuente.zip         Codigo fuente completo (cliente, backend, Docker, scripts).
 - FinanzasApp-Setup.exe                 Instalador de Windows (incluye Java 25).
