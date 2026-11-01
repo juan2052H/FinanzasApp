@@ -1,0 +1,19 @@
+# Normaliza finales de linea. Lo que se ejecuta dentro de contenedores Linux debe quedar
+# con LF aunque se clone en Windows con core.autocrlf=true; si no, ./mvnw falla en el
+# Dockerfile ("exit code 127") y docker compose no puede construir el backend.
+* text=auto
+
+mvnw text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.png binary
+*.ico binary
+*.xlsx binary
+*.jar binary
+*.zip binary
