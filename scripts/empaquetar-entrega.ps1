@@ -34,9 +34,16 @@ try {
     New-Item -ItemType Directory -Path $carpeta -Force | Out-Null
 
     # Si el Excel aun tiene marcadores sin completar, se avisa (y se detiene salvo -AllowIncomplete).
-    $excelTmp = Join-Path $work "excel"
-    Expand-Archive -LiteralPath $ExcelPath -DestinationPath $excelTmp
-    $textoExcel = (Get-ChildItem $excelTmp -Recurse -Filter "*.xml" | Get-Content -Raw) -join ""
+    # Expand-Archive de PowerShell 5.1 rechaza la extension .xlsx; se lee con la API de ZIP de .NET.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $libro = [IO.Compression.ZipFile]::OpenRead($ExcelPath)
+    try {
+        $textoExcel = ($libro.Entries | Where-Object { $_.FullName -like "*.xml" } | ForEach-Object {
+            $reader = New-Object IO.StreamReader($_.Open()); try { $reader.ReadToEnd() } finally { $reader.Dispose() }
+        }) -join ""
+    } finally {
+        $libro.Dispose()
+    }
     if ($textoExcel -match "\[Completar") {
         $problemas.Add("El Excel todavia contiene '[Completar...]' (integrantes / responsables).")
     }
@@ -90,7 +97,8 @@ SHA-256 FinanzasApp-Setup.exe: $hash
 
     New-Item -ItemType Directory -Path (Split-Path -Parent $OutputPath) -Force | Out-Null
     if (Test-Path -LiteralPath $OutputPath) { Remove-Item -LiteralPath $OutputPath -Force }
-    Compress-Archive -Path $carpeta -DestinationPath $OutputPath -CompressionLevel Optimal
+    # Compress-Archive de PowerShell 5.1 guarda rutas con '\' que se extraen mal fuera de Windows.
+    [IO.Compression.ZipFile]::CreateFromDirectory($carpeta, $OutputPath, [IO.Compression.CompressionLevel]::Optimal, $true)
     Write-Output ("Entrega creada: {0} ({1:N1} MB, commit {2})" -f $OutputPath, ((Get-Item $OutputPath).Length / 1MB), $commit)
 }
 finally {
