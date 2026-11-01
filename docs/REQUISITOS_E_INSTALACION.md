@@ -4,6 +4,18 @@
 **Autor:** Juan Jose Roman Bedoya - Aseguramiento de la Calidad del Software, UNIMINUTO (2026-2)
 **Repositorio:** https://github.com/juan2052H/FinanzasApp
 
+## Acceso rapido - usuario y contrasena
+
+| Usuario (correo) | Contrasena | Rol | Donde se usa |
+|---|---|---|---|
+| **`ana.duena@finanzasapp.test`** | **`Prueba2026*`** | Duena del hogar (OWNER) | Acceso directo "FinanzasApp (servidor)" |
+| **`carlos.miembro@finanzasapp.test`** | **`Prueba2026*`** | Miembro (MEMBER) | Acceso directo "FinanzasApp (servidor)" |
+| **`laura.lectora@finanzasapp.test`** | **`Prueba2026*`** | Solo lectura (VIEWER) | Acceso directo "FinanzasApp (servidor)" |
+| **`samuel@finanzasapp.com`** | **`123456`** | Demo sin servidor | Acceso directo "FinanzasApp" (modo local, seccion 4.3) |
+
+La contrasena **`Prueba2026*`** termina en asterisco: el asterisco es parte de la contrasena.
+Para que las tres primeras cuentas funcionen, el servidor debe estar encendido (seccion 4.1).
+
 FinanzasApp tiene dos partes:
 
 - **Aplicacion de escritorio** (Windows): la que usa el usuario final. Se instala con `FinanzasApp-Setup.exe`.
@@ -46,11 +58,11 @@ FinanzasApp tiene dos partes:
 
 Contrasena de todas las cuentas: **`Prueba2026*`**
 
-| Correo | Nombre | Rol en el hogar "Hogar Gomez" | Que permite probar |
-|---|---|---|---|
-| `ana.duena@finanzasapp.test` | Ana Gomez | **OWNER** (propietaria) | Todo: miembros, invitaciones, presupuestos, metas, facturas, reportes, DIAN |
-| `carlos.miembro@finanzasapp.test` | Carlos Ruiz | **MEMBER** | Registrar ingresos, gastos y gastos compartidos |
-| `laura.lectora@finanzasapp.test` | Laura Mejia | **VIEWER** (solo lectura) | Consultar; cualquier creacion o edicion es rechazada |
+| Usuario (correo) | Contrasena | Nombre | Rol en el hogar "Hogar Gomez" | Que permite probar |
+|---|---|---|---|---|
+| `ana.duena@finanzasapp.test` | `Prueba2026*` | Ana Gomez | **OWNER** (propietaria) | Todo: miembros, invitaciones, presupuestos, metas, facturas, reportes, DIAN |
+| `carlos.miembro@finanzasapp.test` | `Prueba2026*` | Carlos Ruiz | **MEMBER** | Registrar ingresos, gastos y gastos compartidos |
+| `laura.lectora@finanzasapp.test` | `Prueba2026*` | Laura Mejia | **VIEWER** (solo lectura) | Consultar; cualquier creacion o edicion es rechazada |
 
 **Datos que ya trae el hogar "Hogar Gomez"** (fechas relativas al dia en que se levanta el servidor):
 
