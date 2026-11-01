@@ -1,16 +1,24 @@
 # Limitaciones Conocidas
 
-- `DataManager` sigue concentrando demasiadas responsabilidades; ya no debe crecer mas sin extraer servicios.
-- No existe sincronizacion incremental continua con revision/updated_since; el cliente usa refresco por snapshot.
-- El cliente aun tiene flujos de red que pueden ejecutarse desde acciones UI existentes; falta auditoria completa de EDT y `SwingWorker`.
-- El selector de workspace, invitaciones internas, cambio de roles, transferencia OWNER y abandono seguro ya estan en Swing, pero falta suite E2E de dos clientes.
-- Los emails de verificacion/reset tienen sink local `file/log/disabled`; falta proveedor SMTP/transaccional real.
-- Ciudad, pais, zona horaria, formato monetario y preferencias de notificacion ya estan modelados en backend/cliente; falta aplicar el formato monetario en todos los renderizadores historicos.
-- Tema claro/oscuro persistente existe con tokens centrales; falta barrer todos los componentes antiguos que todavia pintan colores fijos.
-- Facturas/compras y preparacion DIAN no fueron implementadas.
-- Simulador y calculadora avanzada no cumplen todo el alcance pedido.
-- PDF/XLSX backend son funcionales pero minimos; falta PDFBox/OpenPDF y Apache POI.
-- No hay pruebas E2E de dos usuarios/dos clientes ni suite Swing automatizada.
-- Docker Compose no fue ejecutado localmente por falta de Docker.
-- El backfill historico de ahorro no se ejecuta automaticamente; se requiere asistente con dry-run.
-- La eliminacion de cuenta bloquea owners de workspaces compartidos y ya existe transferencia OWNER; falta integrarla en una prueba E2E completa.
+Revisado el 2026-11-01 contra el comportamiento real (prueba de humo 25/25, pruebas backend 65/65 y cliente 29/29).
+Ninguna de estas limitaciones impide montar el ambiente ni ejecutar los casos de prueba del Excel.
+
+## Funcionales
+
+- **Correo electronico:** los correos de verificacion y recuperacion de contrasena no se envian por SMTP; quedan como archivos en `/app/storage/mail` (modo `file`). Para leerlos: `docker compose exec backend ls /app/storage/mail`.
+- **Sincronizacion entre equipos:** el cliente refresca el workspace activo por intervalos (`FINANZAS_SYNC_POLL_SECONDS`, 20 s por defecto), no en tiempo real.
+- **Recurrencias:** se ejecutan automaticamente una vez al dia (01:00, `finanzas.recurring.cron`) y tambien manualmente desde la aplicacion. En varias instancias del backend no hay bloqueo distribuido.
+- **Migracion de datos locales al backend:** no hay asistente para pasar los datos del modo local a una cuenta del servidor.
+- **Preparacion DIAN:** compara totales con los topes en UVT; es una ayuda de organizacion, no asesoria tributaria certificada. El valor UVT del anio lo configura el usuario.
+- **Reportes PDF/XLSX:** se generan correctamente pero con formato basico (sin graficos).
+
+## Interfaz
+
+- Algunos componentes antiguos pintan colores fijos, por lo que el tema oscuro no se aplica de forma uniforme en todas las pantallas.
+- Los iconos de la barra lateral usan emojis; se ven correctamente en Windows y pueden aparecer como cuadros en Linux sin fuente de emojis.
+
+## Calidad y arquitectura
+
+- No hay pruebas automatizadas de interfaz Swing ni E2E con dos clientes simultaneos; las pantallas se verificaron con capturas generadas desde la aplicacion real (`docs/capturas/`, `scripts/capturas/`).
+- `DataManager` concentra demasiadas responsabilidades; el siguiente paso es extraer servicios de cliente (ver `docs/ARCHITECTURE.md`).
+- El instalador `FinanzasApp-Setup.exe` (IExpress) no tiene firma digital: Windows SmartScreen puede pedir "Mas informacion > Ejecutar de todas formas". La aplicacion instalada si usa el icono propio; el archivo del instalador muestra el icono generico.

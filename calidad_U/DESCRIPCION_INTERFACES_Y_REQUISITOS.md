@@ -298,7 +298,7 @@ La pantalla debe indicar si esta cargando, cuantas facturas encontro o si no exi
 
 **Controles superiores:** periodo predefinido, fecha desde, fecha hasta, `Aplicar`, `Exportar reporte` y `Preparacion DIAN`.
 
-**Periodos:** mes actual, mes anterior, ultimos meses, ano actual, todo el historial y rango personalizado.
+**Periodos:** mes actual, ultimos 30 dias, ultimos 6 meses, ultimos 12 meses, todo el historial y rango personalizado.
 
 **Contenido:**
 
