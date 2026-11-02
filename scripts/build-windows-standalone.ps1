@@ -167,7 +167,7 @@ DisplayLicense=
 FinishMessage=
 TargetName="$OutputPath"
 FriendlyName="FinanzasApp"
-AppLaunched="powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File install-windows-standalone.ps1 -Version $appVersion"
+AppLaunched="powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File install-windows-standalone.ps1 -Version $appVersion -NoLaunch"
 FILE0="$payloadName"
 FILE1="install-windows-standalone.ps1"
 "@

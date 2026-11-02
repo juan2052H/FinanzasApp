@@ -4,11 +4,14 @@ Soporta: titulos #, parrafos, listas (- y 1.), tablas, bloques de codigo, **negr
 Uso: python scripts/md-a-word.py docs/REQUISITOS_E_INSTALACION.md docs/REQUISITOS_E_INSTALACION.docx
 Requiere: pip install python-docx
 """
+import os
 import re
 import sys
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
@@ -104,6 +107,8 @@ def convertir(origen, destino):
         doc.styles[f"Heading {nivel}"].font.color.rgb = AZUL
 
     lineas = open(origen, encoding="utf-8").read().splitlines()
+    hay_titulo = False
+    hay_niveles_1 = sum(1 for linea in lineas if re.match(r"^# ", linea)) > 1
     i = 0
     while i < len(lineas):
         linea = lineas[i].rstrip()
@@ -123,18 +128,54 @@ def convertir(origen, destino):
                 i += 1
             agregar_tabla(doc, filas)
             continue
+        elif linea.startswith("> "):
+            avisos = []
+            while i < len(lineas) and lineas[i].startswith("> "):
+                avisos.append(lineas[i][2:])
+                i += 1
+            tabla = doc.add_table(rows=1, cols=1)
+            celda = tabla.rows[0].cells[0]
+            sombrear(celda, "FFF4CE")
+            celda.text = ""
+            for n, aviso in enumerate(avisos):
+                parrafo = celda.paragraphs[0] if n == 0 else celda.add_paragraph()
+                agregar_texto(parrafo, aviso)
+            doc.add_paragraph()
+            continue
+        elif re.match(r"^!\[[^\]]*\]\([^)]+\)$", linea.strip()):
+            alt, ruta = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)$", linea.strip()).groups()
+            imagen = os.path.join(os.path.dirname(os.path.abspath(origen)), ruta)
+            doc.add_picture(imagen, width=Inches(6.2))
+            doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            pie = doc.add_paragraph()
+            pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = pie.add_run(alt)
+            run.italic = True
+            run.font.size = Pt(9)
         elif linea.startswith("#"):
             nivel = len(linea) - len(linea.lstrip("#"))
             texto = linea[nivel:].strip()
-            if nivel == 1:
-                titulo = doc.add_heading(level=0)
-                agregar_texto(titulo, texto)
+            if nivel == 1 and not hay_titulo:
+                agregar_texto(doc.add_heading(level=0), texto)
+                hay_titulo = True
+            elif hay_niveles_1:
+                # El documento usa '#' para secciones (Parte 1, Parte 2...): '#'->H1, '##'->H2, '###'->H3.
+                agregar_texto(doc.add_heading(level=min(nivel, 3)), texto)
             else:
                 agregar_texto(doc.add_heading(level=min(nivel - 1, 3)), texto)
         elif re.match(r"^\s*- ", linea):
             agregar_texto(doc.add_paragraph(style="List Bullet"), linea.split("- ", 1)[1])
         elif re.match(r"^\d+\. ", linea):
-            agregar_texto(doc.add_paragraph(style="List Number"), linea.split(". ", 1)[1])
+            # Se conserva el numero escrito: el estilo "List Number" de Word continua la numeracion
+            # entre secciones (30, 31...) en lugar de reiniciar en 1 en cada lista.
+            numero, contenido = linea.split(". ", 1)
+            parrafo = doc.add_paragraph()
+            parrafo.paragraph_format.left_indent = Inches(0.35)
+            parrafo.paragraph_format.first_line_indent = Inches(-0.3)
+            parrafo.paragraph_format.space_after = Pt(4)
+            parrafo.add_run(f"{numero}.\t")
+            parrafo.paragraph_format.tab_stops.add_tab_stop(Inches(0.35))
+            agregar_texto(parrafo, contenido)
         elif linea.strip() in ("", "---"):
             pass
         else:

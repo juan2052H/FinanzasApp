@@ -99,11 +99,13 @@ try {
     }
     New-ItemProperty -Path $UninstallKey -Name "EstimatedSize" -Value $sizeKb -PropertyType DWord -Force | Out-Null
 
+    # El instalador del .exe no abre la aplicacion: abrir el modo local llevaba a probar ahi las
+    # cuentas de prueba, que solo existen en el servidor.
     Show-Message ("FinanzasApp $Version se instalo correctamente.`n`n" +
-        "- 'FinanzasApp': modo local, sin servidor.`n" +
-        "- 'FinanzasApp (servidor)': se conecta al backend en http://localhost:8080 " +
-        "(o en la URL de la variable FINANZAS_API_BASE_URL).`n`n" +
-        "Encontraras ambos accesos en el Escritorio y en el menu Inicio.")
+        "Se crearon dos accesos directos en el Escritorio y en el menu Inicio:`n`n" +
+        "- 'FinanzasApp (servidor)': USE ESTE para las cuentas de prueba (ana, carlos, laura). " +
+        "Requiere el servidor encendido con Docker.`n" +
+        "- 'FinanzasApp': modo local, sin servidor (no tiene las cuentas de prueba).")
 
     if (-not $NoLaunch) {
         Start-Process -FilePath $installedExe -WorkingDirectory $InstallPath
