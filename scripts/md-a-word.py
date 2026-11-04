@@ -18,7 +18,29 @@ from docx.shared import Pt, RGBColor
 
 AZUL = RGBColor(0x1A, 0x26, 0x45)
 CODIGO = re.compile(r"(`[^`]+`)")
-INLINE = re.compile(r"(\*[^*\s][^*]*\*|\[[^\]]+\]\([^)]+\)|<https?://[^>]+>)")
+INLINE = re.compile(r"""(\*[^*\s][^*]*\*|\[[^\]]+\]\([^)]+\)|<https?://[^>]+>|https?://[^\s)<>"']+[^\s)<>"'.,;:])""")
+
+
+def agregar_enlace(parrafo, url, texto, negrita=False):
+    """Inserta un hipervinculo clicable (Ctrl + clic en Word)."""
+    rel = parrafo.part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
+    vinculo = OxmlElement("w:hyperlink")
+    vinculo.set(qn("r:id"), rel)
+    run = OxmlElement("w:r")
+    props = OxmlElement("w:rPr")
+    for etiqueta, valor in (("w:color", "1A73E8"), ("w:u", "single")):
+        elemento = OxmlElement(etiqueta)
+        elemento.set(qn("w:val"), valor)
+        props.append(elemento)
+    if negrita:
+        props.append(OxmlElement("w:b"))
+    run.append(props)
+    t = OxmlElement("w:t")
+    t.text = texto
+    t.set(qn("xml:space"), "preserve")
+    run.append(t)
+    vinculo.append(run)
+    parrafo._p.append(vinculo)
 
 
 def sombrear(celda, color_hex):
@@ -55,9 +77,10 @@ def agregar_texto(parrafo, texto, negrita=False):
                     run.italic = True
                 elif parte.startswith("[") and "](" in parte:
                     run = parrafo.add_run(parte[1:parte.index("](")])
-                elif parte.startswith("<http"):
-                    run = parrafo.add_run(parte[1:-1])
-                    run.font.color.rgb = RGBColor(0x1A, 0x73, 0xE8)
+                elif parte.startswith("<http") or parte.startswith("http"):
+                    url = parte.strip("<>")
+                    agregar_enlace(parrafo, url, url, negrita or en_negrita)
+                    continue
                 else:
                     run = parrafo.add_run(parte)
                 run.bold = negrita or en_negrita

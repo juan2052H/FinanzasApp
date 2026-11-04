@@ -24,7 +24,7 @@ Este manual esta escrito para personas que **nunca han instalado un programa de 
 
 | Palabra | Que significa en este manual |
 |---|---|
-| **Aplicacion** | El programa FinanzasApp que se abre en una ventana, como cualquier programa de Windows. Se instala con `FinanzasApp-Setup.exe`. |
+| **Aplicacion** | El programa FinanzasApp que se abre en una ventana, como cualquier programa de Windows. Se instala con `FinanzasApp-Setup.exe`, que esta en la carpeta `ejecutable` de la entrega. |
 | **Servidor** | Un programa que corre "por detras" y guarda los datos de prueba (usuarios, gastos, hogar). La aplicacion se conecta a el. Se enciende con Docker. |
 | **Docker / Docker Desktop** | Programa gratuito que permite encender el servidor y su base de datos con un solo comando, sin instalarlos uno por uno. |
 | **PowerShell** | Ventana de texto de Windows (fondo azul o negro) donde se escriben **comandos**. Viene incluida en Windows. |
@@ -36,7 +36,7 @@ Este manual esta escrito para personas que **nunca han instalado un programa de 
 **Resumen de lo que va a hacer:**
 
 1. Revisar que el computador sirve (Parte 1).
-2. Instalar Docker Desktop (Parte 2) - solo la primera vez.
+2. Instalar y configurar Docker Desktop (Parte 2) - solo la primera vez.
 3. Descomprimir los archivos del proyecto (Parte 3) - solo la primera vez.
 4. Encender el servidor con un comando (Parte 4).
 5. Instalar la aplicacion (Parte 5) - solo la primera vez.
@@ -76,45 +76,103 @@ No necesita instalar Java, Maven ni PostgreSQL: el instalador y Docker los traen
 
 ---
 
-# Parte 2. Instalar Docker Desktop (solo la primera vez)
+# Parte 2. Instalar y configurar Docker Desktop (solo la primera vez)
 
-Si Docker Desktop ya esta instalado, salte a la seccion 2.4 para comprobarlo.
+Docker Desktop es el programa que enciende el servidor de FinanzasApp. Es gratuito para uso personal y educativo. Si ya lo tiene instalado, salte a la seccion 2.5 para revisar la configuracion.
 
-## 2.1 Activar WSL 2 (componente de Windows que necesita Docker)
+## 2.1 Enlaces de descarga
 
-1. Haga clic en el boton **Inicio**, escriba `PowerShell`.
+| Que | Enlace |
+|---|---|
+| **Instalador directo de Docker Desktop (PC normales, Intel o AMD - x64)** | https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe |
+| Instalador directo para PC con procesador ARM (Snapdragon / Surface Pro X) | https://desktop.docker.com/win/main/arm64/Docker%20Desktop%20Installer.exe |
+| Pagina oficial de descarga (por si el enlace directo cambia) | https://www.docker.com/products/docker-desktop/ |
+| Guia oficial de instalacion en Windows | https://docs.docker.com/desktop/setup/install/windows-install/ |
+| Guia oficial de WSL (Microsoft, en espanol) | https://learn.microsoft.com/es-es/windows/wsl/install |
+
+**Cual instalador elegir:** vaya a *Configuracion > Sistema > Informacion* y mire **Tipo de sistema**. Si dice *procesador basado en x64*, use el primer enlace (es el caso de casi todos los computadores). Si dice *procesador basado en ARM*, use el segundo.
+
+## 2.2 Activar WSL 2 (componente de Windows que necesita Docker)
+
+1. Haga clic en el boton **Inicio** y escriba `PowerShell`.
 2. Sobre **Windows PowerShell** haga **clic derecho > Ejecutar como administrador** y acepte el aviso de Windows con **Si**.
 3. Pegue este comando y pulse **Enter**:
 
 ```powershell
-wsl --install
+wsl --install --no-distribution
 ```
 
-4. Espere a que termine (puede tardar varios minutos). Si al final pide reiniciar, **reinicie el computador**.
-5. Si dice que WSL ya esta instalado, ejecute este otro comando para actualizarlo:
+4. Espere a que termine (puede tardar varios minutos). Cuando diga que la operacion se completo, **reinicie el computador**.
+5. Despues de reiniciar, abra de nuevo PowerShell **como administrador** y actualice WSL:
 
 ```powershell
 wsl --update
 ```
 
-## 2.2 Descargar e instalar Docker Desktop
+6. Compruebe que quedo bien con:
 
-1. Abra el navegador y entre a: https://www.docker.com/products/docker-desktop/
-2. Pulse **Download for Windows - AMD64** (o *Download Docker Desktop*). Se descarga `Docker Desktop Installer.exe` (unos 500 MB).
-3. Abra el archivo descargado (doble clic). Si Windows pregunta si permite cambios, pulse **Si**.
-4. En la pantalla de configuracion deje marcada la opcion **Use WSL 2 instead of Hyper-V (recommended)** y pulse **Ok**.
-5. Espere a que termine y pulse **Close and restart** (el computador se reinicia).
+```powershell
+wsl --status
+```
 
-## 2.3 Abrir Docker Desktop por primera vez
+Debe mencionar **Version predeterminada: 2** (o *Default Version: 2*).
 
-1. Despues del reinicio, abra **Docker Desktop** desde el menu Inicio (si no se abrio solo).
-2. Acepte el acuerdo de servicio (**Accept**). El uso educativo y personal es gratuito.
-3. Si pide iniciar sesion o responder una encuesta, puede pulsar **Skip** / **Continue without signing in**: no es necesario tener cuenta.
-4. Espere a que, abajo a la izquierda, aparezca **Engine running** con un punto verde.
+> Si `wsl --install --no-distribution` responde que la opcion no existe (Windows 10 sin actualizar), use solo `wsl --install`, reinicie y continue. Si se abre una ventana pidiendo crear un usuario de Ubuntu, puede cerrarla: Docker no lo necesita.
 
-> Cada vez que quiera usar FinanzasApp con el servidor, **Docker Desktop debe estar abierto** y mostrar *Engine running*.
+## 2.3 Descargar e instalar Docker Desktop
 
-## 2.4 Comprobar que Docker funciona
+1. Haga clic en el **enlace directo** de la tabla 2.1 (o copielo en el navegador). Se descarga **`Docker Desktop Installer.exe`** (unos 600 MB, puede tardar segun su internet).
+2. Abra la carpeta **Descargas** y haga **doble clic** en `Docker Desktop Installer.exe`. Si Windows pregunta *Desea permitir que esta aplicacion haga cambios?*, pulse **Si**.
+3. Aparece la pantalla **Configuration**. Deje marcadas las opciones:
+   - **Use WSL 2 instead of Hyper-V (recommended)** (usar WSL 2 en lugar de Hyper-V)
+   - **Add shortcut to desktop** (acceso directo en el escritorio)
+4. Pulse **Ok** y espere a que termine de instalar (2 a 5 minutos).
+5. Al final pulse **Close and restart** (cerrar y reiniciar). El computador se reinicia.
+
+## 2.4 Abrir Docker Desktop por primera vez
+
+1. Despues del reinicio, abra **Docker Desktop** (doble clic en el acceso directo del escritorio o desde el menu Inicio).
+2. Aparece el **Docker Subscription Service Agreement**: pulse **Accept** (aceptar). El uso personal y educativo es gratuito.
+3. Si pide **iniciar sesion** (*Sign in*) pulse **Skip** o **Continue without signing in**: no hace falta tener cuenta de Docker.
+4. Si aparece una **encuesta** (*Welcome survey*), pulse **Skip**.
+5. Espere a que, en la parte de **abajo a la izquierda** de la ventana de Docker, aparezca **Engine running** con un punto **verde**. La primera vez puede tardar uno o dos minutos.
+
+> Cada vez que vaya a usar FinanzasApp con el servidor, **Docker Desktop debe estar abierto** y mostrar *Engine running*. Puede minimizar la ventana, pero no la cierre.
+
+## 2.5 Configurar Docker Desktop
+
+Abra la configuracion con el icono de **engranaje** (*Settings*), arriba a la derecha de la ventana de Docker Desktop, y revise lo siguiente:
+
+| Seccion de Settings | Opcion | Valor recomendado | Por que |
+|---|---|---|---|
+| **General** | **Use the WSL 2 based engine** | **Marcada** | Es el motor que usa FinanzasApp en Windows |
+| **General** | **Start Docker Desktop when you sign in to your computer** | Marcada (opcional) | Docker se abre solo al encender el PC y no tendra que abrirlo a mano |
+| **General** | **Open Docker Dashboard when Docker Desktop starts** | Opcional | Muestra la ventana de Docker al iniciarse |
+| **Resources > WSL integration** | Integracion con distribuciones | Dejarla como esta | FinanzasApp no la necesita |
+| **Docker Engine** | Archivo de configuracion | No cambiar nada | La configuracion por defecto funciona |
+
+Si cambio algo, pulse **Apply & restart** (aplicar y reiniciar) abajo a la derecha y espere de nuevo a **Engine running**.
+
+**Memoria (solo si su PC tiene 8 GB de RAM y va lento):** con WSL 2, Windows reparte la memoria automaticamente. Para que Docker no use mas de 4 GB, abra PowerShell normal y ejecute:
+
+```powershell
+notepad "$env:USERPROFILE\.wslconfig"
+```
+
+Si el Bloc de notas pregunta si desea crear el archivo, pulse **Si**. Escriba estas dos lineas, guarde con **Ctrl+S** y cierre:
+
+```text
+[wsl2]
+memory=4GB
+```
+
+Luego aplique el cambio con el siguiente comando y vuelva a abrir Docker Desktop:
+
+```powershell
+wsl --shutdown
+```
+
+## 2.6 Comprobar que Docker funciona
 
 1. Abra **PowerShell normal** (Inicio > escriba `PowerShell` > clic en **Windows PowerShell**; esta vez no hace falta administrador).
 2. Pegue estos comandos, uno por uno, pulsando **Enter** despues de cada uno:
@@ -131,7 +189,25 @@ Docker version 29.4.2, build ...
 Docker Compose version v5.1.3
 ```
 
-> Si aparece *"docker" no se reconoce como nombre de un cmdlet...*, cierre PowerShell y vuelva a abrirlo; si sigue igual, Docker Desktop no quedo instalado (repita 2.2).
+3. Haga la prueba completa de Docker (descarga una imagen pequena de ejemplo):
+
+```powershell
+docker run --rm hello-world
+```
+
+Entre el texto que aparece debe estar la frase **Hello from Docker!** Si la ve, Docker esta listo.
+
+## 2.7 Problemas al instalar o abrir Docker
+
+| Problema o mensaje | Solucion |
+|---|---|
+| *"docker" no se reconoce como nombre de un cmdlet...* | Cierre PowerShell y vuelva a abrirlo. Si sigue, Docker Desktop no quedo instalado: repita 2.3. |
+| *error during connect* / *Is the docker daemon running?* | Docker Desktop esta cerrado o aun arrancando. Abralo y espere **Engine running**. |
+| *WSL needs updating* / *WSL 2 is not installed* / *WSL kernel version too low* | En PowerShell **como administrador**: `wsl --update`, reinicie el PC y abra Docker otra vez. |
+| *Virtualization support not detected* | La virtualizacion esta apagada en la BIOS (vea la Parte 1.3). |
+| *You are not allowed to use Docker, you must be in the "docker-users" group* | En PowerShell **como administrador** ejecute `net localgroup docker-users $env:USERNAME /add`, luego **cierre sesion de Windows** y vuelva a entrar. |
+| Docker Desktop se queda en *Starting the Docker Engine...* mas de 5 minutos | Cierrelo (clic derecho en el icono de la ballena junto al reloj > **Quit Docker Desktop**), ejecute `wsl --shutdown` en PowerShell y vuelva a abrirlo. Si sigue igual, reinicie el PC. |
+| La descarga del instalador es muy lenta o se corta | Use la pagina oficial https://www.docker.com/products/docker-desktop/ y pulse **Download for Windows**, o pruebe con otra red. |
 
 ---
 
@@ -148,7 +224,7 @@ Va a usar el archivo de entrega **`FinanzasApp_Entrega_Final.zip`**.
 
 | Archivo | Para que sirve |
 |---|---|
-| `FinanzasApp-Setup.exe` | Instalador de la aplicacion (Parte 5) |
+| Carpeta **`ejecutable`** > `FinanzasApp-Setup.exe` | **Instalador de la aplicacion** (Parte 5) |
 | `FinanzasApp-codigo-fuente.zip` | Codigo del proyecto, necesario para encender el servidor (3.2) |
 | `REQUISITOS_E_INSTALACION.docx` | Este manual |
 | `GUIA_EVALUADOR.md` | Lista de verificacion para probar la aplicacion |
@@ -239,7 +315,7 @@ Ultima comprobacion (opcional): abra el navegador y entre a http://localhost:808
 
 # Parte 5. Instalar la aplicacion (solo la primera vez)
 
-1. Entre a `C:\FinanzasApp\FinanzasApp_Entrega_Final` y haga **doble clic** en **`FinanzasApp-Setup.exe`**.
+1. Entre a la carpeta **`C:\FinanzasApp\FinanzasApp_Entrega_Final\ejecutable`** y haga **doble clic** en **`FinanzasApp-Setup.exe`**.
 2. Si aparece **"Windows protegio su PC"** (SmartScreen): pulse **Mas informacion** y luego **Ejecutar de todas formas**. Aparece porque el instalador no tiene firma digital comercial; es seguro.
 3. A la pregunta **"Instalar FinanzasApp en este equipo?"** responda **Si**.
 4. Espere entre 10 y 30 segundos (no se ve una barra de progreso). Aparecera el mensaje **"FinanzasApp 2.0.0 se instalo correctamente"**. Pulse **Aceptar**.

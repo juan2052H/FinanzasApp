@@ -63,3 +63,6 @@ jacoco.exec
 
 # Material obsoleto de sesiones anteriores (no entregar)
 obsoleto_no_entregar/
+
+# Copia visible del instalador (se genera en dist/; no se versiona por su tamano)
+ejecutable/

@@ -52,7 +52,24 @@ try {
     git archive --format=zip --prefix=FinanzasApp/ -o (Join-Path $carpeta "FinanzasApp-codigo-fuente.zip") HEAD
     if ($LASTEXITCODE -ne 0) { throw "git archive fallo." }
 
-    Copy-Item -LiteralPath $installer -Destination $carpeta
+    # El instalador va en su propia carpeta para que sea lo primero que se encuentre.
+    $carpetaExe = Join-Path $carpeta "ejecutable"
+    New-Item -ItemType Directory -Path $carpetaExe -Force | Out-Null
+    Copy-Item -LiteralPath $installer -Destination $carpetaExe
+    $leemeExe = @"
+FinanzasApp - Instalador
+========================
+
+1. Doble clic en FinanzasApp-Setup.exe y responda Si.
+   Si Windows muestra "Windows protegio su PC": Mas informacion > Ejecutar de todas formas.
+2. Para usar las cuentas de prueba abra el acceso directo "FinanzasApp (servidor)".
+   Antes debe encender el servidor con Docker (Parte 4 del manual).
+
+Usuario: ana.duena@finanzasapp.test    Contrasena: Prueba2026*
+
+Manual completo paso a paso: ..\REQUISITOS_E_INSTALACION.docx
+"@
+    Set-Content -LiteralPath (Join-Path $carpetaExe "LEEME_PRIMERO.txt") -Value $leemeExe -Encoding UTF8
     Copy-Item -LiteralPath $ExcelPath -Destination (Join-Path $carpeta "FinanzasApp_Formato_Calidad_Final.xlsx")
     Copy-Item -LiteralPath (Join-Path $root "docs\GUIA_EVALUADOR.md") -Destination $carpeta
     Copy-Item -LiteralPath (Join-Path $root "docs\REQUISITOS_E_INSTALACION.md") -Destination $carpeta
@@ -76,7 +93,7 @@ Contenido
 - REQUISITOS_E_INSTALACION.docx / .md  Requisitos del PC, instalacion, ejecucion y cuentas de prueba.
 - GUIA_EVALUADOR.md                     Pasos de instalacion, usuarios de prueba y que verificar.
 - FinanzasApp-codigo-fuente.zip         Codigo fuente completo (cliente, backend, Docker, scripts).
-- FinanzasApp-Setup.exe                 Instalador de Windows (incluye Java 25).
+- ejecutable\FinanzasApp-Setup.exe      Instalador de Windows (incluye Java 25).
 - FinanzasApp_Formato_Calidad_Final.xlsx Proyecto, interesados, requisitos, historias, casos de uso,
                                         mockups, arquitectura, trazabilidad, pruebas y defectos.
 - ARQUITECTURA_Y_AMBIENTE.md            Componentes y capas, versiones, dependencias, variables de entorno.

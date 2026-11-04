@@ -89,7 +89,7 @@ En PowerShell use `curl.exe` o `Invoke-RestMethod http://localhost:8080/health/r
 
 **Opcion A - Instalador de Windows (sin Java instalado)**
 
-1. Ejecute `FinanzasApp-Setup.exe` (35,7 MB; se adjunta en la entrega o se genera en `dist\` con `.\scripts\build-windows-standalone.ps1 -JdkHome <JDK 25>`). Instala en `%LOCALAPPDATA%\Programs\FinanzasApp`, sin permisos de administrador y con Java 25 incluido.
+1. Ejecute `FinanzasApp-Setup.exe` (35,7 MB; en la entrega esta en la carpeta **`ejecutable`**, o se genera en `dist\` con `.\scripts\build-windows-standalone.ps1 -JdkHome <JDK 25>`). Instala en `%LOCALAPPDATA%\Programs\FinanzasApp`, sin permisos de administrador y con Java 25 incluido.
 2. Abra **"FinanzasApp (servidor)"** desde el Escritorio o el menu Inicio: entra directo en modo API contra `http://localhost:8080`. No hace falta configurar variables de entorno.
 
 | Acceso directo | Modo |
