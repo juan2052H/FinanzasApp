@@ -57,17 +57,105 @@ try {
     New-Item -ItemType Directory -Path $carpetaExe -Force | Out-Null
     Copy-Item -LiteralPath $installer -Destination $carpetaExe
     $leemeExe = @"
-FinanzasApp - Instalador
-========================
+FinanzasApp - LEEME PRIMERO
+===========================
 
-1. Doble clic en FinanzasApp-Setup.exe y responda Si.
+Para probar FinanzasApp con las cuentas de prueba necesita 3 cosas, en este orden:
+  A) Docker Desktop instalado y abierto   (solo se instala la primera vez)
+  B) El servidor encendido con un comando (cada vez que vaya a usar la aplicacion)
+  C) La aplicacion instalada              (solo la primera vez)
+
+Manual completo con imagenes y solucion de problemas: ..\REQUISITOS_E_INSTALACION.docx (carpeta de arriba)
+
+
+A) DOCKER DESKTOP (solo la primera vez)
+---------------------------------------
+Requisitos: Windows 10 22H2 u 11 de 64 bits, 8 GB de RAM, 10 GB libres en disco,
+virtualizacion activada (Administrador de tareas > Rendimiento > CPU > "Virtualizacion: Habilitado").
+
+1. Abra PowerShell COMO ADMINISTRADOR (Inicio > escriba PowerShell > clic derecho >
+   Ejecutar como administrador) y ejecute:
+
+       wsl --install --no-distribution
+
+   Reinicie el computador. Despues, otra vez en PowerShell como administrador:
+
+       wsl --update
+
+2. Descargue Docker Desktop (enlace directo, unos 600 MB):
+
+       https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe
+
+   (Si su PC tiene procesador ARM: https://desktop.docker.com/win/main/arm64/Docker%20Desktop%20Installer.exe
+    Pagina oficial por si el enlace cambia: https://www.docker.com/products/docker-desktop/ )
+
+3. Abra "Docker Desktop Installer.exe", deje marcada la opcion
+   "Use WSL 2 instead of Hyper-V (recommended)", pulse Ok y al final "Close and restart".
+
+4. Despues del reinicio abra Docker Desktop:
+   - Pulse "Accept" en el acuerdo de servicio (gratis para uso personal y educativo).
+   - Si pide iniciar sesion o una encuesta, pulse "Skip" (no necesita cuenta).
+   - Espere a que abajo a la izquierda diga "Engine running" con un punto verde.
+
+5. Configuracion recomendada (icono de engranaje "Settings" > General):
+   - "Use the WSL 2 based engine": marcada.
+   - "Start Docker Desktop when you sign in to your computer": marcada (asi abre solo).
+   Si cambia algo pulse "Apply & restart".
+
+6. Compruebe que Docker funciona. En PowerShell normal:
+
+       docker --version
+       docker run --rm hello-world
+
+   Debe aparecer el texto "Hello from Docker!".
+
+
+B) ENCENDER EL SERVIDOR (cada vez)
+----------------------------------
+1. Docker Desktop debe estar abierto y decir "Engine running".
+2. Descomprima ..\FinanzasApp-codigo-fuente.zip (carpeta de arriba) en C:\FinanzasApp
+   (clic derecho > Extraer todo > escriba C:\FinanzasApp > Extraer).
+3. Abra PowerShell normal y ejecute, uno por uno:
+
+       cd C:\FinanzasApp\FinanzasApp
+       docker compose up -d --build
+
+   La primera vez tarda entre 5 y 15 minutos. No cierre la ventana.
+
+4. Compruebe el estado:
+
+       docker compose ps -a
+
+   Debe decir "(healthy)" en finanzas-postgres y finanzas-backend,
+   y "Exited (0)" en db-seed (es normal: ya cargo las cuentas de prueba).
+
+Para apagar el servidor:                 docker compose down
+Para borrar todo y recargar los datos:   docker compose down -v   y luego   docker compose up -d
+
+
+C) INSTALAR Y ABRIR LA APLICACION
+---------------------------------
+1. Doble clic en FinanzasApp-Setup.exe (esta en esta carpeta) y responda Si.
    Si Windows muestra "Windows protegio su PC": Mas informacion > Ejecutar de todas formas.
-2. Para usar las cuentas de prueba abra el acceso directo "FinanzasApp (servidor)".
-   Antes debe encender el servidor con Docker (Parte 4 del manual).
+2. Abra el acceso directo "FinanzasApp (servidor)" del Escritorio.
+   (El otro acceso, "FinanzasApp", es el modo local y NO tiene las cuentas de prueba.)
+3. Inicie sesion:
 
-Usuario: ana.duena@finanzasapp.test    Contrasena: Prueba2026*
+       Usuario:     ana.duena@finanzasapp.test
+       Contrasena:  Prueba2026*        (el asterisco final es parte de la contrasena)
 
-Manual completo paso a paso: ..\REQUISITOS_E_INSTALACION.docx
+   Otras cuentas (misma contrasena): carlos.miembro@finanzasapp.test (miembro),
+   laura.lectora@finanzasapp.test (solo lectura).
+4. La primera vez aparece "Primeros pasos": deje lo opcional vacio y pulse "Empezar".
+
+
+PROBLEMAS FRECUENTES
+--------------------
+- "docker" no se reconoce        -> Cierre y abra PowerShell; si sigue, reinstale Docker Desktop.
+- "error during connect"         -> Docker Desktop esta cerrado: abralo y espere "Engine running".
+- "WSL needs updating"           -> PowerShell como administrador: wsl --update  y reinicie.
+- "port is already allocated"    -> Otro programa usa el puerto 5432 u 8080 (ver Parte 10 del manual).
+- "Credenciales invalidas"       -> Revise el asterisco final y que el servidor este encendido.
 "@
     Set-Content -LiteralPath (Join-Path $carpetaExe "LEEME_PRIMERO.txt") -Value $leemeExe -Encoding UTF8
     Copy-Item -LiteralPath $ExcelPath -Destination (Join-Path $carpeta "FinanzasApp_Formato_Calidad_Final.xlsx")
