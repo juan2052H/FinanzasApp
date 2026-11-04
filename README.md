@@ -7,6 +7,8 @@ Aplicacion de escritorio (Java 25 Swing) para finanzas personales y del hogar, c
 
 Repositorio: https://github.com/juan2052H/FinanzasApp
 
+> **Instalador de Windows:** [ejecutable/FinanzasApp-Setup.exe](ejecutable/FinanzasApp-Setup.exe) (35,7 MB; en GitHub use el boton *Download raw file*). Instrucciones rapidas, incluido Docker: [ejecutable/LEEME_PRIMERO.txt](ejecutable/LEEME_PRIMERO.txt).
+>
 > **Equipo evaluador:** empiece por [docs/REQUISITOS_E_INSTALACION.md](docs/REQUISITOS_E_INSTALACION.md) (requisitos del PC, ejecucion y cuentas de prueba; tambien en [Word](docs/REQUISITOS_E_INSTALACION.docx)) y luego [docs/GUIA_EVALUADOR.md](docs/GUIA_EVALUADOR.md) (recorrido de verificacion).
 
 | Documento | Contenido |
