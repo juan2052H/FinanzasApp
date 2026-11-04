@@ -49,7 +49,8 @@ try {
     }
 
     $commit = (git rev-parse --short HEAD).Trim()
-    git archive --format=zip --prefix=FinanzasApp/ -o (Join-Path $carpeta "FinanzasApp-codigo-fuente.zip") HEAD
+    # El instalador ya va en su propia carpeta ejecutable/: no se duplica dentro del ZIP de codigo.
+    git archive --format=zip --prefix=FinanzasApp/ -o (Join-Path $carpeta "FinanzasApp-codigo-fuente.zip") HEAD -- . ":(exclude)ejecutable"
     if ($LASTEXITCODE -ne 0) { throw "git archive fallo." }
 
     # El instalador va en su propia carpeta para que sea lo primero que se encuentre.
