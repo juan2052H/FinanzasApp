@@ -7,7 +7,7 @@ Aplicacion de escritorio (Java 25 Swing) para finanzas personales y del hogar, c
 
 Repositorio: https://github.com/juan2052H/FinanzasApp
 
-> **Instalador de Windows:** [ejecutable/FinanzasApp-Setup.exe](ejecutable/FinanzasApp-Setup.exe) (35,7 MB; en GitHub use el boton *Download raw file*). Instrucciones rapidas, incluido Docker: [ejecutable/LEEME_PRIMERO.txt](ejecutable/LEEME_PRIMERO.txt).
+> **Instalador de Windows:** descargue `FinanzasApp-Setup.exe` (36,6 MB) desde la **[ultima version publicada (Releases)](https://github.com/juan2052H/FinanzasApp/releases/latest)**. Instrucciones rapidas, incluido Docker: [ejecutable/LEEME_PRIMERO.txt](ejecutable/LEEME_PRIMERO.txt).
 >
 > **Equipo evaluador:** empiece por [docs/REQUISITOS_E_INSTALACION.md](docs/REQUISITOS_E_INSTALACION.md) (requisitos del PC, ejecucion y cuentas de prueba; tambien en [Word](docs/REQUISITOS_E_INSTALACION.docx)) y luego [docs/GUIA_EVALUADOR.md](docs/GUIA_EVALUADOR.md) (recorrido de verificacion).
 
@@ -91,7 +91,7 @@ En PowerShell use `curl.exe` o `Invoke-RestMethod http://localhost:8080/health/r
 
 **Opcion A - Instalador de Windows (sin Java instalado)**
 
-1. Ejecute `FinanzasApp-Setup.exe` (35,7 MB; en la entrega esta en la carpeta **`ejecutable`**, o se genera en `dist\` con `.\scripts\build-windows-standalone.ps1 -JdkHome <JDK 25>`). Instala en `%LOCALAPPDATA%\Programs\FinanzasApp`, sin permisos de administrador y con Java 25 incluido.
+1. Ejecute `FinanzasApp-Setup.exe` (36,6 MB; se descarga desde [Releases](https://github.com/juan2052H/FinanzasApp/releases/latest), en la entrega esta en la carpeta **`ejecutable`**, o se genera en `dist\` con `.\scripts\build-windows-standalone.ps1 -JdkHome <JDK 25>`). Instala en `%LOCALAPPDATA%\Programs\FinanzasApp`, sin permisos de administrador y con Java 25 incluido.
 2. Abra **"FinanzasApp (servidor)"** desde el Escritorio o el menu Inicio: entra directo en modo API contra `http://localhost:8080`. No hace falta configurar variables de entorno.
 
 | Acceso directo | Modo |

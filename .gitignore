@@ -67,3 +67,6 @@ obsoleto_no_entregar/
 
 # Generado por maven-shade-plugin al empaquetar
 dependency-reduced-pom.xml
+
+# El instalador se publica en GitHub Releases, no en el repositorio
+ejecutable/*.exe

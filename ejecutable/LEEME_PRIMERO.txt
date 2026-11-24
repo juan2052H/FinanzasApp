@@ -76,7 +76,8 @@ Para borrar todo y recargar los datos:   docker compose down -v   y luego   dock
 
 C) INSTALAR Y ABRIR LA APLICACION
 ---------------------------------
-1. Doble clic en FinanzasApp-Setup.exe (esta en esta carpeta) y responda Si.
+1. Doble clic en FinanzasApp-Setup.exe y responda Si. Si no esta en esta carpeta,
+   descarguelo de https://github.com/juan2052H/FinanzasApp/releases/latest
    Si Windows muestra "Windows protegio su PC": Mas informacion > Ejecutar de todas formas.
 2. Abra el acceso directo "FinanzasApp (servidor)" del Escritorio.
    (El otro acceso, "FinanzasApp", es el modo local y NO tiene las cuentas de prueba.)
