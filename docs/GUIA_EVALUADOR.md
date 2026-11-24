@@ -60,6 +60,9 @@ Cada fila indica que hacer, que debe verse y que requisito/caso de prueba cubre.
 | 11 | Carlos | **Nuevo Gasto** de $1.000 en Alimentacion en "Hogar Gomez" | El gasto aparece y el total de gastos aumenta | RF-004 / CP-004 |
 | 12 | Carlos | **Configuracion** > Tema, moneda y region > Oscuro > Guardar; cerrar sesion y volver a entrar | Se conserva el tema oscuro | RF-022 / CP-026 |
 | 13 | Nuevo | En la pantalla de acceso, **Registrate** con un correo nuevo | Se crea la cuenta con "Mi espacio" y 14 categorias | RF-001 / CP-002 |
+| 14 | Ana | **Inicio** > Alertas y notificaciones > **Marcar como leida** | La alerta desaparece y no vuelve al refrescar | RF-019 / CP-024 |
+| 15 | Ana | **Inicio** > bajar a Proximos movimientos > **Ejecutar ahora** en "Arriendo apartamento" | Mensaje de confirmacion; aparece el gasto y la recurrencia pasa a su siguiente fecha | RF-018 / CP-023 |
+| 16 | Ana | **Configuracion** > Categorias > crear dos veces la misma categoria | El segundo intento explica: "Ya existe una categoria activa con ese nombre y tipo" | RF-006 / CP-015 |
 
 Modo local (sin servidor): abra el acceso directo **"FinanzasApp"**. Funciona sin backend; con la variable `FINANZAS_DEMO_MODE=true` crea el usuario `samuel@finanzasapp.com` / `123456`.
 

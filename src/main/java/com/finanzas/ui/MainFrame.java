@@ -38,6 +38,12 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         AppColors.applyTheme(DataManager.getInstance().getUsuario().getTheme());
+        // Muestra los errores del servidor en operaciones que antes fallaban sin avisar.
+        DataManager.getInstance().setErrorReporter(message -> SwingUtilities.invokeLater(() -> {
+            if (isDisplayable()) {
+                JOptionPane.showMessageDialog(this, message, "No se pudo guardar el cambio", JOptionPane.ERROR_MESSAGE);
+            }
+        }));
         buildUI();
         installCommandPaletteShortcut();
         setVisible(true);

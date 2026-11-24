@@ -120,6 +120,7 @@ public class DataManager {
     private final Map<String, LoginAttempt> loginAttempts = new HashMap<String, LoginAttempt>();
     private final InsightProvider insightProvider = new RuleBasedInsightProvider();
     private final FinanzasApiClient apiClient = new FinanzasApiClient(BackendConfig.baseUrl());
+    private volatile java.util.function.Consumer<String> errorReporter;
     private final ScheduledExecutorService backendSyncExecutor = Executors.newSingleThreadScheduledExecutor(task -> {
         Thread thread = new Thread(task, "finanzas-backend-sync");
         thread.setDaemon(true);
@@ -1409,9 +1410,44 @@ public class DataManager {
         return null;
     }
 
+    /** La interfaz lo registra para mostrar los errores de operaciones que no devuelven resultado. */
+    public void setErrorReporter(java.util.function.Consumer<String> reporter) {
+        this.errorReporter = reporter;
+    }
+
+    /**
+     * Para operaciones void (crear/editar/borrar transacciones, presupuestos, metas...): antes el error del
+     * servidor se registraba en silencio y la pantalla simplemente "no se actualizaba".
+     */
+    private void reportBackendMutationError(String message, Exception ex) {
+        handleBackendMutationError(message, ex);
+        java.util.function.Consumer<String> reporter = errorReporter;
+        if (reporter != null) {
+            reporter.accept(lastErrorMessage);
+        }
+    }
+
     private void handleBackendMutationError(String message, Exception ex) {
-        lastErrorMessage = message;
+        // Antes solo se mostraba el mensaje generico y el usuario no sabia la causa (duplicado, permisos...).
+        String reason = backendReason(ex);
+        lastErrorMessage = reason.isEmpty() ? message : message + "\n" + reason;
         LOGGER.log(Level.WARNING, message, ex);
+    }
+
+    private String backendReason(Throwable ex) {
+        for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
+            if (cause instanceof com.finanzas.api.BackendApiException apiError) {
+                String detail = apiError.getMessage() == null ? "" : apiError.getMessage().replaceFirst("^Backend FinanzasApp: ", "");
+                if (apiError.getStatusCode() == 403 && detail.startsWith("HTTP")) {
+                    return "No tienes permisos para esta accion con tu rol en este workspace.";
+                }
+                return detail;
+            }
+            if (cause instanceof java.net.ConnectException || cause instanceof java.net.http.HttpConnectTimeoutException) {
+                return "No hay conexion con el servidor (" + BackendConfig.baseUrl() + "). Verifica que este encendido.";
+            }
+        }
+        return "";
     }
 
     private NotificationItem toNotificationItem(BackendNotification notification) {
@@ -1419,7 +1455,29 @@ public class DataManager {
                 notification.getTitle(),
                 notification.getBody(),
                 notificationSeverity(notification.getType()),
-                notificationSection(notification.getType()));
+                notificationSection(notification.getType()),
+                notification.getId());
+    }
+
+    /** Marca como leida una notificacion del servidor; deja de mostrarse en el panel de alertas. */
+    public boolean markNotificationRead(NotificationItem item) {
+        UserProfile profile = p();
+        if (profile == null || item == null || item.getBackendId().isEmpty() || !hasBackendFinancialSession()) {
+            lastErrorMessage = "Solo las notificaciones del servidor se pueden marcar como leidas.";
+            return false;
+        }
+        try {
+            callBackend(token -> {
+                apiClient.markNotificationRead(token, activeBackendWorkspaceId(), item.getBackendId());
+                return null;
+            });
+            profile.backendNotifications.removeIf(n -> item.getBackendId().equals(n.getBackendId()));
+            notifyListeners();
+            return true;
+        } catch (Exception ex) {
+            handleBackendMutationError("No fue posible marcar la notificacion como leida.", ex);
+            return false;
+        }
     }
 
     private NotificationItem.Severity notificationSeverity(String type) {
@@ -1801,7 +1859,7 @@ public class DataManager {
             try {
                 runBackend(token -> apiClient.deleteAvatar(token));
             } catch (Exception ex) {
-                handleBackendMutationError("No fue posible eliminar el avatar en el backend.", ex);
+                reportBackendMutationError("No fue posible eliminar el avatar en el backend.", ex);
                 return;
             }
         }
@@ -1889,7 +1947,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible crear la transaccion en el backend.", ex);
+                    reportBackendMutationError("No fue posible crear la transaccion en el backend.", ex);
                 }
                 return;
             }
@@ -1907,7 +1965,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible eliminar la transaccion en el backend.", ex);
+                    reportBackendMutationError("No fue posible eliminar la transaccion en el backend.", ex);
                 }
                 return;
             }
@@ -1947,7 +2005,7 @@ public class DataManager {
                 syncBackendSnapshot();
                 notifyListeners();
             } catch (Exception ex) {
-                handleBackendMutationError("No fue posible actualizar la transaccion en el backend.", ex);
+                reportBackendMutationError("No fue posible actualizar la transaccion en el backend.", ex);
             }
             return;
         }
@@ -1975,7 +2033,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible crear la meta en el backend.", ex);
+                    reportBackendMutationError("No fue posible crear la meta en el backend.", ex);
                 }
                 return;
             }
@@ -1992,7 +2050,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible archivar la meta en el backend.", ex);
+                    reportBackendMutationError("No fue posible archivar la meta en el backend.", ex);
                 }
                 return;
             }
@@ -2024,7 +2082,7 @@ public class DataManager {
                 syncBackendSnapshot();
                 notifyListeners();
             } catch (Exception ex) {
-                handleBackendMutationError("No fue posible actualizar la meta en el backend.", ex);
+                reportBackendMutationError("No fue posible actualizar la meta en el backend.", ex);
             }
             return;
         }
@@ -2127,7 +2185,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible crear el presupuesto en el backend.", ex);
+                    reportBackendMutationError("No fue posible crear el presupuesto en el backend.", ex);
                 }
                 return;
             }
@@ -2145,7 +2203,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible eliminar el presupuesto en el backend.", ex);
+                    reportBackendMutationError("No fue posible eliminar el presupuesto en el backend.", ex);
                 }
                 return;
             }
@@ -2188,7 +2246,7 @@ public class DataManager {
                 syncBackendSnapshot();
                 notifyListeners();
             } catch (Exception ex) {
-                handleBackendMutationError("No fue posible actualizar el presupuesto en el backend.", ex);
+                reportBackendMutationError("No fue posible actualizar el presupuesto en el backend.", ex);
             }
             return;
         }
@@ -2275,7 +2333,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible crear la recurrencia en el backend.", ex);
+                    reportBackendMutationError("No fue posible crear la recurrencia en el backend.", ex);
                 }
                 return;
             }
@@ -2295,7 +2353,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible desactivar la recurrencia en el backend.", ex);
+                    reportBackendMutationError("No fue posible desactivar la recurrencia en el backend.", ex);
                 }
                 return;
             }
@@ -2304,9 +2362,11 @@ public class DataManager {
         }
     }
 
-    public void materializeRecurringTransaction(RecurringTransaction recurringTransaction) {
+    /** Registra ahora el siguiente movimiento de la recurrencia; devuelve false si no fue posible. */
+    public boolean materializeRecurringTransaction(RecurringTransaction recurringTransaction) {
         if (p() == null || recurringTransaction == null || !recurringTransaction.isActive()) {
-            return;
+            lastErrorMessage = "La recurrencia no esta activa.";
+            return false;
         }
         if (hasBackendFinancialSession() && !recurringTransaction.getBackendId().isEmpty()) {
             try {
@@ -2316,15 +2376,17 @@ public class DataManager {
                         recurringTransaction.getBackendId()));
                 syncBackendSnapshot();
                 notifyListeners();
+                return true;
             } catch (Exception ex) {
                 handleBackendMutationError("No fue posible ejecutar la recurrencia en el backend.", ex);
+                return false;
             }
-            return;
         }
         p().transacciones.add(0, recurringTransaction.createTransactionForNextDate());
         recurringTransaction.advanceNextDate();
         refreshBudgetUsage(p());
         notifyListeners();
+        return true;
     }
 
     public void removeGastoHogar(GastoHogar gastoHogar) {
@@ -2335,7 +2397,7 @@ public class DataManager {
                     syncBackendSnapshot();
                     notifyListeners();
                 } catch (Exception ex) {
-                    handleBackendMutationError("No fue posible cancelar el gasto compartido en el backend.", ex);
+                    reportBackendMutationError("No fue posible cancelar el gasto compartido en el backend.", ex);
                 }
                 return;
             }

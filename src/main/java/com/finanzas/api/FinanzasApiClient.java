@@ -200,7 +200,8 @@ public final class FinanzasApiClient {
     }
 
     public List<BackendCategory> listCategories(String accessToken, String workspaceId) throws IOException, InterruptedException {
-        String response = get("/api/workspaces/" + workspaceId + "/categories", accessToken);
+        // Incluye las archivadas: sin ellas sus movimientos se mostraban como "Otros" y no se podian restaurar.
+        String response = get("/api/workspaces/" + workspaceId + "/categories?includeArchived=true", accessToken);
         List<BackendCategory> result = new ArrayList<BackendCategory>();
         for (Object item : SimpleJson.asArray(SimpleJson.parse(response))) {
             result.add(toCategory(SimpleJson.asObject(item)));

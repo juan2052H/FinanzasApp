@@ -3,6 +3,7 @@ package com.finanzas.backend.repo;
 import com.finanzas.backend.domain.NotificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,4 +14,5 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
     Optional<NotificationEntity> findByIdAndUserId(UUID id, UUID userId);
     Optional<NotificationEntity> findByIdAndUserIdAndWorkspaceId(UUID id, UUID userId, UUID workspaceId);
     boolean existsByUserIdAndWorkspaceIdAndTypeAndTitleAndReadAtIsNull(UUID userId, UUID workspaceId, String type, String title);
+    boolean existsByUserIdAndWorkspaceIdAndTypeAndTitleAndCreatedAtAfter(UUID userId, UUID workspaceId, String type, String title, Instant after);
 }

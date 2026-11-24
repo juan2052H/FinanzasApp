@@ -379,7 +379,11 @@ public class DashboardPanel extends JPanel {
         } else {
             for (int i = 0; i < Math.min(4, alerts.size()); i++) {
                 NotificationItem alert = alerts.get(i);
-                card.add(buildAlertItem(notificationIcon(alert), alert.getTitle(), alert.getMessage(), notificationColor(alert)));
+                JPanel item = buildAlertItem(notificationIcon(alert), alert.getTitle(), alert.getMessage(), notificationColor(alert));
+                if (!alert.getBackendId().isEmpty()) {
+                    item.add(markReadButton(alert), BorderLayout.EAST);
+                }
+                card.add(item);
                 card.add(Box.createVerticalStrut(6));
             }
         }
@@ -437,10 +441,21 @@ public class DashboardPanel extends JPanel {
         amount.setFont(AppColors.getFont(Font.BOLD, 12));
         amount.setForeground(recurring.getTipo() == Transaccion.Tipo.INGRESO ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
-        JButton apply = new JButton("Registrar");
+        JButton apply = new JButton("Ejecutar ahora");
+        apply.setToolTipText("Registra ya este movimiento y pasa la recurrencia a su siguiente fecha");
         apply.setFont(AppColors.getFont(Font.PLAIN, 11));
         apply.setFocusPainted(false);
-        apply.addActionListener(e -> data.materializeRecurringTransaction(recurring));
+        apply.addActionListener(e -> {
+            String descripcion = recurring.getDescripcion();
+            if (data.materializeRecurringTransaction(recurring)) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Se registro \"" + descripcion + "\" y la recurrencia paso a su siguiente fecha.",
+                        "Recurrencia ejecutada", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this, data.getLastErrorMessage(),
+                        "No se pudo ejecutar", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
@@ -521,6 +536,24 @@ public class DashboardPanel extends JPanel {
         panel.add(iconLabel, BorderLayout.WEST);
         panel.add(textPanel, BorderLayout.CENTER);
         return panel;
+    }
+
+    private JButton markReadButton(NotificationItem alert) {
+        JButton button = new JButton("Marcar leida");
+        button.setToolTipText("Marcar como leida: la alerta deja de mostrarse");
+        button.setFont(AppColors.getFont(Font.PLAIN, 10));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setForeground(AppColors.ACCENT_BLUE);
+        button.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        button.addActionListener(e -> {
+            if (!data.markNotificationRead(alert)) {
+                javax.swing.JOptionPane.showMessageDialog(this, data.getLastErrorMessage(),
+                        "No se pudo marcar", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        return button;
     }
 
     private JPanel buildActionButtons() {

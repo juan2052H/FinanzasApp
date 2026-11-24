@@ -377,7 +377,7 @@ setx FINANZAS_DEMO_MODE true
 
 ![Seccion Finanzas del Hogar con los datos de prueba](capturas/pantalla_06_hogar.png)
 
-El recorrido completo de 13 pasos esta en `GUIA_EVALUADOR.md`.
+El recorrido completo de 16 pasos esta en `GUIA_EVALUADOR.md`.
 
 **Datos que ya trae el hogar "Hogar Gomez"** (las fechas se ajustan solas al mes actual y al anterior):
 
@@ -494,7 +494,7 @@ docker compose down -v
 
 | Documento | Contenido |
 |---|---|
-| `GUIA_EVALUADOR.md` | Recorrido de verificacion de 13 pasos ligado a requisitos y casos de prueba |
+| `GUIA_EVALUADOR.md` | Recorrido de verificacion de 16 pasos ligado a requisitos y casos de prueba |
 | `ARQUITECTURA_Y_AMBIENTE.md` | Diagrama de componentes y capas, versiones, dependencias, variables de entorno y base de datos |
 | `FinanzasApp_Formato_Calidad_Final.xlsx` | Requisitos, historias, casos de uso, mockups, trazabilidad, 32 casos de prueba y defectos |
 | `README.md` | Instalacion para desarrolladores (sin Docker, desde el codigo con JDK 25) |

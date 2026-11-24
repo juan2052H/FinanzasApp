@@ -179,7 +179,12 @@ public class FinanzasHogarPanel extends JPanel {
         JPanel form = new JPanel(new GridLayout(2, 2, 8, 8));
         JTextField emailField = new JTextField();
         emailField.setColumns(18);
-        JComboBox<String> roleBox = new JComboBox<String>(new String[]{"MEMBER", "VIEWER", "ADMIN"});
+        // Solo el OWNER puede invitar como ADMIN (regla del backend); a un ADMIN no se le ofrece esa opcion.
+        BackendWorkspace active = data.getActiveBackendWorkspace();
+        boolean actorIsOwner = active != null && "OWNER".equalsIgnoreCase(active.getRole());
+        JComboBox<String> roleBox = new JComboBox<String>(actorIsOwner
+                ? new String[]{"MEMBER", "VIEWER", "ADMIN"}
+                : new String[]{"MEMBER", "VIEWER"});
         form.add(new JLabel("Email:"));
         form.add(emailField);
         form.add(new JLabel("Rol:"));

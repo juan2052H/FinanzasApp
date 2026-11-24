@@ -155,6 +155,11 @@ public class DianTaxDialog extends JDialog {
         saveBtn.setBackground(AppColors.ACCENT_BLUE);
         saveBtn.setForeground(Color.WHITE);
         saveBtn.addActionListener(e -> saveConfig());
+        // El servidor solo permite al OWNER o ADMIN guardar la configuracion UVT; antes el resto recibia un 403.
+        if (dm.isBackendSessionActive() && !dm.canManageActiveBackendWorkspace()) {
+            saveBtn.setEnabled(false);
+            saveBtn.setToolTipText("Solo el propietario o un administrador del workspace puede guardar esta configuracion.");
+        }
         panel.add(saveBtn, gbc);
 
         return panel;

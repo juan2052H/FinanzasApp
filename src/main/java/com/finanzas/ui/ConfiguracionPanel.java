@@ -1123,12 +1123,16 @@ public class ConfiguracionPanel extends JPanel {
 
         panel.add(sectionTitle("Importar y exportar datos"));
         panel.add(Box.createVerticalStrut(12));
+        if (data.isBackendSessionActive()) {
+            // Primera fila y con nombre claro: en el QA no se encontraba bajo el titulo "Cuenta backend".
+            panel.add(createDualActionRow(AppIcons.SETTINGS + " Tu cuenta: exportar datos (JSON) o eliminar la cuenta",
+                    "Descarga todos tus datos de cuenta, o elimina tu cuenta (pide tu correo y contrasena). "
+                            + "Si eres propietario de un hogar con otros miembros, primero transfiere la propiedad.",
+                    "Exportar JSON", this::exportarCuentaBackend, "Eliminar cuenta", this::eliminarCuentaBackend));
+        }
         panel.add(createActionRow(AppIcons.BUDGET + " Exportar a Excel (.xls)", "Genera una hoja de calculo con resumen, transacciones, metas y presupuestos", "Exportar", this::exportarExcel));
         panel.add(createActionRow(AppIcons.EXPORT + " Exportar a PDF", "Genera un reporte financiero en PDF listo para compartir", "Exportar", this::exportarPdf));
         panel.add(createActionRow(AppIcons.REPORTS + " Exportar a CSV", "Exporta las transacciones en formato separado por comas", "Exportar", this::exportarCsv));
-        if (data.isBackendSessionActive()) {
-            panel.add(createDualActionRow(AppIcons.SETTINGS + " Cuenta backend", "Exporta tus datos de cuenta o elimina la cuenta activa de forma confirmada", "Exportar JSON", this::exportarCuentaBackend, "Eliminar", this::eliminarCuentaBackend));
-        }
         panel.add(createDualActionRow(AppIcons.EXPORT + " Respaldo completo", "Guarda o restaura el estado persistido de la aplicacion, incluida la imagen de perfil", "Respaldar", this::crearRespaldoCompleto, "Restaurar", this::restaurarRespaldoCompleto));
         panel.add(createDualActionRow(AppIcons.PLUS + " Importar transacciones CSV", "Carga fecha, tipo, categoria, descripcion y monto", "Plantilla", this::descargarPlantillaTransacciones, "Importar", this::importarTransaccionesCsv));
         panel.add(createDualActionRow(AppIcons.GOALS + " Importar metas CSV", "Carga nombre, icono, monto actual, monto objetivo, progreso y fecha limite", "Plantilla", this::descargarPlantillaMetas, "Importar", this::importarMetasCsv));

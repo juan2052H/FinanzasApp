@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -31,6 +32,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
+    /** Una alerta automatica ya leida no se vuelve a generar hasta pasado este plazo. */
+    private static final long REPEAT_AFTER_DAYS = 30;
     private static final BigDecimal BUDGET_WARNING_THRESHOLD = new BigDecimal("85.00");
 
     private final NotificationRepository notifications;
@@ -135,13 +138,19 @@ public class NotificationService {
     }
 
     private void upsertUnread(UUID userId, UUID workspaceId, String type, String title, String body) {
-        if (!notifications.existsByUserIdAndWorkspaceIdAndTypeAndTitleAndReadAtIsNull(userId, workspaceId, type, title)) {
-            notifications.save(new NotificationEntity(workspaceId, userId, type, title, body));
+        // Se mira tambien lo ya leido: si solo se comprobaban las no leidas, una alerta marcada como leida
+        // se volvia a crear en el siguiente refresco (cada pocos segundos) y nunca desaparecia.
+        if (notifications.existsByUserIdAndWorkspaceIdAndTypeAndTitleAndReadAtIsNull(userId, workspaceId, type, title)
+                || notifications.existsByUserIdAndWorkspaceIdAndTypeAndTitleAndCreatedAtAfter(
+                        userId, workspaceId, type, title, Instant.now().minus(REPEAT_AFTER_DAYS, ChronoUnit.DAYS))) {
+            return;
         }
+        notifications.save(new NotificationEntity(workspaceId, userId, type, title, body));
     }
 
     private Map<UUID, CategoryEntity> categoriesById(UUID workspaceId) {
-        return categories.findByWorkspaceIdAndArchivedFalseOrderByNombre(workspaceId).stream()
+        // Incluye las archivadas: un presupuesto de una categoria archivada se titulaba "Presupuesto: Presupuesto".
+        return categories.findByWorkspaceIdOrderByNombre(workspaceId).stream()
                 .collect(Collectors.toMap(CategoryEntity::getId, Function.identity()));
     }
 
