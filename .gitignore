@@ -64,3 +64,6 @@ jacoco.exec
 # Material obsoleto de sesiones anteriores (no entregar)
 obsoleto_no_entregar/
 
+
+# Generado por maven-shade-plugin al empaquetar
+dependency-reduced-pom.xml
