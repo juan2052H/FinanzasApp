@@ -325,8 +325,6 @@ public class MetasPanel extends JPanel {
                 isEdit ? "Editar Meta" : "Nueva Meta de Ahorro",
                 true);
         dialog.setMinimumSize(new Dimension(470, 420));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -398,6 +396,8 @@ public class MetasPanel extends JPanel {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 

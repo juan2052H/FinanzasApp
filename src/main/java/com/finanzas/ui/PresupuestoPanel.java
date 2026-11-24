@@ -188,7 +188,9 @@ public class PresupuestoPanel extends JPanel {
         JLabel amounts = new JLabel(
                 "Gastado: $" + nf.format((long) presupuesto.getMontoGastado())
                         + " / Presupuesto: $" + nf.format((long) presupuesto.getMontoPresupuestado())
-                        + " / Disponible: $" + nf.format((long) presupuesto.getSaldo()));
+                        + (presupuesto.getSaldo() < 0
+                        ? " / Excedido por: $" + nf.format((long) -presupuesto.getSaldo())
+                        : " / Disponible: $" + nf.format((long) presupuesto.getSaldo())));
         amounts.setFont(AppColors.getFont(Font.PLAIN, 10));
         amounts.setForeground(AppColors.TEXT_MUTED);
 
@@ -224,8 +226,6 @@ public class PresupuestoPanel extends JPanel {
                 "Configurar ahorro recomendado",
                 true);
         dialog.setMinimumSize(new Dimension(420, 280));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -267,6 +267,8 @@ public class PresupuestoPanel extends JPanel {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
@@ -277,8 +279,6 @@ public class PresupuestoPanel extends JPanel {
                 isEdit ? "Editar presupuesto" : "Nuevo presupuesto",
                 true);
         dialog.setMinimumSize(new Dimension(400, isEdit ? 290 : 250));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -349,6 +349,8 @@ public class PresupuestoPanel extends JPanel {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 

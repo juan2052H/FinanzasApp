@@ -46,8 +46,6 @@ public final class SimulationDialog {
                 "Simulador financiero",
                 true);
         dialog.setMinimumSize(new Dimension(560, 430));
-        dialog.pack();
-        dialog.setLocationRelativeTo(parent);
 
         JPanel root = new JPanel(new BorderLayout(0, 14));
         root.setBackground(AppColors.CARD_BG);
@@ -131,6 +129,8 @@ public final class SimulationDialog {
         root.add(form, BorderLayout.CENTER);
         root.add(bottom, BorderLayout.SOUTH);
         dialog.setContentPane(root);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
     }
 

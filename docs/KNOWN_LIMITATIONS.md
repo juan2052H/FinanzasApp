@@ -14,7 +14,7 @@ Ninguna de estas limitaciones impide montar el ambiente ni ejecutar los casos de
 
 ## Interfaz
 
-- El tema oscuro usa FlatLaf y tokens de color propios (corregido tras el Informe QA). Si se cambia el tema con la aplicacion abierta, la barra de titulo de Windows conserva el color anterior hasta reiniciar la aplicacion.
+- El tema oscuro usa FlatLaf y tokens de color propios (corregido tras el Informe QA); los dialogos se ajustan a su contenido (DEF-017). Si se cambia el tema con la aplicacion abierta, la barra de titulo de Windows conserva el color anterior hasta reiniciar la aplicacion.
 - Los iconos de la barra lateral usan emojis; se ven correctamente en Windows y pueden aparecer como cuadros en Linux sin fuente de emojis.
 
 ## Calidad y arquitectura

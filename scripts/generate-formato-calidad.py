@@ -443,7 +443,7 @@ HUMO = {
     "CP-032": "SPD-2026-000123 visible con montos $268.907,56 / $51.092,44 / $320.000 (docs/capturas/pantalla_07_facturas.png). Antes la tabla quedaba vacia, ver DEF-007.",
 }
 DEF_CP = {"CP-022": "DEF-004", "CP-027": "DEF-003, DEF-015", "CP-011": "DEF-005", "CP-031": "DEF-006", "CP-032": "DEF-007, DEF-008",
-          "CP-026": "DEF-009", "CP-015": "DEF-010", "CP-021": "DEF-011", "CP-024": "DEF-012", "CP-020": "DEF-013", "CP-023": "DEF-014",
+          "CP-026": "DEF-009, DEF-017", "CP-015": "DEF-010", "CP-021": "DEF-011", "CP-024": "DEF-012", "CP-020": "DEF-013", "CP-023": "DEF-014",
           "CP-009": "DEF-016", "CP-028": "DEF-016"}
 CP = [c[:9] + (("Aprobada", HUMO[c[0]]) if c[0] in HUMO else c[9:11]) + (DEF_CP.get(c[0], c[11]),) for c in CP]
 CP.sort(key=lambda c: c[0])
@@ -499,6 +499,9 @@ fill_table(wb["12. Defectos"], [
     ("DEF-016", "HTTP 403 en balances y DIAN durante las pruebas", "Balances: el 403 aparece al usar el id del espacio personal de otro usuario (los casos usaban un id abreviado). DIAN: guardar la configuracion UVT exige OWNER o ADMIN y la interfaz no lo indicaba.",
      "1. GET balances con el id ...0002 siendo Ana: 403 (correcto).\n2. Guardar UVT como MEMBER: 403.", "Menor", "Media", "Documentacion / Cliente", "CP-009", "RF-017", "Informe QA FinanzasApp", HOY, EQUIPO, "Resuelto", HOY, None,
      "Casos de prueba con ids completos; el boton Guardar de DIAN se deshabilita para roles sin permiso."),
+    ("DEF-017", "Dialogos con campos ocultos y formato de montos (re-verificacion del Informe QA)", "Al re-verificar DEF-009 se encontro que los dialogos calculaban su tamano antes de tener contenido: Primeros pasos ocultaba 'Que quieres administrar' y 'Monto del presupuesto'; Simulacion, Busqueda, Gasto del hogar y DIAN quedaban cortados. DIAN mostraba el anio como 2,026 y montos sin separador de miles; Presupuesto mostraba 'Disponible: $-20.000'.",
+     "1. Iniciar sesion con un usuario nuevo: el dialogo Primeros pasos no muestra Monto del presupuesto.\n2. Reportes > Preparacion DIAN: anio 2,026 y montos como $10200000.00.", "Moderada", "Alta", "Cliente / UI", "CP-026", "RF-022", "Re-verificacion interna del Informe QA", HOY, EQUIPO, "Resuelto", HOY, None,
+     "Los 11 dialogos calculan su tamano despues de agregar el contenido (verificado: el contenido cabe en los 12 dialogos, tema claro y oscuro); DIAN con anio 2026 y montos $10.200.000; Presupuesto muestra 'Excedido por: $20.000'."),
     ("DEF-006", "Miembros duplicados y deudas en cero en Finanzas del Hogar", "En modo API cada miembro aparecia dos veces: una con 'Nombre <correo>' y saldo 0, y otra solo con el nombre y la deuda real. Los miembros usaban etiqueta unica pero pagador y participantes del gasto usaban el nombre visible.",
      "1. Login como Ana (API) y seleccionar Hogar Gomez.\n2. Abrir Finanzas del Hogar.\n3. Ana y Carlos aparecen dos veces con saldos distintos.", "Mayor", "Alta", "Cliente / Hogar", "CP-031", "RF-017", EQUIPO, HOY, EQUIPO, "Cerrado", HOY, None,
      "DataManager.syncBackendHousehold resuelve pagador y participantes por userId con la misma etiqueta de miembrosHogar."),

@@ -40,8 +40,6 @@ public final class TransactionDialog {
                 isEdit ? "Editar transaccion" : (tipo == Transaccion.Tipo.INGRESO ? "Nuevo ingreso" : "Nuevo gasto"),
                 true);
         dialog.setMinimumSize(new Dimension(430, 340));
-        dialog.pack();
-        dialog.setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -97,6 +95,8 @@ public final class TransactionDialog {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
     }
 

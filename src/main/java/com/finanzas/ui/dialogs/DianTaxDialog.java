@@ -7,6 +7,8 @@ import com.finanzas.ui.components.AppColors;
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,10 +31,11 @@ public class DianTaxDialog extends JDialog {
     private DianTaxDialog(Window owner) {
         super(owner, "Preparacion Tributaria DIAN", ModalityType.APPLICATION_MODAL);
         setLayout(new BorderLayout(0, 0));
-        setSize(680, 600);
+        setMinimumSize(new Dimension(680, 560));
         setResizable(true);
-        setLocationRelativeTo(owner);
         buildUI();
+        pack();
+        setLocationRelativeTo(owner);
         loadSummary();
     }
 
@@ -73,8 +76,10 @@ public class DianTaxDialog extends JDialog {
         // Year selector
         JPanel yearPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         yearPanel.setOpaque(false);
+        yearPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         yearPanel.add(new JLabel("Ano fiscal:"));
         yearSpinner = new JSpinner(new SpinnerNumberModel(selectedYear, 2000, 2099, 1));
+        yearSpinner.setEditor(new JSpinner.NumberEditor(yearSpinner, "#"));
         yearSpinner.setPreferredSize(new Dimension(80, 28));
         yearPanel.add(yearSpinner);
         JButton refreshBtn = new JButton("Consultar");
@@ -83,6 +88,7 @@ public class DianTaxDialog extends JDialog {
             loadSummary();
         });
         yearPanel.add(refreshBtn);
+        yearPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, yearPanel.getPreferredSize().height));
         panel.add(yearPanel);
         panel.add(Box.createVerticalStrut(16));
 
@@ -108,21 +114,26 @@ public class DianTaxDialog extends JDialog {
         panel.add(Box.createVerticalStrut(14));
 
         // Reasons
-        panel.add(new JLabel("Razones de obligacion:"));
+        JLabel reasonsTitle = new JLabel("Razones de obligacion:");
+        reasonsTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(reasonsTitle);
         panel.add(Box.createVerticalStrut(4));
-        reasonsArea = new JTextArea(5, 50);
+        reasonsArea = new JTextArea(5, 30);
         reasonsArea.setEditable(false);
         reasonsArea.setFont(AppColors.getFont(Font.PLAIN, 11));
         reasonsArea.setLineWrap(true);
         reasonsArea.setWrapStyleWord(true);
         reasonsArea.setBorder(BorderFactory.createLineBorder(AppColors.BORDER));
-        panel.add(new JScrollPane(reasonsArea));
+        JScrollPane reasonsScroll = new JScrollPane(reasonsArea);
+        reasonsScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(reasonsScroll);
 
         // Disclaimer
         panel.add(Box.createVerticalStrut(10));
         JLabel disclaimer = new JLabel("<html><i>AVISO LEGAL: Esta herramienta es solo orientativa. Consulta con un contador certificado para tu declaracion de renta.</i></html>");
         disclaimer.setFont(AppColors.getFont(Font.ITALIC, 10));
         disclaimer.setForeground(AppColors.TEXT_MUTED);
+        disclaimer.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(disclaimer);
 
         return panel;
@@ -209,7 +220,7 @@ public class DianTaxDialog extends JDialog {
                             ? "No fue posible consultar el resumen tributario."
                             : cause.getMessage();
                     obligationLabel.setText("Error al consultar: " + message);
-                    obligationLabel.setForeground(Color.RED);
+                    obligationLabel.setForeground(AppColors.ACCENT_RED);
                     LOGGER.log(Level.WARNING, "Error al cargar resumen DIAN", ex);
                 }
             }
@@ -221,21 +232,21 @@ public class DianTaxDialog extends JDialog {
         if (s == null) { obligationLabel.setText("Sin datos."); return; }
         boolean oblig = s.isObligationToDeclare();
         obligationLabel.setText(oblig ? "SI DEBE DECLARAR RENTA" : "NO OBLIGADO A DECLARAR (segun datos registrados)");
-        obligationLabel.setForeground(oblig ? new Color(0xC0392B) : new Color(0x27AE60));
+        obligationLabel.setForeground(oblig ? AppColors.ACCENT_RED : AppColors.ACCENT_GREEN);
 
         String fmt = "%s $%s / umbral $%s %s";
         BigDecimal inc = orZero(s.getTotalIncome());
         BigDecimal incThresh = orZero(s.getIncomeThresholdAmount());
-        incomeLabel.setText(String.format(fmt, "Ingresos:", inc.toPlainString(), incThresh.toPlainString(), s.isExceedsIncomeThreshold() ? "[SUPERA]" : ""));
+        incomeLabel.setText(String.format(fmt, "Ingresos:", money(inc), money(incThresh), s.isExceedsIncomeThreshold() ? "[SUPERA]" : ""));
         BigDecimal exp = orZero(s.getTotalExpenses());
         BigDecimal expThresh = orZero(s.getPurchasesThresholdAmount());
-        expensesLabel.setText(String.format(fmt, "Compras/Gastos:", exp.toPlainString(), expThresh.toPlainString(), s.isExceedsPurchasesThreshold() ? "[SUPERA]" : ""));
+        expensesLabel.setText(String.format(fmt, "Compras/Gastos:", money(exp), money(expThresh), s.isExceedsPurchasesThreshold() ? "[SUPERA]" : ""));
         BigDecimal dep = orZero(s.getTotalBankDepositsOrSavings());
         BigDecimal depThresh = orZero(s.getDepositsThresholdAmount());
-        depositsLabel.setText(String.format(fmt, "Depositos/Ahorro:", dep.toPlainString(), depThresh.toPlainString(), s.isExceedsDepositsThreshold() ? "[SUPERA]" : ""));
+        depositsLabel.setText(String.format(fmt, "Depositos/Ahorro:", money(dep), money(depThresh), s.isExceedsDepositsThreshold() ? "[SUPERA]" : ""));
         BigDecimal wealth = orZero(s.getEstimatedGrossWealth());
         BigDecimal wThresh = orZero(s.getWealthThresholdAmount());
-        wealthLabel.setText(String.format(fmt, "Patrimonio:", wealth.toPlainString(), wThresh.toPlainString(), s.isExceedsWealthThreshold() ? "[SUPERA]" : ""));
+        wealthLabel.setText(String.format(fmt, "Patrimonio:", money(wealth), money(wThresh), s.isExceedsWealthThreshold() ? "[SUPERA]" : ""));
 
         if (s.getObligationReasons() != null && !s.getObligationReasons().isEmpty()) {
             reasonsArea.setText(String.join("\n", s.getObligationReasons()));
@@ -291,4 +302,12 @@ public class DianTaxDialog extends JDialog {
     }
 
     private BigDecimal orZero(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+
+    /** Pesos con separador de miles colombiano: 10200000.00 -> 10.200.000 */
+    private static String money(BigDecimal v) {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        return new DecimalFormat("#,##0", symbols).format(v);
+    }
 }

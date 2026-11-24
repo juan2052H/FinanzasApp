@@ -126,7 +126,9 @@ public class CapturarPantallas {
         return null;
     }
 
-    private static void capturar(Component component, File archivo) throws Exception {
+    private static void capturar(Component ventana, File archivo) throws Exception {
+        // Solo el contenido: sin la barra de titulo que Xvfb dibuja encima del encabezado.
+        Component component = ventana instanceof javax.swing.RootPaneContainer r ? r.getRootPane() : ventana;
         AtomicReference<BufferedImage> imagen = new AtomicReference<>();
         SwingUtilities.invokeAndWait(() -> {
             BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);

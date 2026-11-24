@@ -30,8 +30,6 @@ public final class OnboardingDialog {
     public static void show(JFrame owner) {
         JDialog dialog = new JDialog(owner, "Configurar FinanzasApp", true);
         dialog.setMinimumSize(new Dimension(520, 470));
-        dialog.pack();
-        dialog.setLocationRelativeTo(owner);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
         JPanel root = new JPanel(new BorderLayout(0, 14));
@@ -109,6 +107,8 @@ public final class OnboardingDialog {
         root.add(form, BorderLayout.CENTER);
         root.add(footer, BorderLayout.SOUTH);
         dialog.setContentPane(root);
+        dialog.pack();
+        dialog.setLocationRelativeTo(owner);
         dialog.setVisible(true);
     }
 

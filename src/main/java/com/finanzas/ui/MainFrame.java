@@ -284,9 +284,9 @@ public class MainFrame extends JFrame {
 
         dialog.setContentPane(panel);
         dialog.setMinimumSize(new Dimension(520, 460));
+        SwingUtilities.invokeLater(searchField::requestFocusInWindow);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
-        SwingUtilities.invokeLater(searchField::requestFocusInWindow);
         dialog.setVisible(true);
     }
 

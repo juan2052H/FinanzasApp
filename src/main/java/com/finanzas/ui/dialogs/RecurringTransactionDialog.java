@@ -40,8 +40,6 @@ public final class RecurringTransactionDialog {
                 "Nueva transaccion recurrente",
                 true);
         dialog.setMinimumSize(new Dimension(450, 390));
-        dialog.pack();
-        dialog.setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -116,6 +114,8 @@ public final class RecurringTransactionDialog {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
     }
 

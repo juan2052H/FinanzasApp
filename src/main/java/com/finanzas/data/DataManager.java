@@ -3221,9 +3221,9 @@ public class DataManager {
             return "Objetivo de ahorro: pendiente de configurar";
         }
         if ("Monto fijo".equalsIgnoreCase(profile.savingsRecommendationMode)) {
-            return "Ahorro sugerido: $" + suggested.setScale(0, RoundingMode.HALF_UP) + " (monto fijo)";
+            return "Ahorro sugerido: $" + java.text.NumberFormat.getIntegerInstance(getDisplayLocale()).format(suggested) + " (monto fijo)";
         }
-        return "Ahorro sugerido: $" + suggested.setScale(0, RoundingMode.HALF_UP)
+        return "Ahorro sugerido: $" + java.text.NumberFormat.getIntegerInstance(getDisplayLocale()).format(suggested)
                 + " (" + profile.savingsRecommendationPercent.setScale(0, RoundingMode.HALF_UP) + "% de ingresos)";
     }
 

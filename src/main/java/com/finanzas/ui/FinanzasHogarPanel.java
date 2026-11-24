@@ -749,8 +749,6 @@ public class FinanzasHogarPanel extends JPanel {
                 isEdit ? "Editar gasto" : "Nuevo gasto del hogar",
                 true);
         dialog.setMinimumSize(new Dimension(520, 460));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -871,6 +869,8 @@ public class FinanzasHogarPanel extends JPanel {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
@@ -888,8 +888,6 @@ public class FinanzasHogarPanel extends JPanel {
                 "Registrar liquidacion",
                 true);
         dialog.setMinimumSize(new Dimension(420, 300));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -957,6 +955,8 @@ public class FinanzasHogarPanel extends JPanel {
         });
 
         dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
