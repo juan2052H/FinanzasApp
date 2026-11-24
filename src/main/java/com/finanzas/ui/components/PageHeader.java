@@ -10,7 +10,7 @@ public class PageHeader extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
 
         JLabel title = new JLabel(titleText);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(AppColors.getFont(Font.BOLD, 22));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JPanel left = new JPanel();
@@ -20,7 +20,7 @@ public class PageHeader extends JPanel {
 
         if (subtitleText != null && !subtitleText.isEmpty()) {
             JLabel subtitle = new JLabel(subtitleText);
-            subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
             subtitle.setForeground(AppColors.TEXT_SECONDARY);
             left.add(subtitle);
         }

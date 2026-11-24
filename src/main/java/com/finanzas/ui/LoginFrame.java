@@ -23,11 +23,6 @@ public class LoginFrame extends JFrame {
         setSize(460, 640);
         setLocationRelativeTo(null);
         setResizable(false);
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(LoginFrame.class.getName()).fine("No fue posible aplicar look and feel del sistema: " + ex.getMessage());
-        }
         buildUI();
     }
 
@@ -55,12 +50,12 @@ public class LoginFrame extends JFrame {
 
         JLabel title = new JLabel("FinanzasApp");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        title.setFont(AppColors.getFont(Font.BOLD, 28));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("Gestion de finanzas personales y del hogar");
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
         subtitle.setForeground(AppColors.TEXT_SECONDARY);
 
         header.add(title);
@@ -74,13 +69,13 @@ public class LoginFrame extends JFrame {
         GridBagConstraints gbc = baseConstraints();
 
         JLabel heading = new JLabel("Iniciar sesion");
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        heading.setFont(AppColors.getFont(Font.BOLD, 22));
         heading.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel helper = new JLabel(BackendConfig.isEnabled()
                 ? "Conectado al backend: " + BackendConfig.baseUrl()
                 : "Ingresa con tu correo y contrasena.");
-        helper.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        helper.setFont(AppColors.getFont(Font.PLAIN, 12));
         helper.setForeground(AppColors.TEXT_SECONDARY);
 
         JTextField emailField = new JTextField();
@@ -181,13 +176,13 @@ public class LoginFrame extends JFrame {
         GridBagConstraints gbc = baseConstraints();
 
         JLabel heading = new JLabel("Unete a FinanzasApp");
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        heading.setFont(AppColors.getFont(Font.BOLD, 22));
         heading.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel helper = new JLabel(BackendConfig.isEnabled()
                 ? "La cuenta se creara en el backend configurado."
                 : "Crea una cuenta personal o de hogar.");
-        helper.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        helper.setFont(AppColors.getFont(Font.PLAIN, 12));
         helper.setForeground(AppColors.TEXT_SECONDARY);
 
         JTextField nameField = new JTextField();
@@ -290,7 +285,7 @@ public class LoginFrame extends JFrame {
 
     private JPanel formCard() {
         JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(Color.WHITE);
+        card.setBackground(AppColors.CARD_BG);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(AppColors.BORDER),
                 BorderFactory.createEmptyBorder(22, 22, 22, 22)));
@@ -313,7 +308,7 @@ public class LoginFrame extends JFrame {
 
     private JLabel fieldLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setFont(AppColors.getFont(Font.BOLD, 12));
         label.setForeground(AppColors.TEXT_PRIMARY);
         return label;
     }
@@ -330,7 +325,7 @@ public class LoginFrame extends JFrame {
 
     private JButton linkButton(String text) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        button.setFont(AppColors.getFont(Font.PLAIN, 12));
         button.setForeground(AppColors.ACCENT_BLUE);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);

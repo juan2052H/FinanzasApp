@@ -72,16 +72,16 @@ public class FacturasPanel extends JPanel {
         });
         filterBar.add(filterBtn);
         statusLabel = new JLabel("");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        statusLabel.setFont(AppColors.getFont(Font.PLAIN, 11));
         statusLabel.setForeground(AppColors.TEXT_MUTED);
         filterBar.add(statusLabel);
         panel.add(filterBar, BorderLayout.NORTH);
 
         table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setFont(AppColors.getFont(Font.PLAIN, 12));
         table.setRowHeight(28);
-        table.setSelectionBackground(new Color(0xEBF3FE));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        table.setSelectionBackground(AppColors.SELECTION_BG);
+        table.getTableHeader().setFont(AppColors.getFont(Font.BOLD, 12));
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
@@ -278,7 +278,7 @@ public class FacturasPanel extends JPanel {
 
     private JTextField field(String value) {
         JTextField f = new JTextField(value, 20);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        f.setFont(AppColors.getFont(Font.PLAIN, 12));
         return f;
     }
 

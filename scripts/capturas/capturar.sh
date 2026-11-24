@@ -12,13 +12,13 @@ export FINANZAS_API_ENABLED=true
 export FINANZAS_API_BASE_URL="${FINANZAS_API_BASE_URL:-http://backend:8080}"
 export FINANZAS_DATA_DIR=/tmp/finanzas-capturas
 
+# Usa el jar del cliente ya compilado (incluye FlatLaf): ./mvnw -f pom.xml -DskipTests package
+JAR=target/FinanzasApp-shaded.jar
+[ -f "$JAR" ] || { echo "Falta $JAR: ejecute ./mvnw -f pom.xml -DskipTests package"; exit 1; }
 rm -rf /tmp/capturas-build && mkdir -p /tmp/capturas-build
-find src/main/java -name "*.java" > /tmp/capturas-build/sources.txt
-javac --release 25 -encoding UTF-8 -d /tmp/capturas-build @/tmp/capturas-build/sources.txt
-cp -r src/main/resources/. /tmp/capturas-build/ 2>/dev/null || true
-javac --release 25 -encoding UTF-8 -cp /tmp/capturas-build -d /tmp/capturas-build scripts/capturas/CapturarPantallas.java
+javac --release 25 -encoding UTF-8 -cp "$JAR" -d /tmp/capturas-build scripts/capturas/CapturarPantallas.java
 
 Xvfb :99 -screen 0 1280x800x24 >/dev/null 2>&1 &
 export DISPLAY=:99
 sleep 2
-java -Dawt.useSystemAAFontSettings=on -cp /tmp/capturas-build CapturarPantallas docs/capturas
+java -Dawt.useSystemAAFontSettings=on -cp "$JAR:/tmp/capturas-build" CapturarPantallas "${CAPTURAS_SALIDA:-docs/capturas}" "${CAPTURAS_CORREO:-ana.duena@finanzasapp.test}"

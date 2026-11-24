@@ -45,6 +45,7 @@ public class Sidebar extends JPanel {
 
         JLabel logoIcon = new JLabel(AppIcons.APP);
         logoIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
+        logoIcon.setForeground(Color.WHITE);
         JLabel logoText = new JLabel("<html><span style='color:#fff;font-size:13px;font-weight:bold;'>FinanzasApp</span></html>");
         logoPanel.add(logoIcon);
         logoPanel.add(logoText);
@@ -72,8 +73,9 @@ public class Sidebar extends JPanel {
         logoutPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         JLabel logoutIcon = new JLabel(AppIcons.LOGOUT);
         logoutIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+        logoutIcon.setForeground(AppColors.SIDEBAR_TEXT);
         JLabel logoutText = new JLabel("Cerrar sesion");
-        logoutText.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        logoutText.setFont(AppColors.getFont(Font.PLAIN, 12));
         logoutText.setForeground(AppColors.SIDEBAR_TEXT);
         logoutPanel.add(logoutIcon);
         logoutPanel.add(logoutText);
@@ -120,9 +122,11 @@ public class Sidebar extends JPanel {
 
         JLabel iconLabel = new JLabel(menuIcons[index]);
         iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 15));
+        // Sin color propio heredaba TEXT_PRIMARY, igual al fondo de la barra en el tema claro.
+        iconLabel.setForeground(activeIndex == index ? Color.WHITE : AppColors.SIDEBAR_TEXT);
 
         JLabel textLabel = new JLabel(menuItems[index]);
-        textLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        textLabel.setFont(AppColors.getFont(Font.PLAIN, 13));
         textLabel.setForeground(activeIndex == index ? Color.WHITE : AppColors.SIDEBAR_TEXT);
 
         int budgetRiskCount = budgetRiskCount();
@@ -130,7 +134,7 @@ public class Sidebar extends JPanel {
             JLabel badge = new JLabel(String.valueOf(budgetRiskCount));
             badge.setOpaque(false);
             badge.setForeground(Color.WHITE);
-            badge.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            badge.setFont(AppColors.getFont(Font.BOLD, 10));
             JPanel badgePanel = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {

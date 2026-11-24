@@ -4,6 +4,7 @@ import com.finanzas.data.DataManager;
 import com.finanzas.model.MetaAhorro;
 import com.finanzas.model.Money;
 import com.finanzas.ui.components.AppColors;
+import com.finanzas.ui.components.ViewportWidthPanel;
 import com.finanzas.ui.components.CardPanel;
 import com.finanzas.ui.components.FormSupport;
 import com.finanzas.ui.components.PageHeader;
@@ -51,7 +52,7 @@ public class MetasPanel extends JPanel {
         content.setBackground(AppColors.MAIN_BG);
         content.add(buildSummaryStrip(), BorderLayout.NORTH);
 
-        cardsPanel = new JPanel(new GridLayout(0, 2, 16, 16));
+        cardsPanel = new ViewportWidthPanel(new GridLayout(0, 2, 16, 16));
         cardsPanel.setBackground(AppColors.MAIN_BG);
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(8, 20, 20, 20));
 
@@ -95,12 +96,12 @@ public class MetasPanel extends JPanel {
         card.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
 
         JLabel labelView = new JLabel(label);
-        labelView.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        labelView.setFont(AppColors.getFont(Font.PLAIN, 11));
         labelView.setForeground(AppColors.TEXT_MUTED);
         labelView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueView = new JLabel(value);
-        valueView.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        valueView.setFont(AppColors.getFont(Font.BOLD, 16));
         valueView.setForeground(color);
         valueView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -115,7 +116,7 @@ public class MetasPanel extends JPanel {
         List<MetaAhorro> metas = data.getMetas();
         if (metas.isEmpty()) {
             JLabel empty = new JLabel("No tienes metas activas. Crea la primera.");
-            empty.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            empty.setFont(AppColors.getFont(Font.PLAIN, 14));
             empty.setForeground(AppColors.TEXT_MUTED);
             cardsPanel.add(empty);
         } else {
@@ -134,7 +135,7 @@ public class MetasPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(completed ? new Color(0xF0FFF4) : Color.WHITE);
+                g2.setColor(completed ? AppColors.SUCCESS_BG : AppColors.CARD_BG);
                 g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 14, 14));
                 g2.setColor(completed ? AppColors.ACCENT_GREEN : AppColors.BORDER);
                 g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
@@ -155,13 +156,13 @@ public class MetasPanel extends JPanel {
         JLabel icon = new JLabel(meta.getIcono());
         icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
         JLabel name = new JLabel(meta.getNombre());
-        name.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        name.setFont(AppColors.getFont(Font.BOLD, 15));
         name.setForeground(AppColors.TEXT_PRIMARY);
         titleRow.add(icon);
         titleRow.add(name);
 
         JLabel progress = new JLabel(completed ? "Completada" : meta.getProgreso() + "%");
-        progress.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        progress.setFont(AppColors.getFont(Font.BOLD, 13));
         progress.setForeground(completed ? AppColors.ACCENT_GREEN : Color.decode(meta.getColor()));
 
         topRow.add(titleRow, BorderLayout.WEST);
@@ -175,7 +176,7 @@ public class MetasPanel extends JPanel {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(0xE5E7EB));
+                g2.setColor(AppColors.progressTrack());
                 g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 8, 8));
                 int width = (int) (getWidth() * Math.min(meta.getProgreso() / 100.0, 1.0));
                 g2.setColor(completed ? AppColors.ACCENT_GREEN : Color.decode(meta.getColor()));
@@ -190,7 +191,7 @@ public class MetasPanel extends JPanel {
         card.add(Box.createVerticalStrut(10));
 
         JLabel amounts = new JLabel("Ahorrado: $" + nf.format((long) meta.getMontoActual()) + " / $" + nf.format((long) meta.getMontoMeta()));
-        amounts.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        amounts.setFont(AppColors.getFont(Font.PLAIN, 11));
         amounts.setForeground(AppColors.TEXT_MUTED);
         amounts.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -198,12 +199,12 @@ public class MetasPanel extends JPanel {
                 ? "Fecha limite: " + meta.getFechaLimite().format(displayDateFormat) + " (" + meta.getDiasRestantes() + " dias)"
                 : "Fecha limite vencida: " + meta.getFechaLimite().format(displayDateFormat);
         JLabel dueDate = new JLabel(dueText);
-        dueDate.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        dueDate.setFont(AppColors.getFont(Font.PLAIN, 11));
         dueDate.setForeground(meta.getDiasRestantes() >= 0 ? AppColors.TEXT_SECONDARY : AppColors.ACCENT_RED);
         dueDate.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel remaining = new JLabel(completed ? "Meta alcanzada." : "Falta: $" + nf.format((long) meta.getFaltante()));
-        remaining.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        remaining.setFont(AppColors.getFont(Font.BOLD, 11));
         remaining.setForeground(completed ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
         remaining.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -221,7 +222,7 @@ public class MetasPanel extends JPanel {
         if (!completed) {
             RoundedButton depositButton = new RoundedButton("+ Agregar aporte", AppColors.ACCENT_GREEN);
             depositButton.setPreferredSize(new Dimension(150, 30));
-            depositButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            depositButton.setFont(AppColors.getFont(Font.BOLD, 11));
             depositButton.addActionListener(e -> showDepositDialog(meta));
             actions.add(depositButton);
         }
@@ -229,19 +230,19 @@ public class MetasPanel extends JPanel {
         if (meta.getMontoActual() > 0) {
             RoundedButton withdrawButton = new RoundedButton("- Retirar ahorro", AppColors.ACCENT_RED);
             withdrawButton.setPreferredSize(new Dimension(130, 30));
-            withdrawButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            withdrawButton.setFont(AppColors.getFont(Font.BOLD, 11));
             withdrawButton.addActionListener(e -> showWithdrawDialog(meta));
             actions.add(withdrawButton);
         }
 
         RoundedButton editButton = new RoundedButton("Editar", new Color(0x607D8B));
         editButton.setPreferredSize(new Dimension(90, 30));
-        editButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        editButton.setFont(AppColors.getFont(Font.BOLD, 11));
         editButton.addActionListener(e -> showMetaDialog(meta));
         actions.add(editButton);
 
         JButton deleteButton = new JButton("X");
-        deleteButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        deleteButton.setFont(AppColors.getFont(Font.BOLD, 12));
         deleteButton.setBorderPainted(false);
         deleteButton.setContentAreaFilled(false);
         deleteButton.setForeground(AppColors.ACCENT_RED);
@@ -323,12 +324,13 @@ public class MetasPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 isEdit ? "Editar Meta" : "Nueva Meta de Ahorro",
                 true);
-        dialog.setSize(470, 420);
+        dialog.setMinimumSize(new Dimension(470, 420));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = FormSupport.baseConstraints();
 
         JTextField nameField = new JTextField(isEdit ? existing.getNombre() : "");

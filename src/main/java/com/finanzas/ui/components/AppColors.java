@@ -1,8 +1,15 @@
 package com.finanzas.ui.components;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+
 import javax.swing.*;
+import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AppColors {
     private static String currentTheme = "LIGHT";
@@ -48,6 +55,14 @@ public class AppColors {
     public static Color ACCENT_ORANGE = new Color(0xff6d00);
     public static Color BORDER = new Color(0xe5e7eb);
 
+    // Superficies que cambian con el tema (antes estaban fijas en blanco o azul claro).
+    public static Color SELECTION_BG = new Color(0xEBF3FE);
+    public static Color TABLE_HEADER_BG = new Color(0xf8fafc);
+    public static Color ROW_ALT_BG = new Color(0xf9fafb);
+    public static Color FIELD_BG = Color.WHITE;
+    public static Color SUCCESS_BG = new Color(0xF0FFF4);
+    public static Color DISABLED_BG = new Color(0xf3f4f6);
+
     public static Color BTN_GREEN = new Color(0x34a853);
     public static Color BTN_RED = new Color(0xea4335);
     public static Color BTN_BLUE = new Color(0x1a73e8);
@@ -63,7 +78,28 @@ public class AppColors {
             normalized = "SYSTEM".equals(normalized) ? "SYSTEM" : "LIGHT";
         }
         currentTheme = normalized;
+        installLookAndFeel();
         configureSwingDefaults();
+    }
+
+    /**
+     * FlatLaf pinta todos los controles estandar (desplegables, dialogos, tablas, listas) con los
+     * colores del tema. El Look and Feel nativo de Windows ignoraba el tema oscuro y dejaba texto
+     * claro sobre fondo blanco.
+     */
+    private static void installLookAndFeel() {
+        Map<String, String> extras = new HashMap<>();
+        extras.put("@accentColor", isDarkTheme() ? "#3b82f6" : "#1a73e8");
+        extras.put("Component.arc", "8");
+        extras.put("Button.arc", "8");
+        extras.put("TextComponent.arc", "6");
+        extras.put("ScrollBar.showButtons", "false");
+        extras.put("ScrollBar.width", "12");
+        FlatLaf.setGlobalExtraDefaults(extras);
+        boolean ok = isDarkTheme() ? FlatDarkLaf.setup() : FlatLightLaf.setup();
+        if (ok) {
+            FlatLaf.updateUI();
+        }
     }
 
     public static boolean isDarkTheme() {
@@ -88,6 +124,12 @@ public class AppColors {
         TEXT_SECONDARY = new Color(0x6b7280);
         TEXT_MUTED = new Color(0x9ca3af);
         BORDER = new Color(0xe5e7eb);
+        SELECTION_BG = new Color(0xEBF3FE);
+        TABLE_HEADER_BG = new Color(0xf8fafc);
+        ROW_ALT_BG = new Color(0xf9fafb);
+        FIELD_BG = Color.WHITE;
+        SUCCESS_BG = new Color(0xF0FFF4);
+        DISABLED_BG = new Color(0xf3f4f6);
         setCharts();
     }
 
@@ -105,6 +147,12 @@ public class AppColors {
         TEXT_SECONDARY = new Color(0xcbd5e1);
         TEXT_MUTED = new Color(0x94a3b8);
         BORDER = new Color(0x334155);
+        SELECTION_BG = new Color(0x1e3a5f);
+        TABLE_HEADER_BG = new Color(0x334155);
+        ROW_ALT_BG = new Color(0x253043);
+        FIELD_BG = new Color(0x111827);
+        SUCCESS_BG = new Color(0x14301f);
+        DISABLED_BG = new Color(0x374151);
         setCharts();
     }
 
@@ -135,27 +183,59 @@ public class AppColors {
     }
 
     private static void configureSwingDefaults() {
+        // Se fijan en ambos temas para que un cambio oscuro -> claro no deje valores del tema anterior.
+        Color field = FIELD_BG;
         UIManager.put("Panel.background", CARD_BG);
+        UIManager.put("OptionPane.background", CARD_BG);
+        UIManager.put("RootPane.background", CARD_BG);
         UIManager.put("Viewport.background", CARD_BG);
         UIManager.put("ScrollPane.background", CARD_BG);
         UIManager.put("Table.background", CARD_BG);
         UIManager.put("Table.foreground", TEXT_PRIMARY);
         UIManager.put("Table.gridColor", BORDER);
-        UIManager.put("TableHeader.background", isDarkTheme() ? new Color(0x334155) : new Color(0xf8fafc));
+        UIManager.put("Table.rowHeight", 30);
+        UIManager.put("TableHeader.background", TABLE_HEADER_BG);
+        UIManager.put("Table.selectionBackground", SELECTION_BG);
+        UIManager.put("Table.selectionForeground", TEXT_PRIMARY);
+        UIManager.put("List.selectionBackground", SELECTION_BG);
+        UIManager.put("List.selectionForeground", TEXT_PRIMARY);
         UIManager.put("TableHeader.foreground", TEXT_PRIMARY);
         UIManager.put("Label.foreground", TEXT_PRIMARY);
-        UIManager.put("TextField.background", isDarkTheme() ? new Color(0x111827) : Color.WHITE);
+        UIManager.put("TextField.background", field);
         UIManager.put("TextField.foreground", TEXT_PRIMARY);
-        UIManager.put("ComboBox.background", isDarkTheme() ? new Color(0x111827) : Color.WHITE);
+        UIManager.put("PasswordField.background", field);
+        UIManager.put("FormattedTextField.background", field);
+        UIManager.put("TextArea.background", field);
+        UIManager.put("Spinner.background", field);
+        UIManager.put("ComboBox.background", field);
         UIManager.put("ComboBox.foreground", TEXT_PRIMARY);
+        UIManager.put("ComboBox.popupBackground", field);
+        UIManager.put("List.background", field);
         UIManager.put("CheckBox.background", CARD_BG);
         UIManager.put("CheckBox.foreground", TEXT_PRIMARY);
+        UIManager.put("RadioButton.background", CARD_BG);
+        UIManager.put("RadioButton.foreground", TEXT_PRIMARY);
         UIManager.put("ToolTip.background", isDarkTheme() ? new Color(0x111827) : new Color(0xffffe1));
         UIManager.put("ToolTip.foreground", TEXT_PRIMARY);
+        UIManager.put("ProgressBar.background", isDarkTheme() ? new Color(0x334155) : new Color(0xe5e7eb));
     }
 
+    /** Color en formato CSS para etiquetas HTML ("#rrggbb"), que no siguen el tema por si solas. */
+    public static String css(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    /** Fondo de la pista de barras de progreso pintadas a mano (presupuestos y metas). */
+    public static Color progressTrack() {
+        return isDarkTheme() ? new Color(0x334155) : new Color(0xe5e7eb);
+    }
+
+    /**
+     * Segoe UI con fuentes de respaldo del sistema: los iconos (emoji y simbolos como el signo mas o
+     * el menu de acciones) se veian como cuadros porque Segoe UI no los incluye.
+     */
     public static Font getFont(int style, int size) {
-        return new Font("Segoe UI", style, size);
+        return StyleContext.getDefaultStyleContext().getFont("Segoe UI", style, size);
     }
 
     public static JPanel roundedPanel(int radius) {

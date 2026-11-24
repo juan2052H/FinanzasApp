@@ -4,6 +4,7 @@ import com.finanzas.data.DataManager;
 import com.finanzas.model.FinancialCategory;
 import com.finanzas.model.Presupuesto;
 import com.finanzas.ui.components.AppColors;
+import com.finanzas.ui.components.ViewportWidthPanel;
 import com.finanzas.ui.components.CardPanel;
 import com.finanzas.ui.components.FormSupport;
 import com.finanzas.ui.components.PageHeader;
@@ -32,7 +33,7 @@ public class PresupuestoPanel extends JPanel {
     private void buildUI() {
         add(buildHeader(), BorderLayout.NORTH);
 
-        cardsPanel = new JPanel();
+        cardsPanel = new ViewportWidthPanel();
         cardsPanel.setLayout(new BoxLayout(cardsPanel, BoxLayout.Y_AXIS));
         cardsPanel.setBackground(AppColors.MAIN_BG);
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(8, 20, 20, 20));
@@ -94,12 +95,12 @@ public class PresupuestoPanel extends JPanel {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
         JLabel labelView = new JLabel(label);
-        labelView.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        labelView.setFont(AppColors.getFont(Font.PLAIN, 11));
         labelView.setForeground(AppColors.TEXT_MUTED);
         labelView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueView = new JLabel(value);
-        valueView.setFont(new Font("Segoe UI", Font.BOLD, value != null && value.length() > 24 ? 11 : 16));
+        valueView.setFont(AppColors.getFont(Font.BOLD, value != null && value.length() > 24 ? 11 : 16));
         valueView.setForeground(color);
         valueView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -134,7 +135,7 @@ public class PresupuestoPanel extends JPanel {
         dot.setPreferredSize(new Dimension(14, 18));
 
         JLabel categoryLabel = new JLabel(presupuesto.getCategoria());
-        categoryLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        categoryLabel.setFont(AppColors.getFont(Font.BOLD, 13));
         categoryLabel.setForeground(AppColors.TEXT_PRIMARY);
         categoryRow.add(dot);
         categoryRow.add(categoryLabel);
@@ -148,7 +149,7 @@ public class PresupuestoPanel extends JPanel {
                 : AppColors.ACCENT_GREEN;
 
         JLabel badgeLabel = new JLabel(" " + badge + " ");
-        badgeLabel.setFont(new Font("Segoe UI", Font.BOLD, 9));
+        badgeLabel.setFont(AppColors.getFont(Font.BOLD, 9));
         badgeLabel.setForeground(Color.WHITE);
         badgeLabel.setBackground(badgeColor);
         badgeLabel.setOpaque(true);
@@ -157,7 +158,7 @@ public class PresupuestoPanel extends JPanel {
         JPanel percentagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         percentagePanel.setOpaque(false);
         JLabel percentageLabel = new JLabel(String.format("%.0f%%", percentage));
-        percentageLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        percentageLabel.setFont(AppColors.getFont(Font.BOLD, 14));
         percentageLabel.setForeground(badgeColor);
         percentagePanel.add(badgeLabel);
         percentagePanel.add(percentageLabel);
@@ -171,7 +172,7 @@ public class PresupuestoPanel extends JPanel {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(0xe5e7eb));
+                g2.setColor(AppColors.progressTrack());
                 g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 8, 8));
                 int progressWidth = (int) (getWidth() * Math.min(percentage / 100.0, 1.0));
                 g2.setColor(badgeColor);
@@ -188,7 +189,7 @@ public class PresupuestoPanel extends JPanel {
                 "Gastado: $" + nf.format((long) presupuesto.getMontoGastado())
                         + " / Presupuesto: $" + nf.format((long) presupuesto.getMontoPresupuestado())
                         + " / Disponible: $" + nf.format((long) presupuesto.getSaldo()));
-        amounts.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        amounts.setFont(AppColors.getFont(Font.PLAIN, 10));
         amounts.setForeground(AppColors.TEXT_MUTED);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
@@ -222,16 +223,17 @@ public class PresupuestoPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 "Configurar ahorro recomendado",
                 true);
-        dialog.setSize(420, 280);
+        dialog.setMinimumSize(new Dimension(420, 280));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = FormSupport.baseConstraints();
 
         JCheckBox enabled = new JCheckBox("Activar recomendacion");
-        enabled.setBackground(Color.WHITE);
+        enabled.setBackground(AppColors.CARD_BG);
         enabled.setSelected(data.isSavingsRecommendationEnabled());
         JComboBox<String> modeBox = new JComboBox<String>(new String[]{"Conservador", "Equilibrado", "Agresivo", "Personalizado", "Monto fijo"});
         modeBox.setSelectedItem(data.getSavingsRecommendationMode());
@@ -274,12 +276,13 @@ public class PresupuestoPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 isEdit ? "Editar presupuesto" : "Nuevo presupuesto",
                 true);
-        dialog.setSize(400, isEdit ? 290 : 250);
+        dialog.setMinimumSize(new Dimension(400, isEdit ? 290 : 250));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = FormSupport.baseConstraints();
 
         JComboBox<String> categoryBox = new JComboBox<String>(data.getCategoryNames(FinancialCategory.Kind.EXPENSE));
@@ -306,7 +309,7 @@ public class PresupuestoPanel extends JPanel {
         if (isEdit) {
             JLabel spentLabel = new JLabel("Ya gastado este mes: $" + nf.format((long) existing.getMontoGastado())
                     + " (disponible: $" + nf.format((long) existing.getSaldo()) + ")");
-            spentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            spentLabel.setFont(AppColors.getFont(Font.PLAIN, 11));
             spentLabel.setForeground(AppColors.TEXT_MUTED);
             gbc.gridx = 0;
             gbc.gridy = nextRow;
@@ -351,7 +354,7 @@ public class PresupuestoPanel extends JPanel {
 
     private JButton iconBtn(String text, Color foreground) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        button.setFont(AppColors.getFont(Font.PLAIN, 12));
         button.setForeground(foreground);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);

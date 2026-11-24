@@ -13,9 +13,16 @@
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.2</junit.version>
+        <flatlaf.version>3.7.2</flatlaf.version>
     </properties>
 
     <dependencies>
+        <!-- Look and Feel claro/oscuro: el nativo de Windows ignora los colores del tema oscuro. -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>${flatlaf.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

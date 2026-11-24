@@ -29,19 +29,20 @@ public final class OnboardingDialog {
 
     public static void show(JFrame owner) {
         JDialog dialog = new JDialog(owner, "Configurar FinanzasApp", true);
-        dialog.setSize(520, 470);
+        dialog.setMinimumSize(new Dimension(520, 470));
+        dialog.pack();
         dialog.setLocationRelativeTo(owner);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
         JPanel root = new JPanel(new BorderLayout(0, 14));
-        root.setBackground(Color.WHITE);
+        root.setBackground(AppColors.CARD_BG);
         root.setBorder(BorderFactory.createEmptyBorder(22, 24, 22, 24));
 
         JLabel title = new JLabel("Primeros pasos");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setFont(AppColors.getFont(Font.BOLD, 24));
         title.setForeground(AppColors.TEXT_PRIMARY);
         JLabel subtitle = new JLabel("Configura tu espacio sin crear dinero ficticio.");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
         subtitle.setForeground(AppColors.TEXT_SECONDARY);
 
         JPanel heading = new JPanel();
@@ -99,7 +100,7 @@ public final class OnboardingDialog {
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
         JLabel note = new JLabel("Los ingresos aproximados no se registran como transacciones.");
-        note.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        note.setFont(AppColors.getFont(Font.PLAIN, 11));
         note.setForeground(AppColors.TEXT_MUTED);
         footer.add(note, BorderLayout.WEST);
         footer.add(start, BorderLayout.EAST);
@@ -115,7 +116,7 @@ public final class OnboardingDialog {
         gbc.gridx = 0;
         gbc.gridy = row * 2;
         JLabel view = new JLabel(label);
-        view.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        view.setFont(AppColors.getFont(Font.BOLD, 12));
         view.setForeground(AppColors.TEXT_PRIMARY);
         form.add(view, gbc);
         gbc.gridy = row * 2 + 1;

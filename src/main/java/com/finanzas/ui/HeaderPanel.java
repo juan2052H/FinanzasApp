@@ -27,11 +27,11 @@ public class HeaderPanel extends JPanel {
     }
 
     private void buildUI() {
-        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        title.setFont(AppColors.getFont(Font.BOLD, 16));
         title.setForeground(Color.WHITE);
 
         rightPanel.setBackground(AppColors.HEADER_BG);
-        userName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        userName.setFont(AppColors.getFont(Font.BOLD, 13));
         userName.setForeground(Color.WHITE);
         userName.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         rightWrapper.setBackground(AppColors.HEADER_BG);
@@ -53,7 +53,7 @@ public class HeaderPanel extends JPanel {
         if (data.isBackendSessionActive()) {
             rightPanel.add(buildWorkspaceSelector());
             JLabel apiBadge = new JLabel("API");
-            apiBadge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            apiBadge.setFont(AppColors.getFont(Font.BOLD, 11));
             apiBadge.setForeground(Color.WHITE);
             apiBadge.setOpaque(true);
             apiBadge.setBackground(new Color(0x16a34a));
@@ -74,7 +74,7 @@ public class HeaderPanel extends JPanel {
         List<BackendWorkspace> workspaces = data.getBackendWorkspaces();
         JComboBox<BackendWorkspace> selector = new JComboBox<BackendWorkspace>(workspaces.toArray(new BackendWorkspace[0]));
         selector.setPreferredSize(new Dimension(220, 30));
-        selector.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        selector.setFont(AppColors.getFont(Font.PLAIN, 12));
         selector.setFocusable(false);
         selector.setEnabled(!workspaceActionRunning && !workspaces.isEmpty());
         selector.setToolTipText("Workspace activo");
@@ -82,8 +82,8 @@ public class HeaderPanel extends JPanel {
             JLabel label = new JLabel(value == null ? "Sin workspace" : workspaceLabel(value));
             label.setOpaque(true);
             label.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
-            label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            label.setBackground(selected ? new Color(0xEBF3FE) : Color.WHITE);
+            label.setFont(AppColors.getFont(Font.PLAIN, 12));
+            label.setBackground(selected ? AppColors.SELECTION_BG : AppColors.FIELD_BG);
             label.setForeground(AppColors.TEXT_PRIMARY);
             return label;
         });

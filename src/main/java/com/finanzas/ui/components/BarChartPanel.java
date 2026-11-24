@@ -73,11 +73,11 @@ public class BarChartPanel extends JPanel {
         g2.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));
         for (int i = 0; i <= gridLines; i++) {
             int y = padT + height - (i * height / gridLines);
-            g2.setColor(new Color(0xe5e7eb));
+            g2.setColor(AppColors.BORDER);
             g2.drawLine(padL, y, padL + width, y);
             double value = (maxVal / gridLines) * i;
             g2.setColor(AppColors.TEXT_MUTED);
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
+            g2.setFont(AppColors.getFont(Font.PLAIN, 9));
             String label = "$" + (int) (value / 1000000) + "M";
             g2.drawString(label, 2, y + 4);
         }
@@ -109,7 +109,7 @@ public class BarChartPanel extends JPanel {
 
             if (hovered) {
                 String tip = "$" + nf.format((long) ingresos[i]) + " / $" + nf.format((long) gastos[i]);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 9));
+                g2.setFont(AppColors.getFont(Font.BOLD, 9));
                 FontMetrics fm = g2.getFontMetrics();
                 int tw = fm.stringWidth(tip) + 8;
                 int tx = gx + groupW / 2 - tw / 2;
@@ -120,7 +120,7 @@ public class BarChartPanel extends JPanel {
                 g2.drawString(tip, tx + 4, ty);
             }
 
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+            g2.setFont(AppColors.getFont(Font.PLAIN, 10));
             g2.setColor(AppColors.TEXT_SECONDARY);
             FontMetrics fm = g2.getFontMetrics();
             int labelW = fm.stringWidth(labels[i]);
@@ -130,7 +130,7 @@ public class BarChartPanel extends JPanel {
         int legendY = padT + height + 28;
         g2.setColor(AppColors.BAR_INGRESOS);
         g2.fillRect(padL, legendY, 12, 8);
-        g2.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        g2.setFont(AppColors.getFont(Font.PLAIN, 10));
         g2.setColor(AppColors.TEXT_SECONDARY);
         g2.drawString("Ingresos", padL + 16, legendY + 8);
 

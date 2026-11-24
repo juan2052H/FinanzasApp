@@ -64,11 +64,11 @@ public class FinanzasHogarPanel extends JPanel {
         header.setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
 
         JLabel title = new JLabel("Finanzas del Hogar");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(AppColors.getFont(Font.BOLD, 22));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("Gestiona los gastos compartidos con tu hogar");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
         subtitle.setForeground(AppColors.TEXT_SECONDARY);
 
         JPanel left = new JPanel();
@@ -103,7 +103,7 @@ public class FinanzasHogarPanel extends JPanel {
         JPanel card = card();
         card.setLayout(new BorderLayout(0, 8));
         JLabel title = new JLabel("👥 Miembros del hogar");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setFont(AppColors.getFont(Font.BOLD, 13));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JPanel membersList = new JPanel();
@@ -130,7 +130,7 @@ public class FinanzasHogarPanel extends JPanel {
         boolean canManageWorkspace = !backendSession || data.canManageActiveBackendWorkspace();
         RoundedButton addMember = new RoundedButton(AppIcons.PLUS + (backendSession ? " Invitar" : " Agregar"), AppColors.ACCENT_BLUE);
         addMember.setPreferredSize(new Dimension(120, 28));
-        addMember.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        addMember.setFont(AppColors.getFont(Font.BOLD, 11));
         addMember.setEnabled(!backendActionRunning && canManageWorkspace);
         addMember.setToolTipText(canManageWorkspace ? "" : "Solo OWNER o ADMIN pueden invitar miembros.");
         addMember.addActionListener(e -> {
@@ -147,7 +147,7 @@ public class FinanzasHogarPanel extends JPanel {
         if (backendSession) {
             RoundedButton refreshButton = new RoundedButton("Actualizar", AppColors.TEXT_MUTED);
             refreshButton.setPreferredSize(new Dimension(110, 28));
-            refreshButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            refreshButton.setFont(AppColors.getFont(Font.BOLD, 11));
             refreshButton.setEnabled(!backendActionRunning);
             refreshButton.addActionListener(e -> runBackendHouseholdAction("", () -> data.refreshBackendInvitations()));
             buttonRow.add(refreshButton);
@@ -156,14 +156,14 @@ public class FinanzasHogarPanel extends JPanel {
             boolean isOwner = active != null && "OWNER".equalsIgnoreCase(active.getRole());
             RoundedButton transferOwner = new RoundedButton("Transferir", AppColors.TEXT_MUTED);
             transferOwner.setPreferredSize(new Dimension(105, 28));
-            transferOwner.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            transferOwner.setFont(AppColors.getFont(Font.BOLD, 11));
             transferOwner.setEnabled(!backendActionRunning && isOwner && data.getBackendMemberOptions().size() > 1);
             transferOwner.addActionListener(e -> showTransferOwnerDialog());
             buttonRow.add(transferOwner);
 
             RoundedButton leaveWorkspace = new RoundedButton("Abandonar", AppColors.ACCENT_RED);
             leaveWorkspace.setPreferredSize(new Dimension(115, 28));
-            leaveWorkspace.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            leaveWorkspace.setFont(AppColors.getFont(Font.BOLD, 11));
             leaveWorkspace.setEnabled(!backendActionRunning);
             leaveWorkspace.addActionListener(e -> leaveActiveWorkspace());
             buttonRow.add(leaveWorkspace);
@@ -251,14 +251,14 @@ public class FinanzasHogarPanel extends JPanel {
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
 
             JLabel name = new JLabel("👤 " + entry.getKey());
-            name.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            name.setFont(AppColors.getFont(Font.PLAIN, 12));
             name.setForeground(AppColors.TEXT_PRIMARY);
 
             double balance = entry.getValue();
             JLabel balanceLabel = new JLabel(balance >= 0
                     ? "+$" + nf.format((long) balance) + " le deben"
                     : "-$" + nf.format((long) Math.abs(balance)) + " debe");
-            balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            balanceLabel.setFont(AppColors.getFont(Font.BOLD, 11));
             balanceLabel.setForeground(balance >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
             MemberOption memberOption = memberOptionByLabel(entry.getKey());
@@ -268,7 +268,7 @@ public class FinanzasHogarPanel extends JPanel {
             boolean owner = "OWNER".equalsIgnoreCase(role);
 
             JButton delete = new JButton("X");
-            delete.setFont(new Font("Segoe UI", Font.BOLD, 9));
+            delete.setFont(AppColors.getFont(Font.BOLD, 9));
             delete.setBorderPainted(false);
             delete.setContentAreaFilled(false);
             delete.setForeground(AppColors.TEXT_MUTED);
@@ -329,7 +329,7 @@ public class FinanzasHogarPanel extends JPanel {
                 : new String[]{"MEMBER", "VIEWER"});
         roleBox.setSelectedItem(role);
         roleBox.setPreferredSize(new Dimension(92, 24));
-        roleBox.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        roleBox.setFont(AppColors.getFont(Font.PLAIN, 10));
         roleBox.setFocusable(false);
         roleBox.setEnabled(!backendActionRunning);
         roleBox.addActionListener(e -> {
@@ -374,7 +374,7 @@ public class FinanzasHogarPanel extends JPanel {
 
     private JLabel roleLabel(String role) {
         JLabel label = new JLabel(role);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        label.setFont(AppColors.getFont(Font.BOLD, 10));
         label.setForeground(AppColors.TEXT_MUTED);
         label.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         return label;
@@ -434,7 +434,7 @@ public class FinanzasHogarPanel extends JPanel {
 
         if (!hasRows) {
             JLabel empty = new JLabel("Sin invitaciones pendientes.");
-            empty.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            empty.setFont(AppColors.getFont(Font.PLAIN, 11));
             empty.setForeground(AppColors.TEXT_MUTED);
             empty.setAlignmentX(Component.LEFT_ALIGNMENT);
             invitationsPanel.add(empty);
@@ -455,7 +455,7 @@ public class FinanzasHogarPanel extends JPanel {
 
     private void addSmallSectionTitle(JPanel panel, String text) {
         JLabel title = new JLabel(text);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        title.setFont(AppColors.getFont(Font.BOLD, 11));
         title.setForeground(AppColors.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(title);
@@ -464,7 +464,7 @@ public class FinanzasHogarPanel extends JPanel {
 
     private JComponent readOnlyInvitationRow(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setFont(AppColors.getFont(Font.PLAIN, 11));
         label.setForeground(AppColors.TEXT_MUTED);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
@@ -478,7 +478,7 @@ public class FinanzasHogarPanel extends JPanel {
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setFont(AppColors.getFont(Font.PLAIN, 11));
         label.setForeground(AppColors.TEXT_SECONDARY);
         row.add(label, BorderLayout.CENTER);
 
@@ -496,7 +496,7 @@ public class FinanzasHogarPanel extends JPanel {
 
     private JButton compactActionButton(String label, BackendAction action) {
         JButton button = new JButton(label);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        button.setFont(AppColors.getFont(Font.BOLD, 10));
         button.setFocusPainted(false);
         button.setEnabled(!backendActionRunning);
         button.addActionListener(e -> runBackendHouseholdAction("", action));
@@ -507,7 +507,7 @@ public class FinanzasHogarPanel extends JPanel {
         JPanel card = card();
         card.setLayout(new BorderLayout(0, 8));
         JLabel title = new JLabel("💳 Resumen de deudas compartidas");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setFont(AppColors.getFont(Font.BOLD, 13));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         debtCards = new JPanel();
@@ -532,7 +532,7 @@ public class FinanzasHogarPanel extends JPanel {
                 .sum();
 
         JLabel total = new JLabel("Total gastos compartidos: $" + nf.format((long) totalExpenses));
-        total.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        total.setFont(AppColors.getFont(Font.BOLD, 12));
         total.setForeground(AppColors.TEXT_PRIMARY);
         total.setAlignmentX(Component.LEFT_ALIGNMENT);
         debtCards.add(total);
@@ -544,13 +544,13 @@ public class FinanzasHogarPanel extends JPanel {
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
 
             JLabel name = new JLabel(entry.getKey() + ":");
-            name.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            name.setFont(AppColors.getFont(Font.PLAIN, 11));
             name.setForeground(AppColors.TEXT_SECONDARY);
 
             double value = entry.getValue();
             String message = value >= 0 ? "le deben $" + nf.format((long) value) : "debe $" + nf.format((long) Math.abs(value));
             JLabel status = new JLabel(message);
-            status.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            status.setFont(AppColors.getFont(Font.BOLD, 11));
             status.setForeground(value >= 0 ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
             row.add(name, BorderLayout.WEST);
@@ -561,7 +561,7 @@ public class FinanzasHogarPanel extends JPanel {
         if (!data.getSettlements().isEmpty()) {
             debtCards.add(Box.createVerticalStrut(8));
             JLabel historyTitle = new JLabel("Ultimas liquidaciones");
-            historyTitle.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            historyTitle.setFont(AppColors.getFont(Font.BOLD, 11));
             historyTitle.setForeground(AppColors.TEXT_PRIMARY);
             historyTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
             debtCards.add(historyTitle);
@@ -571,7 +571,7 @@ public class FinanzasHogarPanel extends JPanel {
                 JLabel row = new JLabel(settlement.getFromMember() + " -> " + settlement.getToMember()
                         + " $" + nf.format((long) settlement.getAmount())
                         + " (" + settlement.getDate().format(dtf) + ")");
-                row.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+                row.setFont(AppColors.getFont(Font.PLAIN, 10));
                 row.setForeground(AppColors.TEXT_MUTED);
                 row.setAlignmentX(Component.LEFT_ALIGNMENT);
                 debtCards.add(row);
@@ -589,7 +589,7 @@ public class FinanzasHogarPanel extends JPanel {
         JPanel titleRow = new JPanel(new BorderLayout());
         titleRow.setOpaque(false);
         JLabel title = new JLabel("Historial de gastos del hogar");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setFont(AppColors.getFont(Font.BOLD, 14));
         title.setForeground(AppColors.TEXT_PRIMARY);
         titleRow.add(title, BorderLayout.WEST);
 
@@ -601,13 +601,13 @@ public class FinanzasHogarPanel extends JPanel {
             }
         };
         JTable table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setFont(AppColors.getFont(Font.PLAIN, 12));
         table.setRowHeight(36);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(0xEBF3FE));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        table.getTableHeader().setBackground(new Color(0xf8fafc));
+        table.setSelectionBackground(AppColors.SELECTION_BG);
+        table.getTableHeader().setFont(AppColors.getFont(Font.BOLD, 11));
+        table.getTableHeader().setBackground(AppColors.TABLE_HEADER_BG);
         table.getTableHeader().setForeground(AppColors.TEXT_SECONDARY);
         table.getColumnModel().getColumn(2).setPreferredWidth(120);
         table.getColumnModel().getColumn(6).setMaxWidth(80);
@@ -616,17 +616,17 @@ public class FinanzasHogarPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, selected, focus, row, column);
-                setBackground(selected ? new Color(0xEBF3FE) : (row % 2 == 0 ? Color.WHITE : new Color(0xf9fafb)));
+                setBackground(selected ? AppColors.SELECTION_BG : (row % 2 == 0 ? AppColors.CARD_BG : AppColors.ROW_ALT_BG));
                 setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
                 if (column == 2) {
                     setForeground(AppColors.ACCENT_RED);
-                    setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    setFont(AppColors.getFont(Font.BOLD, 12));
                 } else if (column == 5) {
                     setForeground("Si".equals(value) ? AppColors.ACCENT_GREEN : AppColors.TEXT_MUTED);
-                    setFont(new Font("Segoe UI", Font.BOLD, 11));
+                    setFont(AppColors.getFont(Font.BOLD, 11));
                 } else {
                     setForeground(AppColors.TEXT_SECONDARY);
-                    setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                    setFont(AppColors.getFont(Font.PLAIN, 12));
                 }
                 return this;
             }
@@ -657,7 +657,7 @@ public class FinanzasHogarPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(AppColors.CARD_BG);
         panel.add(titleRow, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
         refreshTable();
@@ -743,12 +743,13 @@ public class FinanzasHogarPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 isEdit ? "Editar gasto" : "Nuevo gasto del hogar",
                 true);
-        dialog.setSize(520, 460);
+        dialog.setMinimumSize(new Dimension(520, 460));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(7, 4, 7, 4);
@@ -782,7 +783,7 @@ public class FinanzasHogarPanel extends JPanel {
         }
         JTextField dateField = new JTextField(isEdit ? existing.getFecha().format(dtf) : LocalDate.now().format(dtf));
         JCheckBox split = new JCheckBox("Dividir entre todos");
-        split.setBackground(Color.WHITE);
+        split.setBackground(AppColors.CARD_BG);
         if (isEdit) {
             split.setSelected(existing.isDividido());
         }
@@ -799,7 +800,7 @@ public class FinanzasHogarPanel extends JPanel {
             boolean customSplit = split.isSelected() && splitMethodBox.getSelectedItem() != GastoHogar.SplitMethod.EQUAL;
             splitMethodBox.setEnabled(split.isSelected());
             splitValues.setEnabled(customSplit);
-            splitValues.setBackground(customSplit ? Color.WHITE : new Color(0xf3f4f6));
+            splitValues.setBackground(customSplit ? AppColors.FIELD_BG : AppColors.DISABLED_BG);
         };
         split.addActionListener(e -> refreshSplitControls.run());
         splitMethodBox.addActionListener(e -> refreshSplitControls.run());
@@ -881,12 +882,13 @@ public class FinanzasHogarPanel extends JPanel {
                 SwingUtilities.getWindowAncestor(this) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(this) : null,
                 "Registrar liquidacion",
                 true);
-        dialog.setSize(420, 300);
+        dialog.setMinimumSize(new Dimension(420, 300));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(7, 4, 7, 4);
@@ -1006,7 +1008,7 @@ public class FinanzasHogarPanel extends JPanel {
         gbc.gridy = row;
         gbc.weightx = 0.4;
         JLabel view = new JLabel(label);
-        view.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        view.setFont(AppColors.getFont(Font.PLAIN, 12));
         panel.add(view, gbc);
 
         gbc.gridx = 1;
@@ -1020,7 +1022,7 @@ public class FinanzasHogarPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
+                g2.setColor(AppColors.CARD_BG);
                 g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 12, 12));
                 g2.setColor(AppColors.BORDER);
                 g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));

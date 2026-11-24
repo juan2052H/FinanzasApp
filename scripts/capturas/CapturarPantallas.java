@@ -41,7 +41,8 @@ public class CapturarPantallas {
         SwingUtilities.invokeAndWait(() -> login.get().dispose());
 
         DataManager data = DataManager.getInstance();
-        if (!data.login("ana.duena@finanzasapp.test", "Prueba2026*")) {
+        String correo = args.length > 1 ? args[1] : "ana.duena@finanzasapp.test";
+        if (!data.login(correo, "Prueba2026*")) {
             throw new IllegalStateException("No fue posible iniciar sesion contra el backend.");
         }
         if (!data.selectBackendWorkspace(HOGAR)) {

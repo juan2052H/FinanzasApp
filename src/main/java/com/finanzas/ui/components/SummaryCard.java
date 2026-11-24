@@ -57,22 +57,22 @@ public class SummaryCard extends JPanel {
         int iconX = width - 58 + (44 - iconMetrics.stringWidth(icono)) / 2;
         g2.drawString(icono, iconX, 44);
 
-        g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        g2.setFont(AppColors.getFont(Font.PLAIN, 12));
         g2.setColor(new Color(255, 255, 255, 200));
         g2.drawString(titulo, 14, 24);
 
         NumberFormat nf = NumberFormat.getInstance(com.finanzas.data.DataManager.getInstance().getDisplayLocale());
         String amount = "$" + nf.format((long) monto);
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        g2.setFont(AppColors.getFont(Font.BOLD, 22));
         g2.setColor(Color.WHITE);
         g2.drawString(amount, 14, 58);
 
-        g2.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        g2.setFont(AppColors.getFont(Font.PLAIN, 11));
         g2.setColor(new Color(255, 255, 255, 200));
         g2.drawString(subtitulo, 14, 78);
 
         if (showExtra && !extraText.isEmpty()) {
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            g2.setFont(AppColors.getFont(Font.BOLD, 11));
             g2.setColor(new Color(255, 255, 255, 230));
             g2.drawString(extraText, 14, 96);
         }

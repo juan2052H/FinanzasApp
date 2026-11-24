@@ -11,12 +11,8 @@ public class Main {
         System.setProperty("swing.aatext", "true");
 
         SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            // new MainFrame();
+            // La pantalla de acceso usa el tema claro; MainFrame aplica luego el tema del usuario.
+            com.finanzas.ui.components.AppColors.applyTheme("LIGHT");
             new com.finanzas.ui.LoginFrame().setVisible(true);
         });
     }

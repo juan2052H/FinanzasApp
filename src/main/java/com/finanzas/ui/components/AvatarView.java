@@ -40,7 +40,7 @@ public class AvatarView extends JPanel {
             g2.setColor(fallbackColor);
             g2.fillOval(0, 0, size, size);
             g2.setColor(textColor);
-            g2.setFont(new Font("Segoe UI", Font.BOLD, fontSize));
+            g2.setFont(AppColors.getFont(Font.BOLD, fontSize));
             String initials = buildInitials();
             FontMetrics metrics = g2.getFontMetrics();
             int x = (size - metrics.stringWidth(initials)) / 2;

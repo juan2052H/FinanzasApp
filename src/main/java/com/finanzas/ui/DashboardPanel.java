@@ -7,6 +7,7 @@ import com.finanzas.model.MetaAhorro;
 import com.finanzas.model.RecurringTransaction;
 import com.finanzas.model.Transaccion;
 import com.finanzas.ui.components.AppColors;
+import com.finanzas.ui.components.ViewportWidthPanel;
 import com.finanzas.ui.components.AppIcons;
 import com.finanzas.ui.components.BarChartPanel;
 import com.finanzas.ui.components.CardPanel;
@@ -64,7 +65,7 @@ public class DashboardPanel extends JPanel {
     private void buildUI() {
         add(buildPageHeader(), BorderLayout.NORTH);
 
-        JPanel content = new JPanel();
+        JPanel content = new ViewportWidthPanel();
         content.setBackground(AppColors.MAIN_BG);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(BorderFactory.createEmptyBorder(12, 20, 20, 20));
@@ -91,11 +92,11 @@ public class DashboardPanel extends JPanel {
         panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 4, 20));
 
         JLabel title = new JLabel("Inicio");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(AppColors.getFont(Font.BOLD, 22));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("Resumen de tu situacion financiera");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
         subtitle.setForeground(AppColors.TEXT_SECONDARY);
 
         JPanel left = new JPanel();
@@ -107,7 +108,7 @@ public class DashboardPanel extends JPanel {
 
         String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO")));
         JLabel dateLabel = new JLabel(AppIcons.CALENDAR + "  " + currentDate);
-        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dateLabel.setFont(AppColors.getFont(Font.PLAIN, 12));
         dateLabel.setForeground(AppColors.TEXT_SECONDARY);
 
         panel.add(left, BorderLayout.WEST);
@@ -169,13 +170,13 @@ public class DashboardPanel extends JPanel {
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
             row.setOpaque(false);
             JLabel dot = new JLabel("o");
-            dot.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            dot.setFont(AppColors.getFont(Font.BOLD, 12));
             dot.setForeground(colors[i % colors.length]);
             JLabel text = new JLabel(categories[i]);
-            text.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+            text.setFont(AppColors.getFont(Font.PLAIN, 10));
             text.setForeground(AppColors.TEXT_SECONDARY);
             JLabel pct = new JLabel(String.format(Locale.US, "%.0f%%", percentages[i]));
-            pct.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            pct.setFont(AppColors.getFont(Font.BOLD, 10));
             pct.setForeground(AppColors.TEXT_PRIMARY);
             row.add(dot);
             row.add(text);
@@ -241,10 +242,10 @@ public class DashboardPanel extends JPanel {
         panel.setOpaque(false);
 
         JLabel name = new JLabel(meta.getIcono() + "  " + meta.getNombre());
-        name.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        name.setFont(AppColors.getFont(Font.BOLD, 12));
         name.setForeground(AppColors.TEXT_PRIMARY);
         JLabel pct = new JLabel(meta.getProgreso() + "%");
-        pct.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        pct.setFont(AppColors.getFont(Font.BOLD, 12));
         pct.setForeground(Color.decode(meta.getColor()));
 
         JPanel top = new JPanel(new BorderLayout());
@@ -253,7 +254,7 @@ public class DashboardPanel extends JPanel {
         top.add(pct, BorderLayout.EAST);
 
         JLabel amounts = new JLabel("$" + nf.format((long) meta.getMontoActual()) + " / $" + nf.format((long) meta.getMontoMeta()) + "  Faltan $" + nf.format((long) meta.getFaltante()));
-        amounts.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        amounts.setFont(AppColors.getFont(Font.PLAIN, 10));
         amounts.setForeground(AppColors.TEXT_MUTED);
         panel.add(top, BorderLayout.NORTH);
         panel.add(amounts, BorderLayout.SOUTH);
@@ -276,12 +277,12 @@ public class DashboardPanel extends JPanel {
         FinancialHealthSnapshot health = data.getFinancialHealthSnapshot();
 
         JLabel title = new JLabel("Salud Financiera");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setFont(AppColors.getFont(Font.BOLD, 13));
         title.setForeground(AppColors.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel score = new JLabel(health.getScore() + "/100 - " + health.getLabel());
-        score.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        score.setFont(AppColors.getFont(Font.BOLD, 24));
         score.setForeground(health.getScore() >= 65 ? AppColors.ACCENT_GREEN : health.getScore() >= 45 ? AppColors.ACCENT_YELLOW : AppColors.ACCENT_RED);
         score.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -331,12 +332,12 @@ public class DashboardPanel extends JPanel {
                 return false;
             }
         };
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        table.setFont(AppColors.getFont(Font.PLAIN, 11));
         table.setRowHeight(34);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(0xEBF3FE));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        table.setSelectionBackground(AppColors.SELECTION_BG);
+        table.getTableHeader().setFont(AppColors.getFont(Font.PLAIN, 11));
         table.getTableHeader().setBackground(AppColors.MAIN_BG);
         table.getTableHeader().setForeground(AppColors.TEXT_SECONDARY);
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
@@ -347,8 +348,8 @@ public class DashboardPanel extends JPanel {
                 setForeground(column == 3 || column == 0
                         ? ("Ingreso".equals(tipo) ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED)
                         : AppColors.TEXT_SECONDARY);
-                setFont(new Font("Segoe UI", column == 3 ? Font.BOLD : Font.PLAIN, 11));
-                setBackground(selected ? new Color(0xEBF3FE) : Color.WHITE);
+                setFont(AppColors.getFont(column == 3 ? Font.BOLD : Font.PLAIN, 11));
+                setBackground(selected ? AppColors.SELECTION_BG : AppColors.CARD_BG);
                 setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
                 return this;
             }
@@ -356,7 +357,7 @@ public class DashboardPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(AppColors.CARD_BG);
         card.add(scrollPane, BorderLayout.CENTER);
         return card;
     }
@@ -366,7 +367,7 @@ public class DashboardPanel extends JPanel {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel(AppIcons.ALERT + "  Alertas y notificaciones");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setFont(AppColors.getFont(Font.BOLD, 13));
         title.setForeground(AppColors.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(title);
@@ -385,12 +386,12 @@ public class DashboardPanel extends JPanel {
 
         card.add(Box.createVerticalStrut(12));
         JLabel tipTitle = new JLabel(AppIcons.IDEA + "  Consejo financiero");
-        tipTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tipTitle.setFont(AppColors.getFont(Font.BOLD, 13));
         tipTitle.setForeground(AppColors.TEXT_PRIMARY);
         tipTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(tipTitle);
         card.add(Box.createVerticalStrut(8));
-        JLabel tip = new JLabel("<html><body style='width:240px;color:#6b7280;font-size:11px;'>" + buildDynamicTip() + "</body></html>");
+        JLabel tip = new JLabel("<html><body style='width:240px;color:" + AppColors.css(AppColors.TEXT_SECONDARY) + ";font-size:11px;'>" + buildDynamicTip() + "</body></html>");
         tip.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(tip);
         return card;
@@ -429,15 +430,15 @@ public class DashboardPanel extends JPanel {
 
         String sign = recurring.getTipo() == Transaccion.Tipo.INGRESO ? "+" : "-";
         JLabel label = new JLabel(recurring.getNextDate().format(dtf) + "  " + recurring.getDescripcion());
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        label.setFont(AppColors.getFont(Font.PLAIN, 12));
         label.setForeground(AppColors.TEXT_SECONDARY);
 
         JLabel amount = new JLabel(sign + "$" + nf.format((long) recurring.getMonto()));
-        amount.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        amount.setFont(AppColors.getFont(Font.BOLD, 12));
         amount.setForeground(recurring.getTipo() == Transaccion.Tipo.INGRESO ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
         JButton apply = new JButton("Registrar");
-        apply.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        apply.setFont(AppColors.getFont(Font.PLAIN, 11));
         apply.setFocusPainted(false);
         apply.addActionListener(e -> data.materializeRecurringTransaction(recurring));
 
@@ -453,10 +454,10 @@ public class DashboardPanel extends JPanel {
 
     private void addHealthLine(JPanel card, String label, String value) {
         JLabel title = new JLabel(label);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        title.setFont(AppColors.getFont(Font.BOLD, 10));
         title.setForeground(AppColors.TEXT_MUTED);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel text = new JLabel("<html><body style='width:210px;color:#374151;font-size:10px;'>" + value + "</body></html>");
+        JLabel text = new JLabel("<html><body style='width:210px;color:" + AppColors.css(AppColors.TEXT_PRIMARY) + ";font-size:10px;'>" + value + "</body></html>");
         text.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(title);
         card.add(Box.createVerticalStrut(2));
@@ -509,10 +510,10 @@ public class DashboardPanel extends JPanel {
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setOpaque(false);
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        titleLabel.setFont(AppColors.getFont(Font.BOLD, 11));
         titleLabel.setForeground(AppColors.TEXT_PRIMARY);
         JLabel descLabel = new JLabel(desc);
-        descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        descLabel.setFont(AppColors.getFont(Font.PLAIN, 10));
         descLabel.setForeground(AppColors.TEXT_MUTED);
         textPanel.add(titleLabel);
         textPanel.add(descLabel);
@@ -546,10 +547,10 @@ public class DashboardPanel extends JPanel {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel left = new JLabel(leftText);
-        left.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        left.setFont(AppColors.getFont(Font.BOLD, 13));
         left.setForeground(AppColors.TEXT_PRIMARY);
         JLabel right = new JLabel(rightText);
-        right.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        right.setFont(AppColors.getFont(Font.PLAIN, 11));
         right.setForeground(AppColors.ACCENT_BLUE);
         header.add(left, BorderLayout.WEST);
         header.add(right, BorderLayout.EAST);
@@ -558,15 +559,15 @@ public class DashboardPanel extends JPanel {
 
     private JLabel linkLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setFont(AppColors.getFont(Font.PLAIN, 11));
         label.setForeground(AppColors.ACCENT_BLUE);
         label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return label;
     }
 
     private JLabel emptyState(String message) {
-        JLabel label = new JLabel("<html><div style='text-align:center;color:#6b7280;width:190px;'>" + message + "</div></html>", SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        JLabel label = new JLabel("<html><div style='text-align:center;color:" + AppColors.css(AppColors.TEXT_SECONDARY) + ";width:190px;'>" + message + "</div></html>", SwingConstants.CENTER);
+        label.setFont(AppColors.getFont(Font.PLAIN, 12));
         label.setForeground(AppColors.TEXT_MUTED);
         return label;
     }

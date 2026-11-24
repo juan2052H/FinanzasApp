@@ -37,11 +37,6 @@ public class MainFrame extends JFrame {
         setMinimumSize(new Dimension(960, 640));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(MainFrame.class.getName()).fine("No fue posible aplicar look and feel del sistema: " + ex.getMessage());
-        }
         AppColors.applyTheme(DataManager.getInstance().getUsuario().getTheme());
         buildUI();
         installCommandPaletteShortcut();
@@ -151,7 +146,7 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
 
         addPaletteAction(panel, dialog, "Nuevo ingreso", () -> showNewTransaction(Transaccion.Tipo.INGRESO));
         addPaletteAction(panel, dialog, "Nuevo gasto", () -> showNewTransaction(Transaccion.Tipo.GASTO));
@@ -166,7 +161,8 @@ public class MainFrame extends JFrame {
         addPaletteAction(panel, dialog, "Generar reporte", () -> showSection("reportes"));
 
         dialog.setContentPane(panel);
-        dialog.setSize(360, 360);
+        dialog.setMinimumSize(new Dimension(360, 360));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
@@ -181,7 +177,7 @@ public class MainFrame extends JFrame {
         JButton button = new JButton(label);
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        button.setFont(AppColors.getFont(Font.PLAIN, 13));
         button.setFocusPainted(false);
         button.addActionListener(e -> {
             dialog.dispose();
@@ -207,28 +203,28 @@ public class MainFrame extends JFrame {
         JDialog dialog = new JDialog(this, "Busqueda global", true);
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
 
         JTextField searchField = new JTextField();
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchField.setFont(AppColors.getFont(Font.PLAIN, 14));
         searchField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(AppColors.BORDER, 1, true),
                 BorderFactory.createEmptyBorder(8, 10, 8, 10)));
 
         DefaultListModel<SearchResult> model = new DefaultListModel<SearchResult>();
         JList<SearchResult> resultsList = new JList<SearchResult>(model);
-        resultsList.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        resultsList.setFont(AppColors.getFont(Font.PLAIN, 12));
         resultsList.setFixedCellHeight(54);
-        resultsList.setSelectionBackground(new Color(0xEBF3FE));
+        resultsList.setSelectionBackground(AppColors.SELECTION_BG);
         resultsList.setCellRenderer((list, value, index, selected, focus) -> {
             JPanel row = new JPanel(new BorderLayout(8, 2));
             row.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-            row.setBackground(selected ? new Color(0xEBF3FE) : Color.WHITE);
+            row.setBackground(selected ? AppColors.SELECTION_BG : AppColors.CARD_BG);
             JLabel title = new JLabel(value.getType() + " | " + value.getTitle());
-            title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            title.setFont(AppColors.getFont(Font.BOLD, 12));
             title.setForeground(AppColors.TEXT_PRIMARY);
             JLabel detail = new JLabel(value.getDetail());
-            detail.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            detail.setFont(AppColors.getFont(Font.PLAIN, 11));
             detail.setForeground(AppColors.TEXT_MUTED);
             row.add(title, BorderLayout.NORTH);
             row.add(detail, BorderLayout.CENTER);
@@ -268,7 +264,7 @@ public class MainFrame extends JFrame {
         actions.add(openButton);
 
         JLabel hint = new JLabel("Busca transacciones, presupuestos, metas o miembros.");
-        hint.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        hint.setFont(AppColors.getFont(Font.PLAIN, 11));
         hint.setForeground(AppColors.TEXT_MUTED);
 
         JPanel top = new JPanel(new BorderLayout(0, 6));
@@ -281,7 +277,8 @@ public class MainFrame extends JFrame {
         panel.add(actions, BorderLayout.SOUTH);
 
         dialog.setContentPane(panel);
-        dialog.setSize(520, 460);
+        dialog.setMinimumSize(new Dimension(520, 460));
+        dialog.pack();
         dialog.setLocationRelativeTo(this);
         SwingUtilities.invokeLater(searchField::requestFocusInWindow);
         dialog.setVisible(true);

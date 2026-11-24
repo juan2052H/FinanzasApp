@@ -8,6 +8,7 @@ import com.finanzas.model.Money;
 import com.finanzas.ui.components.AppColors;
 import com.finanzas.ui.components.RoundedButton;
 
+import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -44,11 +45,12 @@ public final class SimulationDialog {
                 SwingUtilities.getWindowAncestor(parent) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(parent) : null,
                 "Simulador financiero",
                 true);
-        dialog.setSize(560, 430);
+        dialog.setMinimumSize(new Dimension(560, 430));
+        dialog.pack();
         dialog.setLocationRelativeTo(parent);
 
         JPanel root = new JPanel(new BorderLayout(0, 14));
-        root.setBackground(Color.WHITE);
+        root.setBackground(AppColors.CARD_BG);
         root.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
         JLabel title = new JLabel("Que pasa si...");

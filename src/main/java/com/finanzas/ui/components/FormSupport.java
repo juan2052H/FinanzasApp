@@ -19,7 +19,7 @@ public final class FormSupport {
         gbc.gridy = row;
         gbc.weightx = 0.35;
         JLabel view = new JLabel(label);
-        view.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        view.setFont(AppColors.getFont(Font.PLAIN, 12));
         panel.add(view, gbc);
 
         gbc.gridx = 1;

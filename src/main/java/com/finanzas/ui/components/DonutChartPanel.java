@@ -67,11 +67,11 @@ public class DonutChartPanel extends JPanel {
         double total = 0;
         for (double v : values) total += v;
         if (values.length == 0 || total <= 0) {
-            g2.setColor(new Color(0xf0f4f8));
+            g2.setColor(AppColors.progressTrack());
             g2.fillOval(cx - outer, cy - outer, outer * 2, outer * 2);
-            g2.setColor(Color.WHITE);
+            g2.setColor(AppColors.CARD_BG);
             g2.fill(new Ellipse2D.Double(cx - inner, cy - inner, inner * 2, inner * 2));
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            g2.setFont(AppColors.getFont(Font.PLAIN, 11));
             g2.setColor(AppColors.TEXT_SECONDARY);
             String empty = "Sin datos";
             FontMetrics fm = g2.getFontMetrics();
@@ -94,7 +94,7 @@ public class DonutChartPanel extends JPanel {
             g2.fill(arc);
 
             // Border
-            g2.setColor(Color.WHITE);
+            g2.setColor(AppColors.CARD_BG);
             g2.setStroke(new BasicStroke(2));
             g2.draw(arc);
 
@@ -102,28 +102,28 @@ public class DonutChartPanel extends JPanel {
         }
 
         // Inner hole
-        g2.setColor(Color.WHITE);
+        g2.setColor(AppColors.CARD_BG);
         g2.fill(new Ellipse2D.Double(cx - inner, cy - inner, inner * 2, inner * 2));
 
         // Center text
         if (hoveredSlice >= 0) {
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            g2.setFont(AppColors.getFont(Font.BOLD, 13));
             g2.setColor(AppColors.TEXT_PRIMARY);
             String pct = (int) values[hoveredSlice] + "%";
             FontMetrics fm = g2.getFontMetrics();
             g2.drawString(pct, cx - fm.stringWidth(pct) / 2, cy + 5);
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
+            g2.setFont(AppColors.getFont(Font.PLAIN, 9));
             g2.setColor(AppColors.TEXT_SECONDARY);
             String lbl = labels[hoveredSlice];
             FontMetrics fm2 = g2.getFontMetrics();
             g2.drawString(lbl, cx - fm2.stringWidth(lbl) / 2, cy + 18);
         } else {
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            g2.setFont(AppColors.getFont(Font.BOLD, 14));
             g2.setColor(AppColors.TEXT_PRIMARY);
             String total2 = "100%";
             FontMetrics fm = g2.getFontMetrics();
             g2.drawString(total2, cx - fm.stringWidth(total2) / 2, cy + 5);
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
+            g2.setFont(AppColors.getFont(Font.PLAIN, 9));
             g2.setColor(AppColors.TEXT_SECONDARY);
             String lbl = "Total";
             FontMetrics fm2 = g2.getFontMetrics();

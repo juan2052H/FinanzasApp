@@ -45,19 +45,19 @@ public class DianTaxDialog extends JDialog {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
         header.setBackground(AppColors.ACCENT_BLUE);
         JLabel title = new JLabel("Declaracion de Renta DIAN");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        title.setFont(AppColors.getFont(Font.BOLD, 16));
         title.setForeground(Color.WHITE);
         header.add(title);
         add(header, BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabs.setFont(AppColors.getFont(Font.PLAIN, 12));
         tabs.addTab("Resumen", buildSummaryTab());
         tabs.addTab("Configurar UVT", buildConfigTab());
         add(tabs, BorderLayout.CENTER);
 
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        footer.setBackground(Color.WHITE);
+        footer.setBackground(AppColors.CARD_BG);
         JButton close = new JButton("Cerrar");
         close.addActionListener(e -> dispose());
         footer.add(close);
@@ -68,7 +68,7 @@ public class DianTaxDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
 
         // Year selector
         JPanel yearPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
@@ -88,7 +88,7 @@ public class DianTaxDialog extends JDialog {
 
         // Obligation
         obligationLabel = new JLabel("Consultando...");
-        obligationLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        obligationLabel.setFont(AppColors.getFont(Font.BOLD, 15));
         obligationLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(obligationLabel);
         panel.add(Box.createVerticalStrut(10));
@@ -112,7 +112,7 @@ public class DianTaxDialog extends JDialog {
         panel.add(Box.createVerticalStrut(4));
         reasonsArea = new JTextArea(5, 50);
         reasonsArea.setEditable(false);
-        reasonsArea.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        reasonsArea.setFont(AppColors.getFont(Font.PLAIN, 11));
         reasonsArea.setLineWrap(true);
         reasonsArea.setWrapStyleWord(true);
         reasonsArea.setBorder(BorderFactory.createLineBorder(AppColors.BORDER));
@@ -121,7 +121,7 @@ public class DianTaxDialog extends JDialog {
         // Disclaimer
         panel.add(Box.createVerticalStrut(10));
         JLabel disclaimer = new JLabel("<html><i>AVISO LEGAL: Esta herramienta es solo orientativa. Consulta con un contador certificado para tu declaracion de renta.</i></html>");
-        disclaimer.setFont(new Font("Segoe UI", Font.ITALIC, 10));
+        disclaimer.setFont(AppColors.getFont(Font.ITALIC, 10));
         disclaimer.setForeground(AppColors.TEXT_MUTED);
         panel.add(disclaimer);
 
@@ -131,7 +131,7 @@ public class DianTaxDialog extends JDialog {
     private JPanel buildConfigTab() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 6, 6, 6);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -162,14 +162,14 @@ public class DianTaxDialog extends JDialog {
 
     private JLabel metricLabel(String prefix) {
         JLabel label = new JLabel(prefix + " --");
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        label.setFont(AppColors.getFont(Font.PLAIN, 12));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
 
     private JTextField field(String def) {
         JTextField f = new JTextField(def, 16);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        f.setFont(AppColors.getFont(Font.PLAIN, 12));
         return f;
     }
 

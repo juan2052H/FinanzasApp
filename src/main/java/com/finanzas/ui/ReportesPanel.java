@@ -96,7 +96,7 @@ public class ReportesPanel extends JPanel {
         right.setBackground(AppColors.MAIN_BG);
 
         periodoBox = new JComboBox<String>(ReportPeriod.labels());
-        periodoBox.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        periodoBox.setFont(AppColors.getFont(Font.PLAIN, 12));
 
         fromField = dateField();
         toField = dateField();
@@ -108,7 +108,7 @@ public class ReportesPanel extends JPanel {
         });
 
         RoundedButton applyButton = new RoundedButton("Aplicar", AppColors.TEXT_MUTED);
-        applyButton.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        applyButton.setFont(AppColors.getFont(Font.BOLD, 10));
         applyButton.addActionListener(e -> refresh());
 
         RoundedButton exportButton = new RoundedButton("Exportar reporte", AppColors.ACCENT_BLUE);
@@ -144,7 +144,7 @@ public class ReportesPanel extends JPanel {
 
     private JTextField dateField() {
         JTextField field = new JTextField(8);
-        field.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        field.setFont(AppColors.getFont(Font.PLAIN, 12));
         return field;
     }
 
@@ -295,17 +295,17 @@ public class ReportesPanel extends JPanel {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
         JLabel labelView = new JLabel(label);
-        labelView.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        labelView.setFont(AppColors.getFont(Font.PLAIN, 11));
         labelView.setForeground(AppColors.TEXT_MUTED);
         labelView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueView = new JLabel(value);
-        valueView.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        valueView.setFont(AppColors.getFont(Font.BOLD, 17));
         valueView.setForeground(color);
         valueView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel noteView = new JLabel(note);
-        noteView.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        noteView.setFont(AppColors.getFont(Font.PLAIN, 10));
         noteView.setForeground(AppColors.TEXT_MUTED);
         noteView.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -323,7 +323,7 @@ public class ReportesPanel extends JPanel {
         JPanel barCard = card();
         barCard.setLayout(new BorderLayout(0, 8));
         JLabel barTitle = new JLabel("Ingresos vs gastos - " + snapshot.getPeriod().getDisplayLabel());
-        barTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        barTitle.setFont(AppColors.getFont(Font.BOLD, 13));
         barTitle.setForeground(AppColors.TEXT_PRIMARY);
         barCard.add(barTitle, BorderLayout.NORTH);
         if (hasChartData(snapshot.getMonthlyIncomeTotals()) || hasChartData(snapshot.getMonthlyExpenseTotals())) {
@@ -335,7 +335,7 @@ public class ReportesPanel extends JPanel {
         JPanel donutCard = card();
         donutCard.setLayout(new BorderLayout(0, 8));
         JLabel donutTitle = new JLabel("Distribucion de gastos");
-        donutTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        donutTitle.setFont(AppColors.getFont(Font.BOLD, 13));
         donutTitle.setForeground(AppColors.TEXT_PRIMARY);
 
         JPanel donutBody = new JPanel(new BorderLayout(8, 0));
@@ -373,15 +373,15 @@ public class ReportesPanel extends JPanel {
             row.setOpaque(false);
 
             JLabel dot = new JLabel("o");
-            dot.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            dot.setFont(AppColors.getFont(Font.PLAIN, 12));
             dot.setForeground(colors[i % colors.length]);
 
             JLabel text = new JLabel(categories[i]);
-            text.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+            text.setFont(AppColors.getFont(Font.PLAIN, 10));
             text.setForeground(AppColors.TEXT_SECONDARY);
 
             JLabel pct = new JLabel(String.format(Locale.US, "%.0f%%", percentages[i]));
-            pct.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            pct.setFont(AppColors.getFont(Font.BOLD, 10));
             pct.setForeground(AppColors.TEXT_PRIMARY);
 
             row.add(dot);
@@ -397,7 +397,7 @@ public class ReportesPanel extends JPanel {
         categoryArea.setLayout(new BorderLayout(0, 10));
 
         JLabel title = new JLabel("Gastos por categoria - detalle");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        title.setFont(AppColors.getFont(Font.BOLD, 13));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JPanel rows = new JPanel();
@@ -419,7 +419,7 @@ public class ReportesPanel extends JPanel {
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 
             JLabel category = new JLabel(entry.getKey());
-            category.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            category.setFont(AppColors.getFont(Font.PLAIN, 11));
             category.setForeground(AppColors.TEXT_SECONDARY);
             category.setPreferredSize(new Dimension(130, 18));
 
@@ -429,7 +429,7 @@ public class ReportesPanel extends JPanel {
                     super.paintComponent(g);
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(new Color(0xf0f4f8));
+                    g2.setColor(AppColors.progressTrack());
                     g2.fill(new RoundRectangle2D.Double(0, 3, getWidth(), 10, 6, 6));
                     g2.setColor(AppColors.ACCENT_BLUE);
                     g2.fill(new RoundRectangle2D.Double(0, 3, (int) (getWidth() * percentageValue / 100), 10, 6, 6));
@@ -439,7 +439,7 @@ public class ReportesPanel extends JPanel {
             barBg.setOpaque(false);
 
             JLabel amount = new JLabel(String.format(Locale.US, "%s (%.0f%%)", money(entry.getValue()), percentageValue));
-            amount.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            amount.setFont(AppColors.getFont(Font.BOLD, 11));
             amount.setForeground(AppColors.TEXT_PRIMARY);
             amount.setPreferredSize(new Dimension(150, 18));
 
@@ -452,7 +452,7 @@ public class ReportesPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(rows);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(AppColors.CARD_BG);
 
         categoryArea.add(title, BorderLayout.NORTH);
         categoryArea.add(scrollPane, BorderLayout.CENTER);
@@ -478,7 +478,7 @@ public class ReportesPanel extends JPanel {
 
     private JLabel emptyLabel(String message) {
         JLabel label = new JLabel(message, SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        label.setFont(AppColors.getFont(Font.PLAIN, 12));
         label.setForeground(AppColors.TEXT_MUTED);
         return label;
     }

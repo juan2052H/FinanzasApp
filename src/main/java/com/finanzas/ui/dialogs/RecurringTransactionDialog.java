@@ -7,6 +7,7 @@ import com.finanzas.model.Transaccion;
 import com.finanzas.ui.components.AppColors;
 import com.finanzas.ui.components.RoundedButton;
 
+import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -38,12 +39,13 @@ public final class RecurringTransactionDialog {
                 SwingUtilities.getWindowAncestor(parent) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(parent) : null,
                 "Nueva transaccion recurrente",
                 true);
-        dialog.setSize(450, 390);
+        dialog.setMinimumSize(new Dimension(450, 390));
+        dialog.pack();
         dialog.setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(7, 4, 7, 4);

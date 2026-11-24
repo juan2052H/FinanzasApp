@@ -88,7 +88,7 @@ public class ConfiguracionPanel extends JPanel {
         icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
 
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        label.setFont(AppColors.getFont(Font.PLAIN, 13));
         label.setForeground(active ? AppColors.ACCENT_BLUE : AppColors.TEXT_PRIMARY);
 
         row.add(icon);
@@ -234,7 +234,7 @@ public class ConfiguracionPanel extends JPanel {
         avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel helper = new JLabel("Imagen de perfil");
-        helper.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        helper.setFont(AppColors.getFont(Font.PLAIN, 11));
         helper.setForeground(AppColors.TEXT_MUTED);
         helper.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -243,8 +243,8 @@ public class ConfiguracionPanel extends JPanel {
 
         RoundedButton uploadButton = new RoundedButton("Subir imagen", AppColors.ACCENT_BLUE);
         RoundedButton removeButton = new RoundedButton("Quitar", AppColors.TEXT_MUTED);
-        uploadButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        removeButton.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        uploadButton.setFont(AppColors.getFont(Font.BOLD, 11));
+        removeButton.setFont(AppColors.getFont(Font.BOLD, 11));
 
         uploadButton.addActionListener(e -> seleccionarImagenPerfil());
         removeButton.addActionListener(e -> {
@@ -302,7 +302,7 @@ public class ConfiguracionPanel extends JPanel {
     private void addNotificationPreview(JPanel panel, List<NotificationItem> notifications) {
         if (notifications.isEmpty()) {
             JLabel empty = new JLabel("No hay eventos financieros que requieran atencion.");
-            empty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            empty.setFont(AppColors.getFont(Font.PLAIN, 12));
             empty.setForeground(AppColors.TEXT_MUTED);
             empty.setAlignmentX(Component.LEFT_ALIGNMENT);
             panel.add(empty);
@@ -319,10 +319,10 @@ public class ConfiguracionPanel extends JPanel {
                     BorderFactory.createEmptyBorder(8, 0, 8, 0)));
 
             JLabel title = new JLabel(item.getTitle());
-            title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            title.setFont(AppColors.getFont(Font.BOLD, 12));
             title.setForeground(notificationPreviewColor(item));
             JLabel message = new JLabel(item.getMessage());
-            message.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            message.setFont(AppColors.getFont(Font.PLAIN, 11));
             message.setForeground(AppColors.TEXT_MUTED);
             row.add(title);
             row.add(message);
@@ -357,11 +357,11 @@ public class ConfiguracionPanel extends JPanel {
         text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        title.setFont(AppColors.getFont(Font.BOLD, 12));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel(description);
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 11));
         subtitle.setForeground(AppColors.TEXT_MUTED);
 
         JCheckBox checkBox = new JCheckBox();
@@ -530,10 +530,10 @@ public class ConfiguracionPanel extends JPanel {
 
         String suffix = category.isArchived() ? " (archivada)" : "";
         JLabel title = new JLabel(category.getName() + suffix);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        title.setFont(AppColors.getFont(Font.BOLD, 12));
         title.setForeground(category.isArchived() ? AppColors.TEXT_MUTED : AppColors.TEXT_PRIMARY);
         JLabel detail = new JLabel(category.getIcon() + "  " + category.getColor());
-        detail.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        detail.setFont(AppColors.getFont(Font.PLAIN, 11));
         detail.setForeground(AppColors.TEXT_MUTED);
 
         JPanel text = new JPanel();
@@ -590,7 +590,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JLabel labelSmall(String value) {
         JLabel label = new JLabel(value);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setFont(AppColors.getFont(Font.PLAIN, 11));
         label.setForeground(AppColors.TEXT_MUTED);
         return label;
     }
@@ -1149,16 +1149,16 @@ public class ConfiguracionPanel extends JPanel {
         text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        title.setFont(AppColors.getFont(Font.BOLD, 12));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("<html><div style='width:340px'>" + description + "</div></html>");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 11));
         subtitle.setForeground(AppColors.TEXT_MUTED);
 
         RoundedButton button = new RoundedButton(buttonText, AppColors.ACCENT_BLUE);
         button.setPreferredSize(new Dimension(92, 30));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        button.setFont(AppColors.getFont(Font.BOLD, 10));
         button.addActionListener(e -> action.run());
 
         text.add(title);
@@ -1182,11 +1182,11 @@ public class ConfiguracionPanel extends JPanel {
         text.setBackground(AppColors.CARD_BG);
 
         JLabel title = new JLabel(titleText);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        title.setFont(AppColors.getFont(Font.BOLD, 12));
         title.setForeground(AppColors.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("<html><div style='width:320px'>" + description + "</div></html>");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 11));
         subtitle.setForeground(AppColors.TEXT_MUTED);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -1194,12 +1194,12 @@ public class ConfiguracionPanel extends JPanel {
 
         RoundedButton leftButton = new RoundedButton(leftButtonText, AppColors.TEXT_MUTED);
         leftButton.setPreferredSize(new Dimension(92, 30));
-        leftButton.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        leftButton.setFont(AppColors.getFont(Font.BOLD, 10));
         leftButton.addActionListener(e -> leftAction.run());
 
         RoundedButton rightButton = new RoundedButton(rightButtonText, AppColors.ACCENT_BLUE);
         rightButton.setPreferredSize(new Dimension(92, 30));
-        rightButton.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        rightButton.setFont(AppColors.getFont(Font.BOLD, 10));
         rightButton.addActionListener(e -> rightAction.run());
 
         actions.add(leftButton);
@@ -1677,16 +1677,16 @@ public class ConfiguracionPanel extends JPanel {
         icon.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel name = new JLabel("FinanzasApp");
-        name.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        name.setFont(AppColors.getFont(Font.BOLD, 22));
         name.setForeground(AppColors.TEXT_PRIMARY);
         name.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel version = new JLabel("Version 1.0.0");
-        version.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        version.setFont(AppColors.getFont(Font.PLAIN, 13));
         version.setForeground(AppColors.TEXT_MUTED);
         version.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel desc = new JLabel("<html><div style='text-align:center;width:260px;color:#6b7280;'>Gestion inteligente de tus finanzas personales y del hogar. Desarrollado con Java Swing.</div></html>");
+        JLabel desc = new JLabel("<html><div style='text-align:center;width:260px;color:" + AppColors.css(AppColors.TEXT_SECONDARY) + ";'>Gestion inteligente de tus finanzas personales y del hogar. Desarrollado con Java Swing.</div></html>");
         desc.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         center.add(icon);
@@ -1701,7 +1701,7 @@ public class ConfiguracionPanel extends JPanel {
 
     private JLabel sectionTitle(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        label.setFont(AppColors.getFont(Font.BOLD, 15));
         label.setForeground(AppColors.TEXT_PRIMARY);
         return label;
     }

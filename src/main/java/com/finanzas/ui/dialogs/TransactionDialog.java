@@ -7,6 +7,7 @@ import com.finanzas.model.Money;
 import com.finanzas.ui.components.AppColors;
 import com.finanzas.ui.components.RoundedButton;
 
+import java.awt.Dimension;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -38,12 +39,13 @@ public final class TransactionDialog {
                 SwingUtilities.getWindowAncestor(parent) instanceof JFrame ? (JFrame) SwingUtilities.getWindowAncestor(parent) : null,
                 isEdit ? "Editar transaccion" : (tipo == Transaccion.Tipo.INGRESO ? "Nuevo ingreso" : "Nuevo gasto"),
                 true);
-        dialog.setSize(430, 340);
+        dialog.setMinimumSize(new Dimension(430, 340));
+        dialog.pack();
         dialog.setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 24, 20, 24));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(AppColors.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(7, 4, 7, 4);

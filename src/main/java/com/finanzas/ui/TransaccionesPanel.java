@@ -54,10 +54,10 @@ public class TransaccionesPanel extends JPanel {
         header.setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
 
         JLabel title = new JLabel(pageTitle);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(AppColors.getFont(Font.BOLD, 22));
         title.setForeground(AppColors.TEXT_PRIMARY);
         JLabel subtitle = new JLabel(filterTipo == Tipo.INGRESO ? "Registro de todos tus ingresos" : "Registro de todos tus gastos");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setFont(AppColors.getFont(Font.PLAIN, 13));
         subtitle.setForeground(AppColors.TEXT_SECONDARY);
 
         JPanel left = new JPanel();
@@ -85,7 +85,7 @@ public class TransaccionesPanel extends JPanel {
         toolbar.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
         searchField = new JTextField(22);
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        searchField.setFont(AppColors.getFont(Font.PLAIN, 12));
         searchField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(AppColors.BORDER, 1, true),
                 BorderFactory.createEmptyBorder(5, 8, 5, 8)));
@@ -96,7 +96,7 @@ public class TransaccionesPanel extends JPanel {
         });
 
         totalLabel = new JLabel();
-        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        totalLabel.setFont(AppColors.getFont(Font.BOLD, 12));
         totalLabel.setForeground(filterTipo == Tipo.INGRESO ? AppColors.ACCENT_GREEN : AppColors.ACCENT_RED);
 
         toolbar.add(new JLabel("Buscar:"));
@@ -112,13 +112,13 @@ public class TransaccionesPanel extends JPanel {
             }
         };
         table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setFont(AppColors.getFont(Font.PLAIN, 12));
         table.setRowHeight(38);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(0xEBF3FE));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        table.getTableHeader().setBackground(new Color(0xf8fafc));
+        table.setSelectionBackground(AppColors.SELECTION_BG);
+        table.getTableHeader().setFont(AppColors.getFont(Font.BOLD, 11));
+        table.getTableHeader().setBackground(AppColors.TABLE_HEADER_BG);
         table.getTableHeader().setForeground(AppColors.TEXT_SECONDARY);
         table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppColors.BORDER));
 
@@ -132,14 +132,14 @@ public class TransaccionesPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, selected, focus, row, column);
-                setBackground(selected ? new Color(0xEBF3FE) : (row % 2 == 0 ? Color.WHITE : new Color(0xf9fafb)));
+                setBackground(selected ? AppColors.SELECTION_BG : (row % 2 == 0 ? AppColors.CARD_BG : AppColors.ROW_ALT_BG));
                 setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
                 if (column == 3) {
                     setForeground(amountColor);
-                    setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    setFont(AppColors.getFont(Font.BOLD, 12));
                 } else {
                     setForeground(AppColors.TEXT_SECONDARY);
-                    setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                    setFont(AppColors.getFont(Font.PLAIN, 12));
                 }
                 return this;
             }
@@ -160,7 +160,7 @@ public class TransaccionesPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(AppColors.CARD_BG);
 
         wrapper.add(toolbar, BorderLayout.NORTH);
         wrapper.add(scrollPane, BorderLayout.CENTER);
@@ -198,8 +198,8 @@ public class TransaccionesPanel extends JPanel {
         JPopupMenu menu = new JPopupMenu();
         JMenuItem edit = new JMenuItem("Editar");
         JMenuItem delete = new JMenuItem("Eliminar");
-        edit.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        delete.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        edit.setFont(AppColors.getFont(Font.PLAIN, 12));
+        delete.setFont(AppColors.getFont(Font.PLAIN, 12));
         edit.addActionListener(ev -> showFormDialog(currentList.get(row)));
         delete.addActionListener(ev -> {
             int result = JOptionPane.showConfirmDialog(this, "Eliminar esta transaccion?", "Confirmar", JOptionPane.YES_NO_OPTION);
@@ -231,7 +231,7 @@ public class TransaccionesPanel extends JPanel {
         gbc.gridy = row;
         gbc.weightx = 0.35;
         JLabel view = new JLabel(label);
-        view.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        view.setFont(AppColors.getFont(Font.PLAIN, 12));
         panel.add(view, gbc);
 
         gbc.gridx = 1;
@@ -243,7 +243,7 @@ public class TransaccionesPanel extends JPanel {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int column) {
             JButton button = new JButton("⋮");
-            button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            button.setFont(AppColors.getFont(Font.BOLD, 16));
             button.setBorderPainted(false);
             button.setContentAreaFilled(false);
             button.setForeground(AppColors.TEXT_MUTED);
@@ -256,7 +256,7 @@ public class TransaccionesPanel extends JPanel {
         private final JButton button = new JButton("⋮");
 
         ActionEditor() {
-            button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            button.setFont(AppColors.getFont(Font.BOLD, 16));
             button.setBorderPainted(false);
             button.setContentAreaFilled(false);
             button.setForeground(AppColors.TEXT_MUTED);
