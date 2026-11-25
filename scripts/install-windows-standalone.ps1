@@ -89,7 +89,7 @@ try {
         DisplayName = "FinanzasApp"; DisplayVersion = $Version; Publisher = "Equipo FinanzasApp"
         DisplayIcon = (Join-Path $InstallPath "FinanzasApp.ico"); InstallLocation = $InstallPath
         UninstallString = $uninstallCommand; QuietUninstallString = "$uninstallCommand -Quiet"
-        InstallDate = (Get-Date).ToString("yyyyMMdd"); URLInfoAbout = "https://github.com/juan2052H/FinanzasApp"
+        InstallDate = (Get-Date).ToString("yyyyMMdd"); URLInfoAbout = "https://github.com/juanromanbedoya/FinanzasApp"
     }
     foreach ($entry in $values.GetEnumerator()) {
         New-ItemProperty -Path $UninstallKey -Name $entry.Key -Value $entry.Value -PropertyType String -Force | Out-Null

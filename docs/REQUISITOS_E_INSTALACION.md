@@ -2,7 +2,7 @@
 
 **Proyecto:** FinanzasApp - Gestion de finanzas personales y del hogar
 **Autor:** Juan Jose Roman Bedoya - Aseguramiento de la Calidad del Software, UNIMINUTO (2026-2)
-**Repositorio:** https://github.com/juan2052H/FinanzasApp
+**Repositorio:** https://github.com/juanromanbedoya/FinanzasApp
 
 Este manual esta escrito para personas que **nunca han instalado un programa de este tipo**. Siga los pasos en orden, sin saltarse ninguno. Cada comando se puede copiar y pegar tal cual. Tiempo aproximado la primera vez: **30 a 60 minutos** (la mayor parte es esperar descargas).
 
@@ -240,7 +240,7 @@ Va a usar el archivo de entrega **`FinanzasApp_Entrega_Final.zip`**.
 
 > Use exactamente la ruta `C:\FinanzasApp`. Las rutas muy largas o dentro de OneDrive pueden causar errores en Windows.
 
-**Alternativa sin el ZIP:** en https://github.com/juan2052H/FinanzasApp pulse **Code > Download ZIP** y descomprimalo en `C:\FinanzasApp`. En ese caso la carpeta se llama `C:\FinanzasApp\FinanzasApp-main` y debe usar ese nombre en los comandos.
+**Alternativa sin el ZIP:** en https://github.com/juanromanbedoya/FinanzasApp pulse **Code > Download ZIP** y descomprimalo en `C:\FinanzasApp`. En ese caso la carpeta se llama `C:\FinanzasApp\FinanzasApp-main` y debe usar ese nombre en los comandos.
 
 ---
 

@@ -9,7 +9,7 @@ El detalle completo (27 requisitos funcionales, 20 no funcionales, 32 casos de p
 Necesita **Docker Desktop** encendido y los puertos **5432** y **8080** libres.
 
 ```bash
-git clone https://github.com/juan2052H/FinanzasApp.git
+git clone https://github.com/juanromanbedoya/FinanzasApp.git
 cd FinanzasApp
 docker compose up -d --build
 docker compose ps -a

@@ -54,7 +54,7 @@ virtualizacion activada (Administrador de tareas > Rendimiento > CPU > "Virtuali
 B) ENCENDER EL SERVIDOR (cada vez)
 ----------------------------------
 1. Docker Desktop debe estar abierto y decir "Engine running".
-2. Descargue el proyecto desde https://github.com/juan2052H/FinanzasApp (boton verde Code >
+2. Descargue el proyecto desde https://github.com/juanromanbedoya/FinanzasApp (boton verde Code >
    Download ZIP) y descomprimalo en C:\FinanzasApp (clic derecho > Extraer todo > C:\FinanzasApp).
 3. Abra PowerShell normal y ejecute, uno por uno:
 
@@ -77,7 +77,7 @@ Para borrar todo y recargar los datos:   docker compose down -v   y luego   dock
 C) INSTALAR Y ABRIR LA APLICACION
 ---------------------------------
 1. Doble clic en FinanzasApp-Setup.exe y responda Si. Si no esta en esta carpeta,
-   descarguelo de https://github.com/juan2052H/FinanzasApp/releases/latest
+   descarguelo de https://github.com/juanromanbedoya/FinanzasApp/releases/latest
    Si Windows muestra "Windows protegio su PC": Mas informacion > Ejecutar de todas formas.
 2. Abra el acceso directo "FinanzasApp (servidor)" del Escritorio.
    (El otro acceso, "FinanzasApp", es el modo local y NO tiene las cuentas de prueba.)

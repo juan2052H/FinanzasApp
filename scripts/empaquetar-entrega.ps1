@@ -173,7 +173,7 @@ PROBLEMAS FRECUENTES
 FinanzasApp - Entrega final
 ===========================
 
-Repositorio: https://github.com/juan2052H/FinanzasApp  (commit $commit)
+Repositorio: https://github.com/juanromanbedoya/FinanzasApp  (commit $commit)
 
 Empiece por REQUISITOS_E_INSTALACION (Word o .md): requisitos del PC, como ejecutarlo y cuentas de prueba.
 Luego GUIA_EVALUADOR.md: recorrido de verificacion ligado a requisitos y casos de prueba.
